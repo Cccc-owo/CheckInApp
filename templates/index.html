@@ -1,0 +1,216 @@
+<!-- /CheckInApp/templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>自动打卡管理</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #333; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; background: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        button { background-color: #4CAF50; color: white; border: none; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px; transition: background-color 0.3s; }
+        button:hover { background-color: #45a049; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        form { margin-top: 20px; width: 500px; margin-left: auto; margin-right: auto; background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        input, textarea { width: 100%; padding: 10px; margin: 8px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input[type=submit] { background-color: #4CAF50; color: white; }
+        .qrcode-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); z-index: 1000; text-align: center; }
+        .qrcode-popup img { max-width: 300px; height: auto; display: block; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; }
+        .jwt-exp { cursor: help; position: relative; display: inline-block; }
+        .jwt-exp::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: #555; color: #fff; padding: 5px 10px; border-radius: 5px; white-space: nowrap; visibility: hidden; opacity: 0; transition: opacity 0.3s; z-index: 1000; }
+        .jwt-exp:hover::after { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body>
+    <h1>自动打卡管理</h1>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button id="checkin-all-btn" onclick="triggerAllCheckIns(event)" style="background-color: #f0ad4e;">
+            立即全部重新打卡 (调试)
+        </button>
+    </div>
+    <table>
+        <tr>
+            <th>ThreadId</th><th>Signature</th><th>Texts</th><th>Values</th><th>Token Expire (UTC+8)</th><th>Action</th>
+        </tr>
+        {% for config in configs %}
+        <tr>
+            <td>{{ config.ThreadId }}</td><td>{{ config.Signature }}</td><td>{{ config.Texts }}</td><td>{{ config.Values }}</td>
+            <td><span class="jwt-exp" data-unix-time="{{ config.jwt_exp }}"></span></td>
+            <td>
+                {% if config.show_qrcode %}
+                <button onclick="requestQRCode('{{ config.Signature }}', event)">Request QR Code</button>
+                {% else %}
+                Token is valid
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <form id="newUserForm">
+        <h3>添加新用户</h3>
+        <label for="ThreadId">ThreadId:</label><input type="text" id="ThreadId" name="ThreadId" value="" placeholder="ThreadId">
+        <label for="Signature">Signature (required):</label><input type="text" id="Signature" name="Signature" required placeholder="Signature">
+        <label for="Texts">Texts:</label><input type="text" id="Texts" name="Texts" value="Your location" placeholder="Texts">
+        <label for="Values">Values:</label><input type="text" id="Values" name="Values" value='{"latitude":00.000000,"longitude":00.000000}' placeholder="Values">
+        <label for="Email">Email (required):</label><input type="text" id="Email" name="Email" required placeholder="Email">
+        <input type="submit" value="添加并获取二维码">
+    </form>
+
+    <div id="qrcodePopup" class="qrcode-popup">
+        <img id="qrcodeImage" src="" alt="QR Code" style="display: none;">
+        <p id="qrcodeStatus">正在生成二维码...</p>
+        <button onclick="closePopup()">关闭</button>
+    </div>
+    <div id="overlay" class="overlay"></div>
+    <script>
+        let pollingInterval;
+        let activeSessionId = null;
+
+        const qrcodePopup = document.getElementById('qrcodePopup');
+        const qrcodeImage = document.getElementById('qrcodeImage');
+        const qrcodeStatus = document.getElementById('qrcodeStatus');
+        const overlay = document.getElementById('overlay');
+
+        function showPopup() {
+            qrcodePopup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function closePopup() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            qrcodePopup.style.display = 'none';
+            overlay.style.display = 'none';
+            qrcodeImage.src = '';
+            qrcodeImage.style.display = 'none';
+            qrcodeStatus.textContent = '正在生成二维码...';
+            activeSessionId = null;
+        }
+
+        function setButtonLoading(button, isLoading) {
+            if (!button) return;
+            button.disabled = isLoading;
+            button.textContent = isLoading ? '加载中...' : button.dataset.originalText;
+        }
+
+        async function startRefreshFlow(url, options, button) {
+            if (button) {
+                button.dataset.originalText = button.textContent;
+                setButtonLoading(button, true);
+            }
+            showPopup();
+
+            try {
+                const startResponse = await fetch(url, options);
+                const startData = await startResponse.json();
+                if (startData.status !== 'success') throw new Error('启动刷新流程失败！');
+
+                activeSessionId = startData.session_id;
+
+                const imageResponse = await fetch(`/get_qrcode_image/${activeSessionId}`);
+                const imageData = await imageResponse.json();
+                if (imageData.status !== 'success') throw new Error('获取二维码失败: ' + imageData.message);
+
+                qrcodeImage.src = `data:image/png;base64,${imageData.image_data}`;
+                qrcodeImage.style.display = 'block';
+                qrcodeStatus.textContent = '请用QQ扫描二维码';
+
+                pollingInterval = setInterval(async () => {
+                    if (!activeSessionId) { clearInterval(pollingInterval); return; }
+                    const statusResponse = await fetch(`/check_refresh_status/${activeSessionId}`);
+                    const statusData = await statusResponse.json();
+                    if (statusData.status === 'success') {
+                        clearInterval(pollingInterval);
+                        alert('Token刷新成功！');
+                        window.location.reload();
+                    } else if (statusData.status === 'error') {
+                        throw new Error('刷新失败: ' + statusData.message);
+                    }
+                }, 3000);
+
+            } catch (error) {
+                if (pollingInterval) clearInterval(pollingInterval);
+                qrcodeImage.style.display = 'none';
+                qrcodeStatus.textContent = `错误: ${error.message}`;
+                if (button) setButtonLoading(button, false);
+            }
+        }
+    
+        function requestQRCode(signature, event) {
+            startRefreshFlow('/request_qrcode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ signature: signature }) // 在POST body中发送signature
+            }, event.target);
+        }
+
+        document.getElementById('newUserForm').onsubmit = function (event) {
+            event.preventDefault();
+            const submitButton = this.querySelector('input[type="submit"]');
+            const formData = {
+                ThreadId: document.getElementById('ThreadId').value,
+                Signature: document.getElementById('Signature').value,
+                Texts: document.getElementById('Texts').value,
+                Values: document.getElementById('Values').value,
+                Email: document.getElementById('Email').value
+            };
+            startRefreshFlow('/create_user', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(formData)
+            }, submitButton);
+        };
+
+        overlay.onclick = closePopup;
+
+        function convertUnixToUTC8(unixTime) {
+            if (!unixTime || !/^\d+$/.test(unixTime) || parseInt(unixTime) === 0) return 'N/A';
+            const date = new Date(parseInt(unixTime) * 1000);
+            return date.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }).replace(/\//g, '-');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.jwt-exp').forEach(function (element) {
+                const unixTime = element.getAttribute('data-unix-time');
+                const utc8Time = convertUnixToUTC8(unixTime);
+                element.textContent = utc8Time;
+                element.setAttribute('data-tooltip', `Unix: ${unixTime}`);
+            });
+        });
+
+        
+        async function triggerAllCheckIns(event) {
+            if (!confirm('确定要为所有用户立即重新打卡吗？这是一个调试功能。')) {
+                return;
+            }
+        
+            const button = event.target;
+            const originalText = button.textContent;
+            setButtonLoading(button, true);
+        
+            try {
+                const response = await fetch('/api/checkin_all', { method: 'POST' });
+                const data = await response.json();
+            
+                if (response.ok && data.status === 'success') {
+                    alert('成功！已发送全部重新打卡指令，请在服务器日志中查看详细过程。');
+                } else {
+                    throw new Error(data.message || '请求失败，请查看服务器日志。');
+                }
+            } catch (error) {
+                alert('错误: ' + error.message);
+            } finally {
+                // 确保按钮状态被恢复
+                setButtonLoading(button, false);
+                button.textContent = originalText;
+            }
+        }
+    </script>
+</body>
+</html>
