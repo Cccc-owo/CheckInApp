@@ -22,6 +22,8 @@ Jielong Payload: `payload` in the `try-catch` block of `perform_check_in()` func
 
 You may use [Reqable](https://reqable.com/) or other tools to get the payload of JieLong. (Tips: Catch the request of "EditRecord" and you will find what you want.)
 
+Meanwhile, `config.csv` is used to build the payload. You may need edit the `config.csv` related codes to add support to new payload. Searching the usage of `read_configs()` function will tell you the things.
+
 ### Config
 
 APScheduler config: `app.py`
