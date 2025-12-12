@@ -130,7 +130,7 @@ def send_failure_notification(user_config, email_settings):
         name=user_config["email"],
         send_time=time.strftime("%Y年%m月%d日 %H:%M:%S", time.localtime())
     )
-    _send_email(user_config["email"], "【紧急】自动打卡失败 - 需要刷新Token", html, email_settings)
+    _send_email(user_config["email"], "打卡失败 - 需要刷新Token", html, email_settings)
 
 def notification_worker_loop():
     """后台任务：检查Token是否即将过期，并发送邮件提醒。单次运行。"""

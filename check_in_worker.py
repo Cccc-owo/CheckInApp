@@ -173,7 +173,8 @@ def perform_check_in(config):
             if "打卡成功" in response_text:
                 logger.info(f"检测到成功关键字，为 {config['Signature']} 发送成功邮件...")
                 send_success_notification(config, email_settings)
-            elif "QSfqFrHF0jbMZcd3DVuvf6k5HceMjOlDwzX1b/SJ4agLnRkO" in response_text: # 打卡失败附带的Data
+            elif ("QSfqFrHF0jbMZcd3DVuvf6k5HceMjOlDwzX1b/SJ4agLnRkO" in response_text or
+                  "请先授权登录小程序" in response_text): # 打卡失败附带的Data 或 授权失效
                 logger.warning(f"检测到登录失败关键字，为 {config['Signature']} 发送失败提醒邮件...")
                 send_failure_notification(config, email_settings)
         
