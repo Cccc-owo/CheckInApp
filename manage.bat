@@ -87,7 +87,7 @@ if exist "%BACKEND_PID_FILE%" (
         echo [WARNING] Backend is already running (PID: !PID!)
         exit /b 0
     ) else (
-        echo [INFO] Backend PID file exists but process not running, cleaning up...
+        REM Silently clean up stale PID file (don't show message)
         del "%BACKEND_PID_FILE%" >nul 2>&1
     )
 )
@@ -106,7 +106,7 @@ if not exist "sessions" mkdir sessions
 
 echo [INFO] Starting backend service in background...
 
-REM Create a VBS script to run Python invisibly
+REM Create a VBS script to run Python invisibly (using venv's python.exe directly)
 set VBS_FILE=%TEMP%\start_backend.vbs
 echo Set WshShell = CreateObject("WScript.Shell") > "%VBS_FILE%"
 echo WshShell.Run """%PYTHON_EXE%"" ""%APP_DIR%run_daemon.py""", 0, False >> "%VBS_FILE%"
@@ -167,7 +167,7 @@ if exist "%FRONTEND_PID_FILE%" (
         echo [WARNING] Frontend is already running (PID: !PID!)
         exit /b 0
     ) else (
-        echo [INFO] Frontend PID file exists but process not running, cleaning up...
+        REM Silently clean up stale PID file (don't show message)
         del "%FRONTEND_PID_FILE%" >nul 2>&1
     )
 )
@@ -211,7 +211,7 @@ del "%VBS_FILE%" >nul 2>&1
 echo [INFO] Waiting for frontend to start...
 timeout /t 3 /nobreak >nul
 
-REM Check if port 3000 is listening (Vite configured port)
+REM Check if port 5000 is listening (Vite configured port)
 set SERVICE_RUNNING=0
 for /L %%i in (1,1,10) do (
     netstat -ano | findstr ":3000" | findstr "LISTENING" >nul 2>&1
@@ -289,8 +289,12 @@ set BACKEND_KILLED=0
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8000" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>&1
     if "!ERRORLEVEL!"=="0" (
-        echo [OK] Backend stopped (PID: %%a)
+        echo [OK] Backend stopped ^(PID: %%a^)
         set BACKEND_KILLED=1
+        REM Delete PID file immediately after successful kill
+        if exist "%BACKEND_PID_FILE%" (
+            del "%BACKEND_PID_FILE%" >nul 2>&1
+        )
     )
 )
 
@@ -301,17 +305,24 @@ if "%BACKEND_KILLED%"=="0" (
         tasklist /FI "PID eq !PID!" 2>NUL | find /I /N "python.exe">NUL
         if "!ERRORLEVEL!"=="0" (
             taskkill /F /T /PID !PID! >nul 2>&1
-            echo [OK] Backend stopped (PID: !PID!)
+            if "!ERRORLEVEL!"=="0" (
+                echo [OK] Backend stopped ^(PID: !PID!^)
+                set BACKEND_KILLED=1
+                REM Delete PID file immediately after successful kill
+                del "%BACKEND_PID_FILE%" >nul 2>&1
+            )
         ) else (
-            echo [WARNING] Backend not running (process does not exist)
+            REM Process doesn't exist, just clean up the stale PID file
+            del "%BACKEND_PID_FILE%" >nul 2>&1
         )
-    ) else (
-        echo [WARNING] Backend not running (no process found)
+    )
+
+    REM Only show warning if nothing was stopped
+    if "%BACKEND_KILLED%"=="0" (
+        echo [WARNING] Backend not running
     )
 )
 
-REM Clean up PID file
-del "%BACKEND_PID_FILE%" >nul 2>&1
 exit /b 0
 
 REM --- Frontend Stop Logic ---
@@ -323,12 +334,16 @@ set FRONTEND_KILLED=0
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3000" ^| findstr "LISTENING"') do (
     taskkill /F /T /PID %%a >nul 2>&1
     if "!ERRORLEVEL!"=="0" (
-        echo [OK] Frontend stopped (PID: %%a)
+        echo [OK] Frontend stopped ^(PID: %%a^)
         set FRONTEND_KILLED=1
+        REM Delete PID file immediately after successful kill
+        if exist "%FRONTEND_PID_FILE%" (
+            del "%FRONTEND_PID_FILE%" >nul 2>&1
+        )
     )
 )
 
-REM Also check ports 3001-3010 (Vite fallback ports)
+REM Also check ports 5001-5010 (Vite fallback ports)
 if "%FRONTEND_KILLED%"=="0" (
     for /L %%p in (3001,1,3010) do (
         for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%%p" ^| findstr "LISTENING"') do (
@@ -337,8 +352,12 @@ if "%FRONTEND_KILLED%"=="0" (
             if "!ERRORLEVEL!"=="0" (
                 taskkill /F /T /PID %%a >nul 2>&1
                 if "!ERRORLEVEL!"=="0" (
-                    echo [OK] Frontend stopped (PID: %%a, Port: %%p)
+                    echo [OK] Frontend stopped ^(PID: %%a, Port: %%p^)
                     set FRONTEND_KILLED=1
+                    REM Delete PID file immediately after successful kill
+                    if exist "%FRONTEND_PID_FILE%" (
+                        del "%FRONTEND_PID_FILE%" >nul 2>&1
+                    )
                 )
             )
         )
@@ -352,17 +371,24 @@ if "%FRONTEND_KILLED%"=="0" (
         tasklist /FI "PID eq !PID!" 2>NUL | find /I /N "node.exe">NUL
         if "!ERRORLEVEL!"=="0" (
             taskkill /F /T /PID !PID! >nul 2>&1
-            echo [OK] Frontend stopped (PID: !PID!)
+            if "!ERRORLEVEL!"=="0" (
+                echo [OK] Frontend stopped ^(PID: !PID!^)
+                set FRONTEND_KILLED=1
+                REM Delete PID file immediately after successful kill
+                del "%FRONTEND_PID_FILE%" >nul 2>&1
+            )
         ) else (
-            echo [WARNING] Frontend not running (process does not exist)
+            REM Process doesn't exist, just clean up the stale PID file
+            del "%FRONTEND_PID_FILE%" >nul 2>&1
         )
-    ) else (
-        echo [WARNING] Frontend not running (no process found)
+    )
+
+    REM Only show warning if nothing was stopped
+    if "%FRONTEND_KILLED%"=="0" (
+        echo [WARNING] Frontend not running
     )
 )
 
-REM Clean up PID file
-del "%FRONTEND_PID_FILE%" >nul 2>&1
 exit /b 0
 
 REM ============================================
@@ -373,6 +399,19 @@ echo [INFO] Restarting %TARGET%...
 echo.
 call :stop
 timeout /t 2 /nobreak >nul
+
+REM Force cleanup of any remaining PID files before starting
+if "%TARGET%"=="backend" (
+    del "%BACKEND_PID_FILE%" >nul 2>&1
+)
+if "%TARGET%"=="frontend" (
+    del "%FRONTEND_PID_FILE%" >nul 2>&1
+)
+if "%TARGET%"=="all" (
+    del "%BACKEND_PID_FILE%" >nul 2>&1
+    del "%FRONTEND_PID_FILE%" >nul 2>&1
+)
+
 call :start
 goto end
 
@@ -586,7 +625,7 @@ echo   build            - Build frontend for production
 echo.
 echo Targets:
 echo   backend  - Backend API service (default port: 8000)
-echo   frontend - Frontend dev server (default port: 3000)
+echo   frontend - Frontend dev server (default port: 5000)
 echo   all      - Both services (default)
 echo.
 echo Examples:

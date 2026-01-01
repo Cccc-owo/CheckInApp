@@ -211,12 +211,22 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "error_message": ""
             }
 
-        # 情况2: 不在打卡时间范围 → 标记为时间范围外
-        # 支持多种匹配方式：直接文本匹配、JSON Data 字段、Description 字段
+        # 情况2: 已经提交过了（重复提交）→ 视为成功，但不发送邮件
+        # 匹配 "已被提交" 或 "已经打卡"
+        elif ("已被提交" in response_text or "已经打卡" in response_text or
+              "重复提交" in response_text):
+            logger.info(f"✅ 检测到'已被提交'，本次打卡已完成（重复提交，不发送邮件）")
+            return {
+                "success": True,
+                "status": "success",
+                "response_text": response_text,
+                "error_message": ""
+            }
+
+        # 情况3: 不在打卡时间范围 → 标记为时间范围外
+        # 匹配 Data 或 Description 中的内容
         elif ("不在打卡时间范围" in response_text or
-              "不在打卡时间" in response_text or
-              '"Data":"不在打卡时间范围"' in response_text or
-              '"Description":"不在打卡时间范围"' in response_text):
+              "不在打卡时间" in response_text):
             logger.warning(f"⏰ 检测到'不在打卡时间范围'，打卡时间不符")
             return {
                 "success": False,
@@ -225,7 +235,7 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "error_message": "不在打卡时间范围内"
             }
 
-        # 情况3: Token 失效的特征标识 → 失败
+        # 情况4: Token 失效的特征标识 → 失败
         elif ("登录" in response_text):
             logger.warning(f"⚠️ 检测到登录失败关键字，Token 可能已失效")
             if email:
@@ -237,7 +247,7 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "error_message": "Token 已失效，需要重新授权"
             }
 
-        # 情况4: 其他响应 → 需要人工确认（标记为异常）
+        # 情况5: 其他响应 → 需要人工确认（标记为异常）
         else:
             logger.warning(f"⚠️ 未识别的响应内容，请检查: {response_text[:200]}...")
             # 标记为未知状态，记录完整响应供后续分析

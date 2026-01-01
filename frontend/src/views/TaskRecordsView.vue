@@ -23,7 +23,7 @@
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
                     </svg>
-                    接龙 ID: {{ currentTask.thread_id }}
+                    接龙 ID: {{ getThreadId(currentTask) }}
                   </span>
                   <span :class="currentTask.is_active ? 'status-success' : 'status-info'">
                     {{ currentTask.is_active ? '启用中' : '已禁用' }}
@@ -148,8 +148,8 @@
                     v-else
                     class="status-error"
                   >❌ 打卡失败</span>
-                  <span :class="record.trigger_type === 'scheduler' ? 'status-info' : 'status-warning'">
-                    {{ record.trigger_type === 'scheduler' ? '自动触发' : '手动触发' }}
+                  <span :class="record.trigger_type === 'scheduled' ? 'status-info' : 'status-warning'">
+                    {{ record.trigger_type === 'scheduled' ? '自动触发' : '手动触发' }}
                   </span>
                 </div>
                 <div class="flex items-center text-sm text-gray-600">
@@ -238,6 +238,19 @@ const recordStats = computed(() => {
     successRate,
   }
 })
+
+// 从 payload_config 中提取 ThreadId
+const getThreadId = (task) => {
+  if (!task || !task.payload_config) return '未知'
+
+  try {
+    const payload = JSON.parse(task.payload_config)
+    return payload.ThreadId || '未知'
+  } catch (e) {
+    console.error('解析 payload_config 失败:', e)
+    return '未知'
+  }
+}
 
 // 获取任务详情
 const fetchTaskDetail = async () => {

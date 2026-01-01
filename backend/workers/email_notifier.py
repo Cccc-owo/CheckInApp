@@ -3,8 +3,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import time
 import logging
-import configparser
-from pathlib import Path
 
 from backend.config import settings
 
@@ -14,79 +12,344 @@ logger = logging.getLogger(__name__)
 
 EXPIRATION_HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Token 到期通知</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token 到期提醒</title>
     <style>
-        body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; margin: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }}
-        h1 {{ color: #d9534f; }}
-        .message {{ background-color: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 20px; }}
-        .important {{ font-weight: bold; color: #d9534f; }}
-        .footer {{ font-size: 0.9em; color: #666; }}
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }}
+        .content {{
+            padding: 30px 40px;
+        }}
+        .alert-box {{
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .info-item {{
+            margin: 16px 0;
+            padding: 12px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+        }}
+        .info-item strong {{
+            color: #333;
+            display: inline-block;
+            min-width: 100px;
+        }}
+        .highlight {{
+            color: #f44336;
+            font-weight: 600;
+        }}
+        .action-button {{
+            display: inline-block;
+            margin: 20px 0;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+        }}
+        .footer {{
+            background-color: #fafafa;
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #eeeeee;
+        }}
     </style>
 </head>
 <body>
-    <h1>注意!</h1>
-    <div class="message">
-        <p>{name}，请注意!</p>
-        <p>您的 <span class="important">token</span> 已经到期，请尽快重新刷新您的 token，否则您的自动打卡功能将会失效。</p>
-        <p><strong>到期时间:</strong> {exp_time}</p>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Token 即将到期提醒</h1>
+        </div>
+        <div class="content">
+            <p>您好，</p>
+            <div class="alert-box">
+                <p>您的接龙打卡系统 <span class="highlight">Token 即将到期</span>，为避免影响自动打卡功能，请尽快刷新您的 Token。</p>
+            </div>
+            <div class="info-item">
+                <strong>到期时间：</strong><span class="highlight">{exp_time}</span>
+            </div>
+            <div class="info-item">
+                <strong>通知时间：</strong>{send_time}
+            </div>
+            <p style="margin-top: 20px; color: #666;">
+                请登录系统，前往 <strong>用户设置</strong> 页面刷新您的 Token，以确保自动打卡功能正常运行。
+            </p>
+        </div>
+        <div class="footer">
+            <p>此邮件由接龙自动打卡系统自动发送，请勿直接回复</p>
+            <p>CheckIn App V2 © 2026</p>
+        </div>
     </div>
-    <p class="footer">邮件发送时间: {send_time}</p>
 </body>
 </html>
 """
 
 SUCCESS_HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>打卡成功通知</title>
     <style>
-        body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; margin: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }}
-        h1 {{ color: #5cb85c; }}
-        .message {{ background-color: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 20px; }}
-        .important {{ font-weight: bold; color: #5cb85c; }}
-        .footer {{ font-size: 0.9em; color: #666; }}
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }}
+        .content {{
+            padding: 30px 40px;
+        }}
+        .success-icon {{
+            text-align: center;
+            font-size: 64px;
+            margin: 20px 0;
+        }}
+        .success-box {{
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .info-item {{
+            margin: 16px 0;
+            padding: 12px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+        }}
+        .info-item strong {{
+            color: #333;
+            display: inline-block;
+            min-width: 100px;
+        }}
+        .highlight {{
+            color: #4caf50;
+            font-weight: 600;
+        }}
+        .footer {{
+            background-color: #fafafa;
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #eeeeee;
+        }}
     </style>
 </head>
 <body>
-    <h1>打卡成功!</h1>
-    <div class="message">
-        <p>{name}，您好!</p>
-        <p>系统已于 <span class="important">{send_time}</span> 成功为您完成自动打卡。</p>
-        <p>您无需进行任何操作，此邮件仅作通知。</p>
+    <div class="container">
+        <div class="header">
+            <h1>✅ 打卡成功</h1>
+        </div>
+        <div class="content">
+            <div class="success-icon">🎉</div>
+            <p>您好，</p>
+            <div class="success-box">
+                <p><strong>自动打卡已成功完成！</strong></p>
+            </div>
+            <div class="info-item">
+                <strong>打卡时间：</strong><span class="highlight">{send_time}</span>
+            </div>
+            <div class="info-item">
+                <strong>打卡状态：</strong><span class="highlight">成功 ✓</span>
+            </div>
+            <p style="margin-top: 20px; color: #666;">
+                您无需进行任何操作，系统已自动为您完成打卡。此邮件仅作通知。
+            </p>
+        </div>
+        <div class="footer">
+            <p>此邮件由接龙自动打卡系统自动发送，请勿直接回复</p>
+            <p>CheckIn App V2 © 2026</p>
+        </div>
     </div>
-    <p class="footer">感谢您的使用！</p>
 </body>
 </html>
 """
 
 FAILURE_HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>打卡失败通知</title>
     <style>
-        body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; margin: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }}
-        h1 {{ color: #d9534f; }}
-        .message {{ background-color: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 20px; }}
-        .important {{ font-weight: bold; color: #d9534f; }}
-        .footer {{ font-size: 0.9em; color: #666; }}
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }}
+        .content {{
+            padding: 30px 40px;
+        }}
+        .error-icon {{
+            text-align: center;
+            font-size: 64px;
+            margin: 20px 0;
+        }}
+        .error-box {{
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .info-item {{
+            margin: 16px 0;
+            padding: 12px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+        }}
+        .info-item strong {{
+            color: #333;
+            display: inline-block;
+            min-width: 100px;
+        }}
+        .highlight {{
+            color: #f44336;
+            font-weight: 600;
+        }}
+        .action-box {{
+            background-color: #fff3e0;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 6px;
+            border: 1px solid #ffb74d;
+        }}
+        .action-box h3 {{
+            margin: 0 0 12px 0;
+            color: #ff6f00;
+            font-size: 16px;
+        }}
+        .action-box ul {{
+            margin: 8px 0;
+            padding-left: 20px;
+        }}
+        .action-box li {{
+            margin: 6px 0;
+            color: #666;
+        }}
+        .footer {{
+            background-color: #fafafa;
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #eeeeee;
+        }}
     </style>
 </head>
 <body>
-    <h1>通知：自动打卡失败!</h1>
-    <div class="message">
-        <p>{name}，您好!</p>
-        <p>系统于 <span class="important">{send_time}</span> 尝试为您自动打卡时失败。</p>
-        <p><strong>失败原因:</strong> 服务器返回 "需要登录"，这通常意味着您的 <span class="important">Token 已失效</span>。</p>
-        <p><strong>请您立即刷新您的 Token，以确保后续打卡能够成功。</strong></p>
+    <div class="container">
+        <div class="header">
+            <h1>❌ 打卡失败通知</h1>
+        </div>
+        <div class="content">
+            <div class="error-icon">⚠️</div>
+            <p>您好，</p>
+            <div class="error-box">
+                <p><strong>自动打卡失败，需要您的关注！</strong></p>
+            </div>
+            <div class="info-item">
+                <strong>失败时间：</strong>{send_time}
+            </div>
+            <div class="info-item">
+                <strong>失败原因：</strong><span class="highlight">Token 已失效（需要登录）</span>
+            </div>
+            <div class="action-box">
+                <h3>📋 需要您执行以下操作：</h3>
+                <ul>
+                    <li>登录接龙自动打卡系统</li>
+                    <li>刷新您的 Authorization Token</li>
+                    <li>确认 Token 更新成功</li>
+                </ul>
+            </div>
+            <p style="margin-top: 20px; color: #666;">
+                Token 失效是正常现象，通常在一段时间后会自动过期。刷新 Token 后，系统将恢复自动打卡功能。
+            </p>
+        </div>
+        <div class="footer">
+            <p>此邮件由接龙自动打卡系统自动发送，请勿直接回复</p>
+            <p>CheckIn App V2 © 2026</p>
+        </div>
     </div>
-    <p class="footer">感谢您的使用！</p>
 </body>
 </html>
 """
@@ -94,28 +357,30 @@ FAILURE_HTML_TEMPLATE = """
 
 def get_email_settings():
     """
-    从 config.ini 读取邮件配置
+    从环境变量读取邮件配置
+
+    如果 SMTP_SERVER、SMTP_PORT 或 SMTP_SENDER_EMAIL 有任一为空，则禁用邮件功能
 
     Returns:
-        dict: 邮件配置，如果配置文件不存在则返回 None
+        dict: 邮件配置，如果配置不完整则返回 None
     """
-    if not settings.EMAIL_CONFIG_FILE.exists():
-        logger.warning("找不到 config.ini，无法发送邮件")
+    # 检查必要的邮件配置是否存在
+    if not settings.SMTP_SERVER or not settings.SMTP_SENDER_EMAIL:
+        logger.debug("邮件配置未完成（SMTP_SERVER 或 SMTP_SENDER_EMAIL 为空），邮件发送功能已禁用")
         return None
 
-    try:
-        config_parser = configparser.ConfigParser()
-        config_parser.read(settings.EMAIL_CONFIG_FILE, encoding='utf-8')
-
-        if 'Email' not in config_parser:
-            logger.warning("config.ini 中缺少 [Email] 配置段")
-            return None
-
-        return config_parser['Email']
-
-    except Exception as e:
-        logger.error(f"读取邮件配置失败: {e}")
+    if not settings.SMTP_PORT:
+        logger.debug("邮件配置未完成（SMTP_PORT 为空），邮件发送功能已禁用")
         return None
+
+    # 返回配置字典
+    return {
+        'smtpserver': settings.SMTP_SERVER,
+        'smtpport': settings.SMTP_PORT,
+        'senderemail': settings.SMTP_SENDER_EMAIL,
+        'senderpassword': settings.SMTP_SENDER_PASSWORD,
+        'use_ssl': settings.SMTP_USE_SSL
+    }
 
 
 def _send_email(to_email: str, subject: str, html_content: str, email_settings: dict) -> bool:
@@ -138,9 +403,16 @@ def _send_email(to_email: str, subject: str, html_content: str, email_settings: 
         msg["Subject"] = subject
         msg.attach(MIMEText(html_content, 'html', 'utf-8'))
 
-        with smtplib.SMTP_SSL(email_settings['smtpserver'], int(email_settings['smtpport'])) as server:
-            server.login(email_settings['senderemail'], email_settings['senderpassword'])
-            server.sendmail(msg["From"], msg["To"], msg.as_string())
+        # 根据配置选择使用 SSL 或普通 SMTP
+        if email_settings.get('use_ssl', True):
+            with smtplib.SMTP_SSL(email_settings['smtpserver'], int(email_settings['smtpport'])) as server:
+                server.login(email_settings['senderemail'], email_settings['senderpassword'])
+                server.sendmail(msg["From"], msg["To"], msg.as_string())
+        else:
+            with smtplib.SMTP(email_settings['smtpserver'], int(email_settings['smtpport'])) as server:
+                server.starttls()
+                server.login(email_settings['senderemail'], email_settings['senderpassword'])
+                server.sendmail(msg["From"], msg["To"], msg.as_string())
 
         logger.info(f"已成功向 {to_email} 发送邮件，主题: {subject}")
         return True

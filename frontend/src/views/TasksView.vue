@@ -110,7 +110,7 @@
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
-                接龙ID: {{ task.thread_id || '未知' }}
+                接龙ID: {{ getThreadId(task) }}
               </div>
               <div class="flex items-center text-sm text-gray-600">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -550,6 +550,19 @@ const handleModeChange = (mode) => {
   templateTaskForm.field_values = {}
 }
 
+// 从 payload_config 中提取 ThreadId
+const getThreadId = (task) => {
+  if (!task.payload_config) return '未知'
+
+  try {
+    const payload = JSON.parse(task.payload_config)
+    return payload.ThreadId || '未知'
+  } catch (e) {
+    console.error('解析 payload_config 失败:', e)
+    return '未知'
+  }
+}
+
 // 加载任务列表
 const fetchTasks = async () => {
   loading.value = true
@@ -570,12 +583,22 @@ const viewTask = (task) => {
 // 编辑任务
 const editTask = (task) => {
   editingTask.value = task
+
+  // 从 payload_config 中提取 thread_id
+  let threadId = ''
+  try {
+    const payload = JSON.parse(task.payload_config || '{}')
+    threadId = payload.ThreadId || ''
+  } catch (e) {
+    console.error('解析 payload_config 失败:', e)
+  }
+
   Object.assign(taskForm, {
     name: task.name,
-    thread_id: task.thread_id,
+    thread_id: threadId,
     is_active: task.is_active,
     payload_config: task.payload_config || '{}',
-    cron_expression: task.cron_expression || '0 20 * * *', // 新增：加载 cron_expression
+    cron_expression: task.cron_expression || '0 20 * * *',
   })
   showCreateDialog.value = true
 }

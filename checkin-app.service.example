@@ -22,53 +22,32 @@
 # ==============================================================================
 
 [Unit]
-# Service description
 Description=CheckIn App V2 - Backend API Service
-Documentation=https://github.com/your-repo/checkin-app
-
-# Start after network and database are available
+Documentation=https://github.com/Cccc-owo/CheckInApp
 After=network.target
 Wants=network-online.target
 
 [Service]
-# Service type
-Type=simple
+Type=forking
 
-# User and Group
-# IMPORTANT: Replace 'www-data' with your actual user
-# Create a dedicated user: sudo useradd -r -s /bin/false checkin
-User=www-data
-Group=www-data
+# CHANGE THIS: Replace with your actual installation path
+# Example: /home/username/CheckInApp
+WorkingDirectory=/path/to/CheckInApp
 
-# Working directory
-# IMPORTANT: Replace with your actual installation path
-WorkingDirectory=/opt/checkin-app
+# PID file written by manage.sh
+PIDFile=/path/to/CheckInApp/backend.pid
 
-# Environment variables
-Environment="PATH=/opt/checkin-app/venv/bin:/usr/local/bin:/usr/bin:/bin"
-Environment="PYTHONPATH=/opt/checkin-app"
+# Start backend using manage.sh script
+ExecStart=/path/to/CheckInApp/manage.sh start backend
 
-# Load environment variables from .env file (optional)
-EnvironmentFile=-/opt/checkin-app/.env
-
-# Command to start the service
-# Using uvicorn directly for production
-ExecStart=/opt/checkin-app/venv/bin/python /opt/checkin-app/run_daemon.py
-
-# Alternative: Using uvicorn directly with more control
-# ExecStart=/opt/checkin-app/venv/bin/uvicorn backend.main:app \
-#     --host 0.0.0.0 \
-#     --port 8000 \
-#     --workers 4 \
-#     --log-level info \
-#     --access-log \
-#     --proxy-headers
+# Stop backend using manage.sh script
+ExecStop=/path/to/CheckInApp/manage.sh stop backend
 
 # Restart policy
 Restart=always
 RestartSec=10
 
-# Kill signal
+# Kill settings
 KillSignal=SIGTERM
 KillMode=mixed
 
@@ -76,18 +55,10 @@ KillMode=mixed
 TimeoutStartSec=60
 TimeoutStopSec=30
 
-# Resource limits (optional)
+# Resource limits
 LimitNOFILE=65535
-# LimitNPROC=4096
-# MemoryLimit=2G
-# CPUQuota=200%
 
-# Security settings (optional but recommended)
-# Restrict access to the filesystem
-# ReadWritePaths=/opt/checkin-app/data /opt/checkin-app/logs /opt/checkin-app/sessions
-# ReadOnlyPaths=/opt/checkin-app
-
-# Prevent privilege escalation
+# Security settings
 NoNewPrivileges=true
 
 # Logging
@@ -96,5 +67,4 @@ StandardError=journal
 SyslogIdentifier=checkin-app
 
 [Install]
-# Start on boot
 WantedBy=multi-user.target

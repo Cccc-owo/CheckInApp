@@ -336,9 +336,10 @@ class TaskService:
             job_id = f"task_{task.id}"
 
             # 先移除旧的任务（如果存在）
-            if scheduler.get_job(job_id):
+            existing_job = scheduler.get_job(job_id)
+            if existing_job:
                 scheduler.remove_job(job_id)
-                logger.debug(f"从调度器移除旧任务: {job_id}")
+                logger.info(f"从调度器移除旧任务: {job_id}")
 
             # 如果任务启用且有有效的 cron 表达式，添加新任务
             if task.is_scheduled_enabled:
@@ -354,7 +355,7 @@ class TaskService:
                         args=[task.id],
                         replace_existing=True
                     )
-                    logger.info(f"✅ 任务 {task.id} 已添加到调度器: {cron_str}")
+                    logger.info(f"✅ 任务 {task.id} 已重新加载到调度器: {cron_str}")
                 else:
                     logger.warning(f"任务 {task.id} 的 cron 表达式无效: {cron_str}")
             else:
