@@ -18,6 +18,7 @@ fi
 # Configuration
 # ==============================================================================
 readonly SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+readonly SCRIPT_NAME="$(basename "$0")"
 readonly APP_DIR="${SCRIPT_DIR}"
 readonly VENV_DIR="${APP_DIR}/venv"
 readonly PYTHON_BIN="${VENV_DIR}/bin/python"
@@ -539,23 +540,24 @@ deploy_frontend() {
 
     local deploy_dir="/var/www/checkin-app"
 
-    # First, build the frontend
-    log_info "Step 1: Building frontend..."
-    echo
-    build_frontend
-    if [ $? -ne 0 ]; then
-        log_error "Build failed, aborting deployment"
-        return 1
-    fi
-
-    echo
-    log_info "Step 2: Deploying to $deploy_dir..."
-
-    # Verify dist directory exists
+    # Check if dist directory exists
+    log_info "Checking for build output..."
     if [ ! -d "${APP_DIR}/frontend/dist" ]; then
-        log_error "dist directory not found: ${APP_DIR}/frontend/dist"
+        log_error "Build output not found: ${APP_DIR}/frontend/dist"
+        log_info "Please build first: $SCRIPT_NAME build"
         return 1
     fi
+
+    # Check if dist directory is not empty
+    if [ -z "$(ls -A ${APP_DIR}/frontend/dist 2>/dev/null)" ]; then
+        log_error "Build output directory is empty: ${APP_DIR}/frontend/dist"
+        log_info "Please build first: $SCRIPT_NAME build"
+        return 1
+    fi
+
+    log_success "Build output found"
+    echo
+    log_info "Deploying to $deploy_dir..."
 
     # Create deploy directory if it doesn't exist
     if [ ! -d "$deploy_dir" ]; then
@@ -729,7 +731,7 @@ cmd_log() {
 
     if [ -z "$target" ] || [ "$target" = "all" ]; then
         log_error "Cannot tail multiple logs simultaneously"
-        log_info "Use: $0 log backend  OR  $0 log frontend"
+        log_info "Use: $SCRIPT_NAME log backend  OR  $SCRIPT_NAME log frontend"
         return 1
     fi
 
@@ -768,7 +770,7 @@ show_usage() {
     printf "${C_CYAN}CheckIn App V2 - Unified Service Manager${C_RESET}\n"
     echo
     printf "${C_YELLOW}USAGE:${C_RESET}\n"
-    echo "    \$0 COMMAND [TARGET]"
+    echo "    $SCRIPT_NAME COMMAND [TARGET]"
     echo
     printf "${C_YELLOW}COMMANDS:${C_RESET}\n"
     echo "    start [TARGET]   - Start service(s)"
@@ -785,14 +787,14 @@ show_usage() {
     echo "    all              - Both services (default)"
     echo
     printf "${C_YELLOW}EXAMPLES:${C_RESET}\n"
-    echo "    \$0 start              # Start both services"
-    echo "    \$0 start backend      # Start backend only"
-    echo "    \$0 stop all           # Stop all services"
-    echo "    \$0 status             # View all service status"
-    echo "    \$0 log backend        # View backend logs"
-    echo "    \$0 build              # Build frontend static files"
-    echo "    \$0 deploy             # Build and deploy to /var/www/checkin-app"
-    echo "    \$0 restart frontend   # Restart frontend"
+    echo "    $SCRIPT_NAME start              # Start both services"
+    echo "    $SCRIPT_NAME start backend      # Start backend only"
+    echo "    $SCRIPT_NAME stop all           # Stop all services"
+    echo "    $SCRIPT_NAME status             # View all service status"
+    echo "    $SCRIPT_NAME log backend        # View backend logs"
+    echo "    $SCRIPT_NAME build              # Build frontend static files"
+    echo "    $SCRIPT_NAME deploy             # Build and deploy to /var/www/checkin-app"
+    echo "    $SCRIPT_NAME restart frontend   # Restart frontend"
     echo
 }
 
