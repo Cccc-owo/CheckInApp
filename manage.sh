@@ -532,6 +532,98 @@ build_frontend() {
 }
 
 # ==============================================================================
+# Deploy Command
+# ==============================================================================
+deploy_frontend() {
+    print_header "CheckIn App V2 - Deploying Frontend"
+
+    local deploy_dir="/var/www/checkin-app"
+
+    # First, build the frontend
+    log_info "Step 1: Building frontend..."
+    echo
+    build_frontend
+    if [ $? -ne 0 ]; then
+        log_error "Build failed, aborting deployment"
+        return 1
+    fi
+
+    echo
+    log_info "Step 2: Deploying to $deploy_dir..."
+
+    # Verify dist directory exists
+    if [ ! -d "${APP_DIR}/frontend/dist" ]; then
+        log_error "dist directory not found: ${APP_DIR}/frontend/dist"
+        return 1
+    fi
+
+    # Create deploy directory if it doesn't exist
+    if [ ! -d "$deploy_dir" ]; then
+        log_info "Creating deployment directory..."
+        sudo mkdir -p "$deploy_dir" || {
+            log_error "Failed to create $deploy_dir"
+            return 1
+        }
+    fi
+
+    # Clear old files
+    log_info "Removing old files from $deploy_dir..."
+    sudo rm -rf "${deploy_dir:?}"/* || {
+        log_error "Failed to remove old files"
+        return 1
+    }
+
+    # Copy new files
+    log_info "Copying new files to $deploy_dir..."
+    sudo cp -r "${APP_DIR}/frontend/dist/"* "$deploy_dir/" || {
+        log_error "Failed to copy files"
+        return 1
+    }
+
+    # Set ownership and permissions
+    log_info "Setting ownership and permissions..."
+    sudo chown -R www-data:www-data "$deploy_dir" || {
+        log_warn "Failed to set ownership (www-data user may not exist)"
+    }
+    sudo chmod -R 755 "$deploy_dir" || {
+        log_error "Failed to set permissions"
+        return 1
+    }
+
+    # Reload Nginx if available
+    if command -v nginx &>/dev/null; then
+        log_info "Reloading Nginx..."
+        sudo systemctl reload nginx 2>/dev/null || sudo service nginx reload 2>/dev/null || {
+            log_warn "Failed to reload Nginx - you may need to reload it manually"
+        }
+    else
+        log_warn "Nginx not found - skipping reload"
+    fi
+
+    echo
+    log_success "Deployment completed successfully!"
+    echo
+    printf "${C_CYAN}Deployment Info:${C_RESET}\n"
+    printf "  Location: %s\n" "$deploy_dir"
+    printf "  Owner:    www-data:www-data\n"
+    printf "  Perms:    755\n"
+
+    # Show deployed files
+    local file_count
+    file_count=$(find "$deploy_dir" -type f 2>/dev/null | wc -l)
+    printf "  Files:    %s\n" "$file_count"
+
+    local total_size
+    total_size=$(sudo du -sh "$deploy_dir" 2>/dev/null | cut -f1 || echo "unknown")
+    printf "  Size:     %s\n" "$total_size"
+
+    echo
+    log_info "Frontend is now live at your configured Nginx URL"
+
+    return 0
+}
+
+# ==============================================================================
 # Command Handlers
 # ==============================================================================
 cmd_start() {
@@ -685,6 +777,7 @@ show_usage() {
     echo "    status [TARGET]  - View service status"
     echo "    log TARGET       - View real-time logs (backend or frontend)"
     echo "    build            - Build frontend for production"
+    echo "    deploy           - Build and deploy frontend to /var/www/checkin-app"
     echo
     printf "${C_YELLOW}TARGETS:${C_RESET}\n"
     echo "    backend          - Backend API service (port $BACKEND_PORT)"
@@ -698,6 +791,7 @@ show_usage() {
     echo "    \$0 status             # View all service status"
     echo "    \$0 log backend        # View backend logs"
     echo "    \$0 build              # Build frontend static files"
+    echo "    \$0 deploy             # Build and deploy to /var/www/checkin-app"
     echo "    \$0 restart frontend   # Restart frontend"
     echo
 }
@@ -732,6 +826,9 @@ main() {
             ;;
         build)
             build_frontend
+            ;;
+        deploy)
+            deploy_frontend
             ;;
         help|--help|-h)
             show_usage

@@ -18,8 +18,7 @@ server {
     server_name your-domain.com;  # CHANGE THIS: Replace with your domain or IP
 
     # CHANGE THIS: Replace with your actual frontend build path
-    # Example: /home/username/CheckInApp/frontend/dist
-    root /path/to/CheckInApp/frontend/dist;
+    root /var/www/checkin-app;
     index index.html;
 
     # Access and Error Logs
