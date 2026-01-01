@@ -1,0 +1,100 @@
+# ==============================================================================
+# CheckIn App V2 - Systemd Service File Example
+# ==============================================================================
+#
+# This file defines a systemd service for running the CheckIn App backend
+#
+# Installation:
+#   1. Copy this file: sudo cp checkin-app.service.example /etc/systemd/system/checkin-app.service
+#   2. Edit the file and replace placeholders with your actual values
+#   3. Reload systemd: sudo systemctl daemon-reload
+#   4. Enable service: sudo systemctl enable checkin-app.service
+#   5. Start service: sudo systemctl start checkin-app.service
+#   6. Check status: sudo systemctl status checkin-app.service
+#
+# Management Commands:
+#   Start:   sudo systemctl start checkin-app
+#   Stop:    sudo systemctl stop checkin-app
+#   Restart: sudo systemctl restart checkin-app
+#   Status:  sudo systemctl status checkin-app
+#   Logs:    sudo journalctl -u checkin-app -f
+#
+# ==============================================================================
+
+[Unit]
+# Service description
+Description=CheckIn App V2 - Backend API Service
+Documentation=https://github.com/your-repo/checkin-app
+
+# Start after network and database are available
+After=network.target
+Wants=network-online.target
+
+[Service]
+# Service type
+Type=simple
+
+# User and Group
+# IMPORTANT: Replace 'www-data' with your actual user
+# Create a dedicated user: sudo useradd -r -s /bin/false checkin
+User=www-data
+Group=www-data
+
+# Working directory
+# IMPORTANT: Replace with your actual installation path
+WorkingDirectory=/opt/checkin-app
+
+# Environment variables
+Environment="PATH=/opt/checkin-app/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/opt/checkin-app"
+
+# Load environment variables from .env file (optional)
+EnvironmentFile=-/opt/checkin-app/.env
+
+# Command to start the service
+# Using uvicorn directly for production
+ExecStart=/opt/checkin-app/venv/bin/python /opt/checkin-app/run_daemon.py
+
+# Alternative: Using uvicorn directly with more control
+# ExecStart=/opt/checkin-app/venv/bin/uvicorn backend.main:app \
+#     --host 0.0.0.0 \
+#     --port 8000 \
+#     --workers 4 \
+#     --log-level info \
+#     --access-log \
+#     --proxy-headers
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Kill signal
+KillSignal=SIGTERM
+KillMode=mixed
+
+# Timeout settings
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Resource limits (optional)
+LimitNOFILE=65535
+# LimitNPROC=4096
+# MemoryLimit=2G
+# CPUQuota=200%
+
+# Security settings (optional but recommended)
+# Restrict access to the filesystem
+# ReadWritePaths=/opt/checkin-app/data /opt/checkin-app/logs /opt/checkin-app/sessions
+# ReadOnlyPaths=/opt/checkin-app
+
+# Prevent privilege escalation
+NoNewPrivileges=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=checkin-app
+
+[Install]
+# Start on boot
+WantedBy=multi-user.target

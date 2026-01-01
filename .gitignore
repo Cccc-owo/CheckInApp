@@ -1,9 +1,55 @@
-__pycache__
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# 项目特定
 chromedriver
-chrome-linux64
+chromedriver.exe
+chrome-linux64/
+chrome-win64/
 debug_page_source.html
 debug_screenshot.png
-sessions
+
+# 运行时文件
+sessions/
 *.lock
 *.log
 *.pid
+backend.pid
+frontend.pid
+
+# 数据库
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# 配置文件
+.env
+config.ini
+
+# 日志
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 前端
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+.claude
