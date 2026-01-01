@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { userAPI } from '@/api'
 
 const routes = [
   {
@@ -115,7 +116,6 @@ router.beforeEach(async (to, from, next) => {
     // 检查用户审批状态（除了待审批页面本身）
     if (to.name !== 'PendingApproval') {
       try {
-        const { userAPI } = await import('@/api')
         const status = await userAPI.getUserStatus()
 
         if (!status.is_approved) {
@@ -130,7 +130,6 @@ router.beforeEach(async (to, from, next) => {
     } else {
       // 访问待审批页面时，检查是否已审批
       try {
-        const { userAPI } = await import('@/api')
         const status = await userAPI.getUserStatus()
 
         if (status.is_approved) {
