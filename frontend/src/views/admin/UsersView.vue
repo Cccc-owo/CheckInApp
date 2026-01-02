@@ -205,7 +205,7 @@ import { UserFilled, Plus, Refresh } from '@element-plus/icons-vue'
 import Layout from '@/components/Layout.vue'
 import { useUserStore } from '@/stores/user'
 import { useAdminStore } from '@/stores/admin'
-import adminAPI from '@/api/index'
+import { adminAPI } from '@/api/index'
 
 const userStore = useUserStore()
 const adminStore = useAdminStore()
