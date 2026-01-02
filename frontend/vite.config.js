@@ -28,9 +28,16 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'element-plus': ['element-plus'],
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+        manualChunks(id) {
+          // Let Vite handle chunking automatically to avoid circular dependencies
+          // Element Plus will be bundled with its dependencies in the correct order
+          if (id.includes('node_modules')) {
+            if (id.includes('element-plus')) {
+              return 'element-plus'
+            }
+            // Group all other vendor code together
+            return 'vendor'
+          }
         },
       },
     },
