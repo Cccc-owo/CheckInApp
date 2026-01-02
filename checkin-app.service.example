@@ -29,6 +29,8 @@ Wants=network-online.target
 
 [Service]
 Type=forking
+# CHANGE THIS: Replace with your actual username
+User=username
 
 # CHANGE THIS: Replace with your actual installation path
 # Example: /home/username/CheckInApp
@@ -44,8 +46,8 @@ ExecStart=/path/to/CheckInApp/manage.sh start backend
 ExecStop=/path/to/CheckInApp/manage.sh stop backend
 
 # Restart policy
-Restart=always
-RestartSec=10
+Restart=on-failure
+RestartSec=10s
 
 # Kill settings
 KillSignal=SIGTERM
