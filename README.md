@@ -188,15 +188,13 @@ DATABASE_URL=sqlite:///./data/checkin.db
 # CORS 允许的域名
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 
-# 定时打卡时间
-CHECKIN_SCHEDULE_HOUR=20
-CHECKIN_SCHEDULE_MINUTE=0
-
 # Token 过期检查间隔（分钟）
 TOKEN_CHECK_INTERVAL_MINUTES=30
 
 # 会话文件清理间隔（小时）
 SESSION_CLEANUP_INTERVAL_HOURS=24
+
+# 注意：每个任务的打卡时间由任务的 cron_expression 字段控制
 ```
 
 ### 邮件配置 (`config.ini`)
@@ -597,9 +595,13 @@ DATABASE_URL=sqlite:///./data/checkin.db
 # CORS 允许的域名
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 
-# 定时打卡时间
-CHECKIN_SCHEDULE_HOUR=20
-CHECKIN_SCHEDULE_MINUTE=0
+# Token 过期检查间隔（分钟）
+TOKEN_CHECK_INTERVAL_MINUTES=30
+
+# 会话文件清理间隔（小时）
+SESSION_CLEANUP_INTERVAL_HOURS=24
+
+# 注意：每个任务的打卡时间由任务的 cron_expression 字段控制
 ```
 
 ### 邮件配置 (`config.ini`)

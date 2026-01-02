@@ -142,12 +142,12 @@ senderpassword = your-password
 
 ### 定时任务配置
 
-在 `backend/config.py` 中配置：
+在 `.env` 文件中配置（或在 `backend/config.py` 中设置默认值）：
 
-- `CHECKIN_SCHEDULE_HOUR`: 定时打卡小时（默认 20）
-- `CHECKIN_SCHEDULE_MINUTE`: 定时打卡分钟（默认 0）
 - `TOKEN_CHECK_INTERVAL_MINUTES`: Token 检查间隔（默认 30 分钟）
 - `SESSION_CLEANUP_INTERVAL_HOURS`: 会话清理间隔（默认 24 小时）
+
+**注意**：每个任务的打卡时间由任务自身的 `cron_expression` 字段控制（支持标准 Crontab 表达式）。
 
 ## 🔐 认证流程
 

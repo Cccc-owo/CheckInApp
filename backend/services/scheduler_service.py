@@ -294,21 +294,6 @@ def start_scheduler():
         # 创建后台调度器
         scheduler = BackgroundScheduler(timezone="Asia/Shanghai")
 
-        # 添加定时打卡任务（每天指定时间）
-        scheduler.add_job(
-            scheduled_check_in,
-            trigger=CronTrigger(
-                hour=settings.CHECKIN_SCHEDULE_HOUR,
-                minute=settings.CHECKIN_SCHEDULE_MINUTE
-            ),
-            id="scheduled_check_in",
-            name="定时打卡任务",
-            replace_existing=True
-        )
-        logger.info(
-            f"已添加定时打卡任务: 每天 {settings.CHECKIN_SCHEDULE_HOUR:02d}:{settings.CHECKIN_SCHEDULE_MINUTE:02d}"
-        )
-
         # 添加 Token 过期检查任务（每隔指定分钟）
         scheduler.add_job(
             check_token_expiration,

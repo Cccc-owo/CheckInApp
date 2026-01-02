@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = f"sqlite:///{BASE_DIR}/data/checkin.db"
 
     # CORS 配置（从环境变量读取，用逗号分隔）
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000"
 
     @property
     def cors_origins_list(self) -> List[str]:
@@ -51,11 +51,9 @@ class Settings(BaseSettings):
     SMTP_SENDER_PASSWORD: str = ""
     SMTP_USE_SSL: bool = True
 
-    # 定时任务配置
-    CHECKIN_SCHEDULE_HOUR: int = 20  # 20:00
-    CHECKIN_SCHEDULE_MINUTE: int = 0
-    TOKEN_CHECK_INTERVAL_MINUTES: int = 30
-    SESSION_CLEANUP_INTERVAL_HOURS: int = 24
+    # 定时任务配置（可通过环境变量配置）
+    TOKEN_CHECK_INTERVAL_MINUTES: int = 30  # Token 检查间隔（分钟）
+    SESSION_CLEANUP_INTERVAL_HOURS: int = 24  # 会话清理间隔（小时）
 
     # Selenium / Chrome 配置（从 .env 读取）
     CHROME_BINARY_PATH: str = ""
