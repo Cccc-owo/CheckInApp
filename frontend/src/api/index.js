@@ -14,6 +14,11 @@ export const authAPI = {
     return client.get(`/api/auth/qrcode_status/${sessionId}`)
   },
 
+  // 取消 QR 码登录会话
+  cancelQRCodeSession: (sessionId) => {
+    return client.delete(`/api/auth/qrcode_session/${sessionId}`)
+  },
+
   // 别名+密码登录
   aliasLogin: (alias, password) => {
     return client.post('/api/auth/alias_login', { alias, password })

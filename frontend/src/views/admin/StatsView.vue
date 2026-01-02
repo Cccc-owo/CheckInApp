@@ -1,106 +1,126 @@
 <template>
   <Layout>
     <div class="admin-stats-container">
-      <el-row :gutter="20">
-        <el-col :span="24">
-          <el-card>
-            <template #header>
+      <a-row :gutter="20">
+        <a-col :span="24">
+          <a-card>
+            <template #title>
               <div class="card-header">
-                <el-icon><DataAnalysis /></el-icon>
+                <BarChartOutlined />
                 <span>系统统计信息</span>
-                <el-button type="primary" :icon="Refresh" @click="handleRefresh">
+                <a-button type="primary" @click="handleRefresh">
+                  <template #icon><ReloadOutlined /></template>
                   刷新
-                </el-button>
+                </a-button>
               </div>
             </template>
 
             <div v-if="adminStore.loading" class="loading-container">
-              <el-skeleton :rows="5" animated />
+              <a-skeleton :active="true" :paragraph="{ rows: 5 }" />
             </div>
 
             <div v-else-if="adminStore.stats" class="stats-content">
-              <el-row :gutter="20">
-                <el-col :span="6">
-                  <el-statistic
+              <a-row :gutter="[20, 20]">
+                <a-col :xs="24" :sm="12" :md="6">
+                  <a-statistic
                     title="总用户数"
                     :value="adminStore.totalUsers"
-                    prefix-icon="User"
-                  />
-                </el-col>
-                <el-col :span="6">
-                  <el-statistic
+                  >
+                    <template #prefix>
+                      <UserOutlined />
+                    </template>
+                  </a-statistic>
+                </a-col>
+                <a-col :xs="24" :sm="12" :md="6">
+                  <a-statistic
                     title="已审批用户数"
                     :value="adminStore.activeUsers"
-                    prefix-icon="Check"
-                    value-style="color: #67c23a"
-                  />
-                </el-col>
-                <el-col :span="6">
-                  <el-statistic
+                    :value-style="{ color: '#52c41a' }"
+                  >
+                    <template #prefix>
+                      <CheckOutlined />
+                    </template>
+                  </a-statistic>
+                </a-col>
+                <a-col :xs="24" :sm="12" :md="6">
+                  <a-statistic
                     title="总打卡次数"
                     :value="adminStore.totalRecords"
-                    prefix-icon="List"
-                  />
-                </el-col>
-                <el-col :span="6">
-                  <el-statistic
+                  >
+                    <template #prefix>
+                      <UnorderedListOutlined />
+                    </template>
+                  </a-statistic>
+                </a-col>
+                <a-col :xs="24" :sm="12" :md="6">
+                  <a-statistic
                     title="今日打卡"
                     :value="adminStore.todayRecords"
-                    prefix-icon="Calendar"
-                    value-style="color: #409eff"
-                  />
-                </el-col>
-              </el-row>
+                    :value-style="{ color: '#1890ff' }"
+                  >
+                    <template #prefix>
+                      <CalendarOutlined />
+                    </template>
+                  </a-statistic>
+                </a-col>
+              </a-row>
 
-              <el-divider />
+              <a-divider />
 
-              <el-descriptions title="详细信息" :column="2" border>
-                <el-descriptions-item label="管理员数量">
+              <a-descriptions title="详细信息" :column="{ xs: 1, sm: 1, md: 2 }" bordered>
+                <a-descriptions-item label="管理员数量">
                   {{ adminStore.stats?.users?.admin || 0 }}
-                </el-descriptions-item>
-                <el-descriptions-item label="普通用户数量">
+                </a-descriptions-item>
+                <a-descriptions-item label="普通用户数量">
                   {{ adminStore.stats?.users?.regular || 0 }}
-                </el-descriptions-item>
-                <el-descriptions-item label="今日成功打卡">
-                  <el-tag type="success">{{ adminStore.stats?.check_in_records?.today_success || 0 }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="今日失败打卡">
-                  <el-tag type="danger">{{ adminStore.stats?.check_in_records?.today_failure || 0 }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="今日时间范围外">
-                  <el-tag type="info">{{ adminStore.stats?.check_in_records?.today_out_of_time || 0 }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="今日异常打卡">
-                  <el-tag type="warning">{{ adminStore.stats?.check_in_records?.today_unknown || 0 }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="总成功率" :span="2">
-                  <el-progress
-                    :percentage="calculateSuccessRate()"
-                    :color="getProgressColor"
+                </a-descriptions-item>
+                <a-descriptions-item label="今日成功打卡">
+                  <a-tag color="success">{{ adminStore.stats?.check_in_records?.today_success || 0 }}</a-tag>
+                </a-descriptions-item>
+                <a-descriptions-item label="今日失败打卡">
+                  <a-tag color="error">{{ adminStore.stats?.check_in_records?.today_failure || 0 }}</a-tag>
+                </a-descriptions-item>
+                <a-descriptions-item label="今日时间范围外">
+                  <a-tag color="default">{{ adminStore.stats?.check_in_records?.today_out_of_time || 0 }}</a-tag>
+                </a-descriptions-item>
+                <a-descriptions-item label="今日异常打卡">
+                  <a-tag color="warning">{{ adminStore.stats?.check_in_records?.today_unknown || 0 }}</a-tag>
+                </a-descriptions-item>
+                <a-descriptions-item label="总成功率" :span="2">
+                  <a-progress
+                    :percent="calculateSuccessRate()"
+                    :stroke-color="getProgressColor(calculateSuccessRate())"
                   />
-                </el-descriptions-item>
-              </el-descriptions>
+                </a-descriptions-item>
+              </a-descriptions>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </a-card>
+        </a-col>
+      </a-row>
     </div>
   </Layout>
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { DataAnalysis, Refresh } from '@element-plus/icons-vue'
+import { message } from 'ant-design-vue'
+import {
+  BarChartOutlined,
+  ReloadOutlined,
+  UserOutlined,
+  CheckOutlined,
+  UnorderedListOutlined,
+  CalendarOutlined,
+} from '@ant-design/icons-vue'
 import Layout from '@/components/Layout.vue'
 import { useAdminStore } from '@/stores/admin'
 
 const adminStore = useAdminStore()
 
 const getProgressColor = (percentage) => {
-  if (percentage >= 90) return '#67c23a'
-  if (percentage >= 70) return '#e6a23c'
-  return '#f56c6c'
+  if (percentage >= 90) return '#52c41a'
+  if (percentage >= 70) return '#faad14'
+  return '#ff4d4f'
 }
 
 const calculateSuccessRate = () => {
@@ -121,9 +141,9 @@ const calculateSuccessRate = () => {
 const handleRefresh = async () => {
   try {
     await adminStore.fetchStats()
-    ElMessage.success('刷新成功')
+    message.success('刷新成功')
   } catch (error) {
-    ElMessage.error(error.message || '刷新失败')
+    message.error(error.message || '刷新失败')
   }
 }
 
@@ -142,10 +162,10 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: bold;
+  width: 100%;
 }
 
-.card-header .el-button {
+.card-header :deep(.ant-btn) {
   margin-left: auto;
 }
 

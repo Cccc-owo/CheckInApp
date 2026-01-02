@@ -1,9 +1,9 @@
 <template>
   <Layout>
-    <div class="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
-      <div class="max-w-7xl mx-auto">
+    <div class="templates-view">
+      <div class="max-w-6xl mx-auto">
         <!-- Header -->
-        <div class="mb-8 animate-fade-in">
+        <div class="mb-8">
           <div class="flex items-center justify-between mb-6">
             <div>
               <h1 class="text-3xl font-bold text-gradient mb-2">任务模板管理</h1>
@@ -21,9 +21,7 @@
         <!-- Templates List -->
         <div v-if="loading && templates.length === 0" class="space-y-4">
           <div v-for="i in 3" :key="i" class="fluent-card p-6">
-            <div class="skeleton h-6 w-1/3 mb-3"></div>
-            <div class="skeleton h-4 w-full mb-2"></div>
-            <div class="skeleton h-4 w-2/3"></div>
+            <a-skeleton :active="true" :paragraph="{ rows: 2 }" />
           </div>
         </div>
 
@@ -40,9 +38,9 @@
           <div
             v-for="template in templates"
             :key="template.id"
-            class="fluent-card p-6 hover:shadow-xl transition-all animate-slide-up"
+            class="fluent-card p-7 hover:shadow-xl transition-all animate-slide-up"
           >
-            <div class="flex items-start justify-between mb-4">
+            <div class="flex items-start justify-between mb-5">
               <div class="flex-1">
                 <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ template.name }}</h3>
                 <p class="text-sm text-gray-600 mb-3">{{ template.description || '无描述' }}</p>
@@ -52,116 +50,141 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2 mt-4">
-              <button @click="previewTemplate(template)" class="md3-button-outlined text-sm">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                预览
-              </button>
-              <button @click="editTemplate(template)" class="md3-button-outlined text-sm">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                编辑
-              </button>
-              <button @click="deleteTemplate(template)" class="md3-button-text text-sm text-red-600">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                删除
-              </button>
+            <div class="mt-5 pt-4 border-t border-gray-100 space-y-2">
+              <!-- 第一行：预览在左半部分居中，编辑在右半部分居中 -->
+              <div class="grid grid-cols-2 gap-2">
+                <div class="flex justify-center">
+                  <button @click="previewTemplate(template)" class="md3-button-outlined text-sm flex-shrink-0">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    预览
+                  </button>
+                </div>
+
+                <div class="flex justify-center">
+                  <button @click="editTemplate(template)" class="md3-button-outlined text-sm flex-shrink-0">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    编辑
+                  </button>
+                </div>
+              </div>
+
+              <!-- 第二行：删除在右半部分居中，与编辑对齐 -->
+              <div class="grid grid-cols-2 gap-2">
+                <div></div>
+                <div class="flex justify-center">
+                  <button @click="deleteTemplate(template)" class="md3-button-text text-sm text-red-600 flex-shrink-0">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    删除
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Create/Edit Dialog -->
-        <el-dialog
-          v-model="dialogVisible"
+        <a-modal
+          v-model:open="dialogVisible"
           :title="dialogMode === 'create' ? '新建模板' : '编辑模板'"
-          width="95%"
-          :close-on-click-modal="false"
-          class="template-editor-dialog"
+          :width="dialogWidth"
+          :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
+          :maskClosable="false"
+          class="template-editor-modal"
         >
-          <el-form :model="formData" label-width="120px" ref="formRef">
-            <el-form-item label="模板名称" required>
-              <el-input v-model="formData.name" placeholder="请输入模板名称" maxlength="100" show-word-limit />
-            </el-form-item>
+          <a-form :model="formData" layout="vertical" ref="formRef">
+            <a-form-item label="模板名称" required>
+              <a-input v-model:value="formData.name" placeholder="请输入模板名称" :maxlength="100" show-count />
+            </a-form-item>
 
-            <el-form-item label="模板描述">
-              <el-input v-model="formData.description" type="textarea" :rows="2" placeholder="请输入模板描述" />
-            </el-form-item>
+            <a-form-item label="模板描述">
+              <a-textarea v-model:value="formData.description" :rows="2" placeholder="请输入模板描述" />
+            </a-form-item>
 
-            <el-form-item label="父模板">
-              <el-select v-model="formData.parent_id" placeholder="可选，继承父模板的字段配置" clearable class="w-full">
-                <el-option
+            <a-form-item label="父模板">
+              <a-select
+                v-model:value="formData.parent_id"
+                placeholder="可选，继承父模板的字段配置"
+                allow-clear
+                style="width: 100%"
+              >
+                <a-select-option
                   v-for="template in availableParentTemplates"
                   :key="template.id"
-                  :label="template.name"
                   :value="template.id"
                   :disabled="template.id === currentTemplateId"
-                />
-              </el-select>
-            </el-form-item>
+                >
+                  {{ template.name }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
 
-            <el-form-item label="是否启用">
-              <el-switch v-model="formData.is_active" />
-            </el-form-item>
+            <a-form-item label="是否启用">
+              <a-switch v-model:checked="formData.is_active" />
+            </a-form-item>
 
-            <el-divider content-position="left">
+            <a-divider orientation="left">
               <span class="text-lg font-bold">Payload 配置 (JSON 映射)</span>
-            </el-divider>
+            </a-divider>
 
-            <el-alert
-              title="💡 JSON 映射架构"
+            <a-alert
+              message="💡 JSON 映射架构"
               type="info"
               :closable="false"
+              show-icon
               class="mb-4"
             >
-              <p class="text-sm mb-2">
-                <strong>配置即结构</strong>：模板配置完全映射到生成的 Payload 结构
-              </p>
-              <p class="text-sm mb-2">
-                <strong>字段名保持原样</strong>：不进行任何大小写转换
-              </p>
-              <p class="text-sm">
-                <strong>ThreadId</strong> 由用户填写，无需在模板中配置
-              </p>
-            </el-alert>
+              <template #description>
+                <p class="text-sm mb-2">
+                  <strong>配置即结构</strong>：模板配置完全映射到生成的 Payload 结构
+                </p>
+                <p class="text-sm mb-2">
+                  <strong>字段名保持原样</strong>：不进行任何大小写转换
+                </p>
+                <p class="text-sm">
+                  <strong>ThreadId</strong> 由用户填写，无需在模板中配置
+                </p>
+              </template>
+            </a-alert>
 
             <!-- 字段配置编辑器 -->
             <div class="field-config-editor">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-800">字段配置</h3>
-                <el-dropdown @command="handleAddField">
-                  <el-button type="primary">
+                <a-dropdown>
+                  <a-button type="primary">
                     添加字段
-                    <el-icon class="el-icon--right"><arrow-down /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="field">
+                    <DownOutlined />
+                  </a-button>
+                  <template #overlay>
+                    <a-menu @click="handleAddField">
+                      <a-menu-item key="field">
                         <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
                         普通字段
-                      </el-dropdown-item>
-                      <el-dropdown-item command="array">
+                      </a-menu-item>
+                      <a-menu-item key="array">
                         <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
                         数组字段
-                      </el-dropdown-item>
-                      <el-dropdown-item command="object">
+                      </a-menu-item>
+                      <a-menu-item key="object">
                         <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         对象字段
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
+                      </a-menu-item>
+                    </a-menu>
                   </template>
-                </el-dropdown>
+                </a-dropdown>
               </div>
 
               <!-- 递归渲染字段树 -->
@@ -176,7 +199,7 @@
               <div v-else class="space-y-3">
                 <FieldTreeNode
                   v-for="(config, key) in formData.field_config"
-                  :key="key"
+                  :key="`${fieldConfigVersion}-${key}`"
                   :field-key="key"
                   :field-config="config"
                   :path="[key]"
@@ -188,46 +211,56 @@
             </div>
 
             <!-- JSON 预览 -->
-            <el-divider content-position="left">
+            <a-divider orientation="left">
               <span class="text-lg font-bold">JSON 预览</span>
-            </el-divider>
+            </a-divider>
 
             <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto max-h-96">
               <pre>{{ JSON.stringify(formData.field_config, null, 2) }}</pre>
             </div>
-          </el-form>
+          </a-form>
 
           <template #footer>
-            <el-button @click="dialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="handleSubmit" :loading="submitting">
+            <a-button @click="dialogVisible = false">取消</a-button>
+            <a-button type="primary" @click="handleSubmit" :loading="submitting">
               {{ dialogMode === 'create' ? '创建' : '更新' }}
-            </el-button>
+            </a-button>
           </template>
-        </el-dialog>
+        </a-modal>
 
         <!-- Add Field Dialog -->
-        <el-dialog v-model="addFieldDialogVisible" :title="`添加${fieldTypeLabel}`" width="500px">
-          <el-form @submit.prevent="confirmAddField">
-            <el-form-item label="字段名">
-              <el-input
-                v-model="newFieldName"
+        <a-modal
+          v-model:open="addFieldDialogVisible"
+          :title="`添加${fieldTypeLabel}`"
+          :width="isMobile ? '100%' : 500"
+          :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
+        >
+          <a-form @submit.prevent="confirmAddField">
+            <a-form-item label="字段名">
+              <a-input
+                v-model:value="newFieldName"
                 placeholder="例如: Id, Group1, DateTarget"
                 @keyup.enter="confirmAddField"
               />
-              <span class="text-xs text-gray-500 mt-1">
+              <span class="text-xs text-gray-500 mt-1 block">
                 💡 字段名将保持原样，不会进行大小写转换
               </span>
-            </el-form-item>
-          </el-form>
+            </a-form-item>
+          </a-form>
 
           <template #footer>
-            <el-button @click="addFieldDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="confirmAddField">确定</el-button>
+            <a-button @click="addFieldDialogVisible = false">取消</a-button>
+            <a-button type="primary" @click="confirmAddField">确定</a-button>
           </template>
-        </el-dialog>
+        </a-modal>
 
         <!-- Preview Dialog -->
-        <el-dialog v-model="previewDialogVisible" title="模板预览" width="90%">
+        <a-modal
+          v-model:open="previewDialogVisible"
+          title="模板预览"
+          :width="previewDialogWidth"
+          :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
+        >
           <div v-if="previewData" class="space-y-4">
             <div class="bg-gray-50 rounded p-4">
               <h4 class="font-semibold mb-2">生成的 Payload（使用默认值）：</h4>
@@ -241,9 +274,9 @@
           </div>
 
           <template #footer>
-            <el-button @click="previewDialogVisible = false">关闭</el-button>
+            <a-button @click="previewDialogVisible = false">关闭</a-button>
           </template>
-        </el-dialog>
+        </a-modal>
       </div>
     </div>
   </Layout>
@@ -251,13 +284,28 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { ElMessage, ElMessageBox, ElIcon } from 'element-plus'
-import { ArrowDown } from '@element-plus/icons-vue'
+import { message, Modal } from 'ant-design-vue'
+import { DownOutlined } from '@ant-design/icons-vue'
 import Layout from '@/components/Layout.vue'
 import FieldTreeNode from '@/components/FieldTreeNode.vue'
 import { useTemplateStore } from '@/stores/template'
+import { useBreakpoint } from '@/composables/useBreakpoint'
 
 const templateStore = useTemplateStore()
+const { isMobile, isTablet } = useBreakpoint()
+
+// 计算对话框宽度 - 响应式设计
+const dialogWidth = computed(() => {
+  if (isMobile.value) return '100%'
+  if (isTablet.value) return 900
+  return 1200
+})
+
+const previewDialogWidth = computed(() => {
+  if (isMobile.value) return '100%'
+  if (isTablet.value) return 800
+  return 1000
+})
 
 const templates = ref([])
 const loading = ref(false)
@@ -272,6 +320,7 @@ const previewData = ref(null)
 const addFieldDialogVisible = ref(false)
 const newFieldName = ref('')
 const newFieldType = ref('field')
+const fieldConfigVersion = ref(0) // 用于强制刷新字段列表
 
 const formData = ref({
   name: '',
@@ -315,7 +364,7 @@ const fetchTemplates = async () => {
   try {
     templates.value = await templateStore.fetchTemplates()
   } catch (error) {
-    ElMessage.error(error.message || '获取模板列表失败')
+    message.error(error.message || '获取模板列表失败')
   } finally {
     loading.value = false
   }
@@ -353,7 +402,7 @@ const editTemplate = (template) => {
 
 const handleSubmit = async () => {
   if (!formData.value.name) {
-    ElMessage.warning('请输入模板名称')
+    message.warning('请输入模板名称')
     return
   }
 
@@ -369,41 +418,38 @@ const handleSubmit = async () => {
 
     if (dialogMode.value === 'create') {
       await templateStore.createTemplate(templateData)
-      ElMessage.success('模板创建成功')
+      message.success('模板创建成功')
     } else {
       await templateStore.updateTemplate(currentTemplateId.value, templateData)
-      ElMessage.success('模板更新成功')
+      message.success('模板更新成功')
     }
 
     dialogVisible.value = false
     await fetchTemplates()
   } catch (error) {
-    ElMessage.error(error.message || '操作失败')
+    message.error(error.message || '操作失败')
   } finally {
     submitting.value = false
   }
 }
 
-const deleteTemplate = async (template) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除模板"${template.name}"吗？此操作不可撤销。`,
-      '确认删除',
-      {
-        confirmButtonText: '删除',
-        cancelButtonText: '取消',
-        type: 'warning',
+const deleteTemplate = (template) => {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除模板"${template.name}"吗？此操作不可撤销。`,
+    okText: '删除',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
+      try {
+        await templateStore.deleteTemplate(template.id)
+        message.success('模板删除成功')
+        await fetchTemplates()
+      } catch (error) {
+        message.error(error.message || '删除失败')
       }
-    )
-
-    await templateStore.deleteTemplate(template.id)
-    ElMessage.success('模板删除成功')
-    await fetchTemplates()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除失败')
-    }
-  }
+    },
+  })
 }
 
 const previewTemplate = async (template) => {
@@ -411,38 +457,45 @@ const previewTemplate = async (template) => {
     previewData.value = await templateStore.previewTemplate(template.id)
     previewDialogVisible.value = true
   } catch (error) {
-    ElMessage.error(error.message || '预览失败')
+    message.error(error.message || '预览失败')
   }
 }
 
-const handleAddField = (type) => {
-  newFieldType.value = type
+const handleAddField = ({ key }) => {
+  newFieldType.value = key
   newFieldName.value = ''
   addFieldDialogVisible.value = true
 }
 
 const confirmAddField = () => {
   if (!newFieldName.value) {
-    ElMessage.warning('请输入字段名')
+    message.warning('请输入字段名')
     return
   }
 
   if (formData.value.field_config[newFieldName.value]) {
-    ElMessage.warning('该字段已存在')
+    message.warning('该字段已存在')
     return
   }
 
+  // 创建一个新对象,确保新字段被添加到末尾
+  const newConfig = { ...formData.value.field_config }
+
   // 创建对应类型的字段
   if (newFieldType.value === 'field') {
-    formData.value.field_config[newFieldName.value] = createDefaultFieldConfig()
+    newConfig[newFieldName.value] = createDefaultFieldConfig()
   } else if (newFieldType.value === 'array') {
-    formData.value.field_config[newFieldName.value] = []
+    newConfig[newFieldName.value] = []
   } else if (newFieldType.value === 'object') {
-    formData.value.field_config[newFieldName.value] = {}
+    newConfig[newFieldName.value] = {}
   }
 
+  // 替换整个 field_config 以确保顺序和响应性
+  formData.value.field_config = newConfig
+  fieldConfigVersion.value++ // 强制刷新
+
   addFieldDialogVisible.value = false
-  ElMessage.success('字段添加成功')
+  message.success('字段添加成功')
 }
 
 const updateField = (path, newValue) => {
@@ -456,8 +509,6 @@ const updateField = (path, newValue) => {
 
 const deleteField = (path) => {
   // 通过路径删除嵌套字段
-  console.log('🗑️ 删除字段 - 路径:', path)
-
   if (!path || path.length === 0) return
 
   // 创建一个新的 field_config 副本以触发响应性
@@ -489,90 +540,121 @@ const deleteField = (path) => {
 
   // 替换整个 field_config 以触发 Vue 响应性
   formData.value.field_config = newConfig
-
-  console.log('✅ 字段已删除:', path)
+  fieldConfigVersion.value++ // 强制刷新
 }
 
 const moveField = (path, direction) => {
   // 通过路径移动字段
   if (!path || path.length === 0) return
 
-  // 创建一个新的 field_config 副本以触发响应性
-  const newConfig = JSON.parse(JSON.stringify(formData.value.field_config))
-  let parent = newConfig
+  // 如果是根级别字段，直接重建整个 field_config
+  if (path.length === 1) {
+    const fieldKey = path[0]
+    const keys = Object.keys(formData.value.field_config)
+    const currentIndex = keys.indexOf(fieldKey)
 
-  // 导航到父对象/数组
-  for (let i = 0; i < path.length - 1; i++) {
-    if (!parent || typeof parent !== 'object') {
-      console.error('移动失败：路径无效', path, 'at index', i)
+    if (currentIndex === -1) {
+      console.error('❌ 字段不存在:', fieldKey)
       return
     }
-    parent = parent[path[i]]
+
+    let targetIndex = currentIndex
+    if (direction === 'up' && currentIndex > 0) {
+      targetIndex = currentIndex - 1
+    } else if (direction === 'down' && currentIndex < keys.length - 1) {
+      targetIndex = currentIndex + 1
+    } else {
+      return
+    }
+
+    // 交换键的位置
+    const temp = keys[currentIndex]
+    keys[currentIndex] = keys[targetIndex]
+    keys[targetIndex] = temp
+
+    // 重建整个 field_config - 使用深拷贝确保完全新的对象
+    const newConfig = {}
+    keys.forEach(key => {
+      // 深拷贝每个字段配置
+      newConfig[key] = JSON.parse(JSON.stringify(formData.value.field_config[key]))
+    })
+
+    // 替换整个 formData，而不只是 field_config
+    formData.value = {
+      ...formData.value,
+      field_config: newConfig
+    }
+    fieldConfigVersion.value++
+    return
   }
 
-  if (!parent || typeof parent !== 'object') {
-    console.error('移动失败：父对象不存在', path)
-    return
+  // 嵌套字段的情况（保留原有逻辑）
+  const newConfig = JSON.parse(JSON.stringify(formData.value.field_config))
+
+  // 导航到目标的父容器
+  let parent = newConfig
+  for (let i = 0; i < path.length - 1; i++) {
+    parent = parent[path[i]]
+    if (!parent) {
+      console.error('❌ 路径无效:', path)
+      return
+    }
   }
 
   const fieldKey = path[path.length - 1]
 
   if (Array.isArray(parent)) {
-    // 数组：使用索引移动
-    const index = fieldKey
+    // 数组情况：直接交换元素
+    const index = Number(fieldKey)
     if (direction === 'up' && index > 0) {
-      // 向上移动
       const temp = parent[index]
       parent[index] = parent[index - 1]
       parent[index - 1] = temp
     } else if (direction === 'down' && index < parent.length - 1) {
-      // 向下移动
       const temp = parent[index]
       parent[index] = parent[index + 1]
       parent[index + 1] = temp
     } else {
-      // 已经在边界，无需移动
       return
     }
   } else {
-    // 对象：需要重建对象以改变键的顺序
+    // 对象情况：重建对象以改变键顺序
     const keys = Object.keys(parent)
     const currentIndex = keys.indexOf(fieldKey)
 
-    if (currentIndex === -1) return
-
-    let newIndex = currentIndex
-    if (direction === 'up' && currentIndex > 0) {
-      newIndex = currentIndex - 1
-    } else if (direction === 'down' && currentIndex < keys.length - 1) {
-      newIndex = currentIndex + 1
-    } else {
-      // 已经在边界，无需移动
+    if (currentIndex === -1) {
+      console.error('❌ 字段不存在:', fieldKey)
       return
     }
 
-    if (newIndex !== currentIndex) {
-      // 交换键的位置
-      const temp = keys[currentIndex]
-      keys[currentIndex] = keys[newIndex]
-      keys[newIndex] = temp
-
-      // 重建对象
-      const newParent = {}
-      keys.forEach(key => {
-        newParent[key] = parent[key]
-      })
-
-      // 更新父对象的所有键
-      Object.keys(parent).forEach(key => delete parent[key])
-      Object.assign(parent, newParent)
+    let targetIndex = currentIndex
+    if (direction === 'up' && currentIndex > 0) {
+      targetIndex = currentIndex - 1
+    } else if (direction === 'down' && currentIndex < keys.length - 1) {
+      targetIndex = currentIndex + 1
+    } else {
+      return
     }
+
+    // 交换键数组中的位置
+    const temp = keys[currentIndex]
+    keys[currentIndex] = keys[targetIndex]
+    keys[targetIndex] = temp
+
+    // 重建父对象
+    const reorderedParent = {}
+    keys.forEach(key => {
+      reorderedParent[key] = parent[key]
+    })
+
+    // 替换父容器的所有属性
+    Object.keys(parent).forEach(key => delete parent[key])
+    Object.assign(parent, reorderedParent)
   }
 
-  // 替换整个 field_config 以触发 Vue 响应性
+  // 强制触发响应性更新
   formData.value.field_config = newConfig
-
-  console.log('✅ 字段已移动:', path, direction)
+  fieldConfigVersion.value++
 }
 
 onMounted(() => {
@@ -585,7 +667,7 @@ onMounted(() => {
   min-height: 200px;
 }
 
-.template-editor-dialog :deep(.el-dialog__body) {
+.template-editor-modal :deep(.ant-modal-body) {
   max-height: 70vh;
   overflow-y: auto;
 }

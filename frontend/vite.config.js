@@ -29,11 +29,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Let Vite handle chunking automatically to avoid circular dependencies
-          // Element Plus will be bundled with its dependencies in the correct order
+          // Manual chunking for better dependency management
           if (id.includes('node_modules')) {
-            if (id.includes('element-plus')) {
-              return 'element-plus'
+            // Ant Design Vue
+            if (id.includes('ant-design-vue')) {
+              return 'ant-design-vue'
             }
             // Group all other vendor code together
             return 'vendor'

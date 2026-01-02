@@ -9,7 +9,6 @@ from selenium.webdriver.chrome.options import Options
 from typing import Dict, Any
 
 from backend.config import settings
-from backend.workers.email_notifier import send_success_notification, send_failure_notification
 
 logger = logging.getLogger(__name__)
 
@@ -99,11 +98,20 @@ def get_live_x_api_payload(auth_token: str) -> str:
 
     except Exception as e:
         logger.error(f"获取现场 x-api-request-payload 时失败: {e}")
-        debug_screenshot = os.path.join(settings.BASE_DIR, 'payload_debug.png')
-        driver.save_screenshot(debug_screenshot)
+        try:
+            debug_screenshot = os.path.join(settings.BASE_DIR, 'payload_debug.png')
+            driver.save_screenshot(debug_screenshot)
+        except Exception as screenshot_error:
+            logger.warning(f"保存调试截图失败: {screenshot_error}")
 
     finally:
-        driver.quit()
+        # 优雅关闭 WebDriver，避免 Windows asyncio ConnectionResetError
+        try:
+            driver.quit()
+        except Exception as e:
+            # 忽略 WebDriver 关闭时的连接错误（Windows 平台常见问题）
+            if "WinError 10054" not in str(e) and "ConnectionResetError" not in str(e):
+                logger.warning(f"关闭 WebDriver 时出现警告: {e}")
 
     return payload_signature
 
@@ -127,7 +135,8 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
     try:
         payload_dict = json.loads(task.payload_config) if task.payload_config else {}
         signature = payload_dict.get('Signature', 'Unknown')
-    except:
+    except (json.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
+        logger.debug(f"解析任务 {task.id} 的 payload_config 失败: {e}")
         signature = 'Unknown'
 
     logger.info(f"Selenium打卡: 正在为任务 ID: {task.id} (Signature: {signature}) 执行打卡...")
@@ -196,14 +205,21 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
         logger.info(f"✉️ 任务 ID: {task.id} (Signature: {signature}) 打卡请求完成！响应: {response_text}")
 
         # 判断响应内容（参考 V1 实现逻辑）
-        # 使用用户账户的邮箱，而不是任务的邮箱
-        email = task.user.email if task.user else None
-
         # 情况1: 明确包含"打卡成功" → 成功
         if "打卡成功" in response_text:
             logger.info(f"✅ 检测到成功关键字 '打卡成功'，打卡成功")
-            if email:
-                send_success_notification(email)
+            # 发送成功邮件通知
+            if task.user and task.user.email:
+                try:
+                    from backend.services.email_service import EmailService
+                    task_info = {
+                        'thread_id': payload.get('ThreadId', '未知'),
+                        'name': getattr(task, 'name', '打卡任务')
+                    }
+                    EmailService.notify_check_in_result(task.user, task_info, True, "打卡成功")
+                except Exception as e:
+                    logger.error(f"发送打卡成功邮件失败: {e}")
+
             return {
                 "success": True,
                 "status": "success",
@@ -238,8 +254,18 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
         # 情况4: Token 失效的特征标识 → 失败
         elif ("登录" in response_text):
             logger.warning(f"⚠️ 检测到登录失败关键字，Token 可能已失效")
-            if email:
-                send_failure_notification(email)
+            # 发送失败邮件通知
+            if task.user and task.user.email:
+                try:
+                    from backend.services.email_service import EmailService
+                    task_info = {
+                        'thread_id': payload.get('ThreadId', '未知'),
+                        'name': getattr(task, 'name', '打卡任务')
+                    }
+                    EmailService.notify_check_in_result(task.user, task_info, False, "Token 已失效，需要重新授权")
+                except Exception as e:
+                    logger.error(f"发送打卡失败邮件失败: {e}")
+
             return {
                 "success": False,
                 "status": "failure",

@@ -23,25 +23,25 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
           <span class="font-mono text-base font-bold text-blue-700">{{ fieldKey }}</span>
-          <el-tag type="primary" size="small">普通字段</el-tag>
+          <a-tag type="primary" size="small">普通字段</a-tag>
         </div>
         <div class="flex gap-2">
-          <el-button size="small" @click="handleMove('up')" title="上移">
+          <a-button size="small" @click="handleMove('up')" title="上移">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
             </svg>
-          </el-button>
-          <el-button size="small" @click="handleMove('down')" title="下移">
+          </a-button>
+          <a-button size="small" @click="handleMove('down')" title="下移">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
-          </el-button>
-          <el-button size="small" type="danger" plain @click="handleDelete">
+          </a-button>
+          <a-button size="small" type="danger" plain @click="handleDelete">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             删除
-          </el-button>
+          </a-button>
         </div>
       </div>
 
@@ -73,38 +73,38 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
           </svg>
           <span class="font-mono text-base font-bold text-purple-700">{{ fieldKey }}</span>
-          <el-tag type="warning" size="small">数组字段</el-tag>
+          <a-tag type="warning" size="small">数组字段</a-tag>
         </div>
         <div class="flex gap-2">
-          <el-button size="small" @click="handleMove('up')" title="上移">
+          <a-button size="small" @click="handleMove('up')" title="上移">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
             </svg>
-          </el-button>
-          <el-button size="small" @click="handleMove('down')" title="下移">
+          </a-button>
+          <a-button size="small" @click="handleMove('down')" title="下移">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
-          </el-button>
-          <el-button size="small" type="primary" @click="addArrayItem">
+          </a-button>
+          <a-button size="small" type="primary" @click="addArrayItem">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             添加元素
-          </el-button>
-          <el-button size="small" type="danger" plain @click="handleDelete">
+          </a-button>
+          <a-button size="small" type="danger" plain @click="handleDelete">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             删除
-          </el-button>
+          </a-button>
         </div>
       </div>
 
       <div v-show="!isCollapsed">
         <div v-if="localFieldConfig.length === 0" class="text-center py-6 bg-purple-50 rounded-lg border border-dashed border-purple-300">
           <p class="text-sm text-gray-500 mb-2">数组为空</p>
-          <el-button size="small" type="primary" @click="addArrayItem">添加第一个元素</el-button>
+          <a-button size="small" type="primary" @click="addArrayItem">添加第一个元素</a-button>
         </div>
 
         <div v-else class="space-y-3 mt-3">
@@ -115,9 +115,9 @@
           >
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-semibold text-purple-700">元素 #{{ index + 1 }}</span>
-              <el-button size="small" type="danger" plain @click="removeArrayItem(index)">
+              <a-button size="small" type="danger" plain @click="removeArrayItem(index)">
                 删除元素
-              </el-button>
+              </a-button>
             </div>
 
             <!-- 如果数组元素是字段配置对象，直接渲染为字段编辑器 -->
@@ -138,12 +138,12 @@
                 @move="$emit('move', $event)"
               />
 
-              <el-button class="w-full" size="small" type="primary" plain @click="addFieldToArrayItem(index)">
+              <a-button class="w-full" size="small" type="primary" plain @click="addFieldToArrayItem(index)">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 添加字段
-              </el-button>
+              </a-button>
             </div>
 
             <!-- 如果数组元素是数组，递归渲染 -->
@@ -185,38 +185,38 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <span class="font-mono text-base font-bold text-green-700">{{ fieldKey }}</span>
-          <el-tag type="success" size="small">对象字段</el-tag>
+          <a-tag type="success" size="small">对象字段</a-tag>
         </div>
         <div class="flex gap-2">
-          <el-button size="small" @click="handleMove('up')" title="上移">
+          <a-button size="small" @click="handleMove('up')" title="上移">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
             </svg>
-          </el-button>
-          <el-button size="small" @click="handleMove('down')" title="下移">
+          </a-button>
+          <a-button size="small" @click="handleMove('down')" title="下移">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
-          </el-button>
-          <el-button size="small" type="primary" @click="addFieldToObject">
+          </a-button>
+          <a-button size="small" type="primary" @click="addFieldToObject">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             添加子字段
-          </el-button>
-          <el-button size="small" type="danger" plain @click="handleDelete">
+          </a-button>
+          <a-button size="small" type="danger" plain @click="handleDelete">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             删除
-          </el-button>
+          </a-button>
         </div>
       </div>
 
       <div v-show="!isCollapsed">
         <div v-if="Object.keys(localFieldConfig).length === 0" class="text-center py-6 bg-green-50 rounded-lg border border-dashed border-green-300">
           <p class="text-sm text-gray-500 mb-2">对象为空</p>
-          <el-button size="small" type="primary" @click="addFieldToObject">添加第一个子字段</el-button>
+          <a-button size="small" type="primary" @click="addFieldToObject">添加第一个子字段</a-button>
         </div>
 
         <div v-else class="space-y-3 mt-3 pl-4 border-l-4 border-green-300">
@@ -236,34 +236,34 @@
     </div>
 
     <!-- 添加字段对话框 -->
-    <el-dialog v-model="addFieldDialogVisible" :title="currentArrayIndex === -1 ? '添加数组元素' : '添加字段'" width="400px">
-      <el-form>
-        <el-form-item :label="currentArrayIndex === -1 ? '字段名（可选）' : '字段名'">
-          <el-input
-            v-model="newFieldName"
+    <a-modal v-model:open="addFieldDialogVisible" :title="currentArrayIndex === -1 ? '添加数组元素' : '添加字段'" width="400px">
+      <a-form>
+        <a-form-item :label="currentArrayIndex === -1 ? '字段名（可选）' : '字段名'">
+          <a-input
+            v-model:value="newFieldName"
             :placeholder="currentArrayIndex === -1 ? '留空则作为数组元素，填写则作为对象字段' : '例如: FieldId, Values, Texts'"
           />
-        </el-form-item>
-        <el-form-item label="元素类型">
-          <el-radio-group v-model="newFieldType">
-            <el-radio label="field">普通字段</el-radio>
-            <el-radio label="array">数组字段</el-radio>
-            <el-radio label="object">对象字段</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
+        </a-form-item>
+        <a-form-item label="元素类型">
+          <a-radio-group v-model:value="newFieldType">
+            <a-radio value="field">普通字段</a-radio>
+            <a-radio value="array">数组字段</a-radio>
+            <a-radio value="object">对象字段</a-radio>
+          </a-radio-group>
+        </a-form-item>
+      </a-form>
 
       <template #footer>
-        <el-button @click="addFieldDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmAddField">确定</el-button>
+        <a-button @click="addFieldDialogVisible = false">取消</a-button>
+        <a-button type="primary" @click="confirmAddField">确定</a-button>
       </template>
-    </el-dialog>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import FieldConfigEditor from './FieldConfigEditor.vue'
 
 const props = defineProps({
@@ -400,7 +400,7 @@ const confirmAddField = () => {
       }
 
       addFieldDialogVisible.value = false
-      ElMessage.success('数组元素添加成功')
+      message.success('数组元素添加成功')
       return
     } else {
       // 字段名不为空，添加为包含命名字段的对象
@@ -423,21 +423,21 @@ const confirmAddField = () => {
 
       localFieldConfig.value.push(newObject)
       addFieldDialogVisible.value = false
-      ElMessage.success('带命名字段的对象添加成功')
+      message.success('带命名字段的对象添加成功')
       return
     }
   }
 
   // 其他情况需要字段名
   if (!newFieldName.value) {
-    ElMessage.warning('请输入字段名')
+    message.warning('请输入字段名')
     return
   }
 
   if (isAddingToObject.value) {
     // 添加到对象字段
     if (localFieldConfig.value[newFieldName.value]) {
-      ElMessage.warning('该字段已存在')
+      message.warning('该字段已存在')
       return
     }
 
@@ -460,7 +460,7 @@ const confirmAddField = () => {
     // 添加到数组元素
     const arrayItem = localFieldConfig.value[currentArrayIndex.value]
     if (arrayItem[newFieldName.value]) {
-      ElMessage.warning('该字段已存在')
+      message.warning('该字段已存在')
       return
     }
 
@@ -482,7 +482,7 @@ const confirmAddField = () => {
   }
 
   addFieldDialogVisible.value = false
-  ElMessage.success('字段添加成功')
+  message.success('字段添加成功')
 }
 </script>
 

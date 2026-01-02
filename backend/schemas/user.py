@@ -12,6 +12,7 @@ class UserCreate(UserBase):
     """创建用户 Schema（管理员手动创建，只需要别名）"""
     role: Optional[str] = Field("user", description="角色: user/admin")
     email: Optional[str] = Field(None, description="邮箱地址")
+    is_approved: Optional[bool] = Field(True, description="是否已审批（默认已审批）")
 
 
 class UserUpdate(BaseModel):
@@ -36,7 +37,7 @@ class UserResponse(BaseModel):
     """用户响应 Schema"""
     id: int
     alias: str
-    jwt_sub: str
+    jwt_sub: Optional[str] = None
     role: str
     is_approved: bool
     jwt_exp: str
@@ -58,7 +59,7 @@ class TokenStatus(BaseModel):
     """Token 状态 Schema"""
     is_valid: bool
     jwt_exp: str
-    jwt_sub: str
+    jwt_sub: Optional[str] = None
     expires_at: Optional[int] = None  # Unix 时间戳（秒）
     days_until_expiry: Optional[int] = None
     expiring_soon: bool = False  # 是否即将过期（30分钟内）

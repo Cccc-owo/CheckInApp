@@ -1,17 +1,17 @@
 <template>
-  <el-dialog
-    v-model="dialogVisible"
+  <a-modal
+    v-model:open="dialogVisible"
     title="QQ 扫码登录"
-    width="400px"
-    :close-on-click-modal="false"
-    @close="handleClose"
+    :width="isMobile ? '100%' : 400"
+    :style="isMobile ? { top: 0, paddingBottom: 0, maxWidth: '100vw' } : {}"
+    :maskClosable="false"
+    @cancel="handleClose"
+    :footer="null"
   >
     <div class="qrcode-container">
       <!-- 加载中 -->
       <div v-if="status === 'loading'" class="status-container">
-        <el-icon class="is-loading" :size="60">
-          <Loading />
-        </el-icon>
+        <a-spin size="large" />
         <p class="status-text">正在获取二维码...</p>
       </div>
 
@@ -19,43 +19,43 @@
       <div v-else-if="status === 'pending'" class="qrcode-wrapper">
         <img :src="qrcodeUrl" alt="QR Code" class="qrcode-image" />
         <p class="hint-text">请使用手机 QQ 扫描二维码登录</p>
-        <el-progress :percentage="progress" :show-text="false" />
+        <a-progress :percent="progress" :show-info="false" />
         <p class="countdown-text">{{ countdown }}s</p>
       </div>
 
       <!-- 扫码成功 -->
       <div v-else-if="status === 'success'" class="status-container">
-        <el-icon :size="60" color="#67c23a">
-          <SuccessFilled />
-        </el-icon>
+        <CheckCircleFilled class="status-icon success-icon" />
         <p class="status-text success">登录成功！</p>
       </div>
 
       <!-- 二维码过期 -->
       <div v-else-if="status === 'expired'" class="status-container">
-        <el-icon :size="60" color="#e6a23c">
-          <WarningFilled />
-        </el-icon>
+        <WarningFilled class="status-icon warning-icon" />
         <p class="status-text">二维码已过期</p>
-        <el-button type="primary" @click="refreshQRCode">刷新二维码</el-button>
+        <a-button type="primary" @click="refreshQRCode" class="mt-4">刷新二维码</a-button>
       </div>
 
       <!-- 失败 -->
       <div v-else-if="status === 'failed'" class="status-container">
-        <el-icon :size="60" color="#f56c6c">
-          <CircleCloseFilled />
-        </el-icon>
+        <CloseCircleFilled class="status-icon error-icon" />
         <p class="status-text error">{{ errorMessage }}</p>
-        <el-button type="primary" @click="refreshQRCode">重试</el-button>
+        <a-button type="primary" @click="refreshQRCode" class="mt-4">重试</a-button>
       </div>
     </div>
-  </el-dialog>
+  </a-modal>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { ElMessage } from 'element-plus'
+import { useBreakpoint } from '@/composables/useBreakpoint'
+import { message } from 'ant-design-vue'
+import {
+  CheckCircleFilled,
+  WarningFilled,
+  CloseCircleFilled,
+} from '@ant-design/icons-vue'
 
 const props = defineProps({
   visible: {
@@ -71,6 +71,7 @@ const props = defineProps({
 const emit = defineEmits(['update:visible', 'success', 'error'])
 
 const authStore = useAuthStore()
+const { isMobile } = useBreakpoint()
 
 const dialogVisible = computed({
   get: () => props.visible,
@@ -122,7 +123,7 @@ const startPolling = () => {
         stopPolling()
         stopCountdown()
 
-        ElMessage.success('登录成功！')
+        message.success('登录成功！')
 
         // 延迟关闭对话框
         setTimeout(() => {
@@ -194,6 +195,16 @@ const refreshQRCode = () => {
 const handleClose = () => {
   stopPolling()
   stopCountdown()
+
+  // 如果有未完成的会话,取消它
+  if (sessionId.value && status.value !== 'success') {
+    try {
+      authStore.cancelQRCodeSession(sessionId.value)
+    } catch (error) {
+      console.error('取消会话失败:', error)
+    }
+  }
+
   dialogVisible.value = false
 }
 
@@ -209,6 +220,12 @@ watch(
     }
   }
 )
+
+// 组件卸载时清理定时器，防止内存泄漏
+onBeforeUnmount(() => {
+  stopPolling()
+  stopCountdown()
+})
 </script>
 
 <style scoped>
@@ -228,6 +245,22 @@ watch(
   min-height: 300px;
 }
 
+.status-icon {
+  font-size: 60px;
+}
+
+.success-icon {
+  color: #52c41a;
+}
+
+.warning-icon {
+  color: #faad14;
+}
+
+.error-icon {
+  color: #ff4d4f;
+}
+
 .status-text {
   margin-top: 20px;
   font-size: 16px;
@@ -235,12 +268,12 @@ watch(
 }
 
 .status-text.success {
-  color: #67c23a;
+  color: #52c41a;
   font-weight: bold;
 }
 
 .status-text.error {
-  color: #f56c6c;
+  color: #ff4d4f;
 }
 
 .qrcode-wrapper {
@@ -253,8 +286,8 @@ watch(
 .qrcode-image {
   width: 240px;
   height: 240px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
   padding: 10px;
   background-color: #fff;
 }
@@ -262,17 +295,16 @@ watch(
 .hint-text {
   margin-top: 20px;
   font-size: 14px;
-  color: #909399;
+  color: #8c8c8c;
 }
 
 .countdown-text {
   margin-top: 10px;
   font-size: 12px;
-  color: #909399;
+  color: #8c8c8c;
 }
 
-.el-progress {
-  width: 100%;
-  margin-top: 10px;
+.mt-4 {
+  margin-top: 16px;
 }
 </style>

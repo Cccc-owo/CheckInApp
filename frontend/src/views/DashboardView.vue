@@ -1,67 +1,69 @@
 <template>
   <Layout>
     <div class="dashboard-container">
-      <el-row :gutter="20">
+      <a-row :gutter="[20, 20]">
         <!-- Token 状态卡片 -->
-        <el-col :span="24">
-          <el-card class="status-card">
-            <template #header>
+        <a-col :xs="24" :sm="24" :md="24">
+          <a-card class="status-card">
+            <template #title>
               <div class="card-header">
-                <el-icon><Key /></el-icon>
+                <KeyOutlined />
                 <span>Token 状态</span>
               </div>
             </template>
 
             <div v-if="tokenStatusLoading" class="loading-container">
-              <el-skeleton :rows="3" animated />
+              <a-skeleton :active="true" :paragraph="{ rows: 3 }" />
             </div>
 
             <div v-else-if="tokenStatus" class="token-status">
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="Token 状态">
-                  <el-tag :type="tokenStatus.is_valid ? 'success' : 'danger'">
+              <a-descriptions :column="{ xs: 1, sm: 1, md: 2 }" bordered>
+                <a-descriptions-item label="Token 状态">
+                  <a-tag :color="tokenStatus.is_valid ? 'success' : 'error'">
                     {{ tokenStatus.is_valid ? '有效' : '无效' }}
-                  </el-tag>
-                </el-descriptions-item>
+                  </a-tag>
+                </a-descriptions-item>
 
-                <el-descriptions-item label="过期时间">
+                <a-descriptions-item label="过期时间">
                   {{ formatExpireTime }}
-                </el-descriptions-item>
+                </a-descriptions-item>
 
-                <el-descriptions-item label="剩余时间">
-                  <el-tag v-if="tokenStatus.is_valid" :type="tokenStatus.expiring_soon ? 'warning' : 'success'">
+                <a-descriptions-item label="剩余时间">
+                  <a-tag v-if="tokenStatus.is_valid" :color="tokenStatus.expiring_soon ? 'warning' : 'success'">
                     {{ formatRemainTime }}
-                  </el-tag>
-                  <el-tag v-else type="danger">已过期</el-tag>
-                </el-descriptions-item>
+                  </a-tag>
+                  <a-tag v-else color="error">已过期</a-tag>
+                </a-descriptions-item>
 
-                <el-descriptions-item label="即将过期">
-                  <el-tag :type="tokenStatus.expiring_soon ? 'warning' : 'success'">
+                <a-descriptions-item label="即将过期">
+                  <a-tag v-if="!tokenStatus.is_valid" color="error">
+                    已过期
+                  </a-tag>
+                  <a-tag v-else :color="tokenStatus.expiring_soon ? 'warning' : 'success'">
                     {{ tokenStatus.expiring_soon ? '是' : '否' }}
-                  </el-tag>
-                </el-descriptions-item>
-              </el-descriptions>
+                  </a-tag>
+                </a-descriptions-item>
+              </a-descriptions>
 
-              <el-alert
+              <a-alert
                 v-if="tokenStatus.expiring_soon"
-                title="Token 即将过期"
+                message="Token 即将过期"
+                description="您的 Token 将在 30 分钟内过期，请在过期后及时刷新 Token！"
                 type="warning"
                 :closable="false"
                 show-icon
                 style="margin-top: 15px"
-              >
-                您的 Token 将在 30 分钟内过期，请及时重新登录！
-              </el-alert>
+              />
             </div>
-          </el-card>
-        </el-col>
+          </a-card>
+        </a-col>
 
         <!-- 手动打卡卡片 -->
-        <el-col :span="24" style="margin-top: 20px">
-          <el-card>
-            <template #header>
+        <a-col :xs="24" :sm="24" :md="24">
+          <a-card>
+            <template #title>
               <div class="card-header">
-                <el-icon><Calendar /></el-icon>
+                <CalendarOutlined />
                 <span>手动打卡</span>
               </div>
             </template>
@@ -70,101 +72,103 @@
               <p class="hint">选择任务并点击下方按钮立即执行打卡操作</p>
 
               <!-- 任务选择 -->
-              <el-select
-                v-model="selectedTaskId"
+              <a-select
+                v-model:value="selectedTaskId"
                 placeholder="请选择要打卡的任务"
+                :loading="taskStore.loading"
                 style="width: 100%; max-width: 400px; margin-bottom: 20px"
               >
-                <el-option
-                  v-for="task in taskStore.activeTasks"
+                <a-select-option
+                  v-for="task in taskStore.tasks"
                   :key="task.id"
-                  :label="task.name"
                   :value="task.id"
                 >
-                  <div style="display: flex; justify-content: space-between">
+                  <div style="display: flex; justify-content: space-between; align-items: center">
                     <span>{{ task.name }}</span>
-                    <el-tag size="small" type="success">启用</el-tag>
+                    <a-tag size="small" :color="task.is_active ? 'success' : 'default'">
+                      {{ task.is_active ? '启用' : '禁用' }}
+                    </a-tag>
                   </div>
-                </el-option>
-              </el-select>
+                </a-select-option>
+              </a-select>
 
-              <el-button
+              <a-button
                 type="primary"
                 size="large"
                 :loading="checkInLoading"
                 :disabled="!selectedTaskId"
-                :icon="Calendar"
                 @click="handleCheckIn"
               >
+                <template #icon><CalendarOutlined /></template>
                 {{ checkInLoading ? '打卡中...' : '立即打卡' }}
-              </el-button>
+              </a-button>
 
               <div v-if="lastCheckIn" class="last-check-in">
-                <el-divider />
+                <a-divider />
                 <p class="label">上次打卡</p>
-                <el-descriptions :column="2" border size="small">
-                  <el-descriptions-item label="时间">
+                <a-descriptions :column="{ xs: 1, sm: 1, md: 2 }" bordered size="small">
+                  <a-descriptions-item label="时间">
                     {{ formatDateTime(lastCheckIn.check_in_time) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="状态">
-                    <el-tag
-                      :type="lastCheckIn.status === 'success' ? 'success' :
-                             lastCheckIn.status === 'out_of_time' ? 'info' :
-                             lastCheckIn.status === 'unknown' ? 'warning' : 'danger'"
+                  </a-descriptions-item>
+                  <a-descriptions-item label="状态">
+                    <a-tag
+                      :color="lastCheckIn.status === 'success' ? 'success' :
+                             lastCheckIn.status === 'out_of_time' ? 'default' :
+                             lastCheckIn.status === 'unknown' ? 'warning' : 'error'"
                     >
                       {{
                         lastCheckIn.status === 'success' ? '成功' :
                         lastCheckIn.status === 'out_of_time' ? '时间范围外' :
                         lastCheckIn.status === 'unknown' ? '异常' : '失败'
                       }}
-                    </el-tag>
-                  </el-descriptions-item>
-                  <el-descriptions-item label="打卡响应" :span="2">
+                    </a-tag>
+                  </a-descriptions-item>
+                  <a-descriptions-item label="打卡响应" :span="2">
                     {{ lastCheckIn.response_text || lastCheckIn.error_message || '-' }}
-                  </el-descriptions-item>
-                </el-descriptions>
+                  </a-descriptions-item>
+                </a-descriptions>
               </div>
             </div>
-          </el-card>
-        </el-col>
+          </a-card>
+        </a-col>
 
         <!-- 用户信息卡片 -->
-        <el-col :span="24" style="margin-top: 20px">
-          <el-card>
-            <template #header>
+        <a-col :xs="24" :sm="24" :md="24">
+          <a-card>
+            <template #title>
               <div class="card-header">
-                <el-icon><User /></el-icon>
+                <UserOutlined />
                 <span>个人信息</span>
               </div>
             </template>
 
-            <el-descriptions :column="2" border>
-              <el-descriptions-item label="用户名">
+            <a-descriptions :column="{ xs: 1, sm: 1, md: 2 }" bordered>
+              <a-descriptions-item label="用户名">
                 {{ authStore.user?.alias }}
-              </el-descriptions-item>
-              <el-descriptions-item label="角色">
-                <el-tag :type="authStore.isAdmin ? 'danger' : 'primary'">
+              </a-descriptions-item>
+              <a-descriptions-item label="角色">
+                <a-tag :color="authStore.isAdmin ? 'error' : 'blue'">
                   {{ authStore.isAdmin ? '管理员' : '普通用户' }}
-                </el-tag>
-              </el-descriptions-item>
-              <el-descriptions-item label="邮箱" :span="2">
+                </a-tag>
+              </a-descriptions-item>
+              <a-descriptions-item label="邮箱" :span="2">
                 {{ authStore.user?.email || '未设置' }}
-              </el-descriptions-item>
-              <el-descriptions-item label="注册时间" :span="2">
+              </a-descriptions-item>
+              <a-descriptions-item label="注册时间" :span="2">
                 {{ formatDateTime(authStore.user?.created_at, false) }}
-              </el-descriptions-item>
-            </el-descriptions>
-          </el-card>
-        </el-col>
-      </el-row>
+              </a-descriptions-item>
+            </a-descriptions>
+          </a-card>
+        </a-col>
+      </a-row>
     </div>
   </Layout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Calendar, Key, User } from '@element-plus/icons-vue'
+import { message } from 'ant-design-vue'
+import { CalendarOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons-vue'
 import Layout from '@/components/Layout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
@@ -218,7 +222,7 @@ const fetchTokenStatus = async () => {
   try {
     await userStore.fetchTokenStatus()
   } catch (error) {
-    ElMessage.error(error.message || '获取 Token 状态失败')
+    message.error(error.message || '获取 Token 状态失败')
   } finally {
     tokenStatusLoading.value = false
   }
@@ -227,7 +231,7 @@ const fetchTokenStatus = async () => {
 // 手动打卡
 const handleCheckIn = async () => {
   if (!selectedTaskId.value) {
-    ElMessage.warning('请先选择要打卡的任务')
+    message.warning('请先选择要打卡的任务')
     return
   }
 
@@ -240,21 +244,21 @@ const handleCheckIn = async () => {
     // 获取 record_id
     const recordId = result.record_id
     if (!recordId) {
-      ElMessage.error('打卡请求失败：未获取到记录ID')
+      message.error('打卡请求失败：未获取到记录ID')
       checkInLoading.value = false
       return
     }
 
     // 如果初始状态就是失败,显示错误并刷新记录
     if (result.status === 'failure') {
-      ElMessage.error(result.message || '打卡失败')
+      message.error(result.message || '打卡失败')
       checkInLoading.value = false
       checkInStore.fetchMyRecords({ limit: 1 })
       return
     }
 
     // 显示提示消息
-    ElMessage.info('打卡任务已启动，正在后台处理...')
+    message.info('打卡任务已启动，正在后台处理...')
 
     // 用于存储 interval ID，以便在超时时清理
     let pollIntervalId = null
@@ -271,12 +275,12 @@ const handleCheckIn = async () => {
 
           if (status.status === 'success') {
             // 打卡成功
-            ElMessage.success('打卡成功！')
+            message.success('打卡成功！')
             checkInStore.fetchMyRecords({ limit: 1 })
           } else {
             // 打卡失败或其他状态 (failure, out_of_time, unknown 等)
             const errorMsg = status.error_message || status.response_text || '打卡失败'
-            ElMessage.error(errorMsg)
+            message.error(errorMsg)
             checkInStore.fetchMyRecords({ limit: 1 })
           }
         }
@@ -286,7 +290,7 @@ const handleCheckIn = async () => {
         console.error('轮询状态失败:', error)
         clearInterval(pollIntervalId)
         checkInLoading.value = false
-        ElMessage.error('查询打卡状态失败')
+        message.error('查询打卡状态失败')
       }
     }, 2000) // 每 2 秒查询一次
 
@@ -295,14 +299,14 @@ const handleCheckIn = async () => {
       if (checkInLoading.value) {
         clearInterval(pollIntervalId)
         checkInLoading.value = false
-        ElMessage.warning('打卡处理时间较长，请稍后查看打卡记录')
+        message.warning('打卡处理时间较长，请稍后查看打卡记录')
       }
     }, 30000)
 
   } catch (error) {
     console.error('启动打卡失败:', error)
     checkInLoading.value = false
-    ElMessage.error(error.message || '启动打卡任务失败')
+    message.error(error.message || '启动打卡任务失败')
   }
 }
 
@@ -313,12 +317,14 @@ onMounted(async () => {
   // 加载任务列表
   try {
     await taskStore.fetchMyTasks()
-    // 如果只有一个启用的任务，自动选中
+    // 如果只有一个任务，自动选中（优先选择启用的任务）
     if (taskStore.activeTasks.length === 1) {
       selectedTaskId.value = taskStore.activeTasks[0].id
+    } else if (taskStore.tasks.length === 1) {
+      selectedTaskId.value = taskStore.tasks[0].id
     }
   } catch (error) {
-    ElMessage.error('加载任务列表失败')
+    message.error(error.message || '加载任务列表失败')
   }
 })
 </script>
@@ -370,5 +376,18 @@ onMounted(async () => {
 
 .status-card {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+/* 修复按钮图标对齐 */
+:deep(.ant-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.ant-btn .anticon) {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
 </style>

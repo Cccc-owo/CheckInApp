@@ -91,6 +91,15 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    // 取消扫码会话
+    async cancelQRCodeSession(sessionId) {
+      try {
+        await authAPI.cancelQRCodeSession(sessionId)
+      } catch (error) {
+        console.error('取消会话失败:', error)
+      }
+    },
+
     // 验证 Token
     async verifyToken(token) {
       try {

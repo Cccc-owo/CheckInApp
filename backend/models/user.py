@@ -18,7 +18,6 @@ class User(Base):
     jwt_exp = Column(String(20), default="0", comment="Token 过期时间戳")
     role = Column(String(20), default="user", index=True, comment="角色: user/admin")
     is_approved = Column(Boolean, default=False, index=True, comment="是否已通过管理员审批")
-    registered_ip = Column(String(50), nullable=True, comment="注册时的 IP 地址")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), comment="更新时间")
 

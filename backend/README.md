@@ -121,7 +121,6 @@ backend/
 
 ### 管理员 API (`/api/admin`)
 
-- `POST /api/admin/batch_toggle_active` - 批量启用/禁用用户
 - `POST /api/admin/batch_check_in` - 批量触发打卡
 - `GET /api/admin/logs` - 获取系统日志
 - `GET /api/admin/stats` - 获取系统统计

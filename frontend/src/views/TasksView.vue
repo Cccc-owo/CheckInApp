@@ -1,192 +1,197 @@
 <template>
   <Layout>
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
+    <div class="tasks-view">
       <div class="max-w-7xl mx-auto">
         <!-- Header Section -->
-        <div class="mb-8 animate-fade-in">
+        <div class="mb-8">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h1 class="text-4xl font-bold text-gradient mb-2">任务管理</h1>
               <p class="text-gray-600">管理您的自动打卡任务</p>
             </div>
-            <button
+            <a-button
+              type="primary"
+              size="large"
               @click="showCreateDialog = true"
-              class="md3-button-filled shadow-md3-3 hover:scale-105 transform transition-all"
+              class="shadow-md3-3"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
+              <template #icon>
+                <PlusOutlined />
+              </template>
               创建任务
-            </button>
+            </a-button>
           </div>
 
           <!-- Stats Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="fluent-card p-6 animate-slide-up">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600 mb-1">总任务数</p>
-                  <p class="text-3xl font-bold text-primary-600">{{ taskStore.taskStats.total }}</p>
-                </div>
-                <div class="w-12 h-12 bg-primary-100 rounded-md3 flex items-center justify-center">
-                  <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
+          <a-row :gutter="[16, 16]" class="mb-6">
+            <a-col :xs="24" :sm="8" :md="8">
+              <div class="fluent-card p-6 animate-slide-up">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-600 mb-1">总任务数</p>
+                    <p class="text-3xl font-bold text-primary-600">{{ taskStore.taskStats.total }}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-primary-100 rounded-md3 flex items-center justify-center">
+                    <FileTextOutlined class="text-2xl text-primary-600" />
+                  </div>
                 </div>
               </div>
-            </div>
+            </a-col>
 
-            <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.1s">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600 mb-1">启用中</p>
-                  <p class="text-3xl font-bold text-green-600">{{ taskStore.taskStats.active }}</p>
-                </div>
-                <div class="w-12 h-12 bg-green-100 rounded-md3 flex items-center justify-center">
-                  <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+            <a-col :xs="24" :sm="8" :md="8">
+              <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.1s">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-600 mb-1">启用中</p>
+                    <p class="text-3xl font-bold text-green-600">{{ taskStore.taskStats.active }}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-green-100 rounded-md3 flex items-center justify-center">
+                    <CheckCircleOutlined class="text-2xl text-green-600" />
+                  </div>
                 </div>
               </div>
-            </div>
+            </a-col>
 
-            <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.2s">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-gray-600 mb-1">已禁用</p>
-                  <p class="text-3xl font-bold text-gray-600">{{ taskStore.taskStats.inactive }}</p>
-                </div>
-                <div class="w-12 h-12 bg-gray-100 rounded-md3 flex items-center justify-center">
-                  <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                  </svg>
+            <a-col :xs="24" :sm="8" :md="8">
+              <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.2s">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-600 mb-1">已禁用</p>
+                    <p class="text-3xl font-bold text-gray-600">{{ taskStore.taskStats.inactive }}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-gray-100 rounded-md3 flex items-center justify-center">
+                    <StopOutlined class="text-2xl text-gray-600" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </a-col>
+          </a-row>
         </div>
 
         <!-- Tasks List -->
-        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="i in 6" :key="i" class="fluent-card p-6">
-            <div class="skeleton h-6 w-3/4 mb-4"></div>
-            <div class="skeleton h-4 w-full mb-2"></div>
-            <div class="skeleton h-4 w-2/3"></div>
-          </div>
+        <div v-if="loading">
+          <a-row :gutter="[16, 16]">
+            <a-col :xs="24" :sm="12" :lg="8" v-for="i in 6" :key="i">
+              <a-card>
+                <a-skeleton :active="true" :paragraph="{ rows: 4 }" />
+              </a-card>
+            </a-col>
+          </a-row>
         </div>
 
         <div v-else-if="taskStore.tasks.length === 0" class="fluent-card p-12 text-center">
-          <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
+          <FileTextOutlined class="text-8xl text-gray-300 mb-4" />
           <h3 class="text-xl font-semibold text-gray-700 mb-2">暂无任务</h3>
           <p class="text-gray-500 mb-6">点击右上角的"创建任务"按钮开始添加您的第一个打卡任务</p>
-          <button @click="showCreateDialog = true" class="md3-button-outlined">
+          <a-button type="primary" @click="showCreateDialog = true">
             创建第一个任务
-          </button>
+          </a-button>
         </div>
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
+        <a-row v-else :gutter="[16, 16]">
+          <a-col
+            :xs="24" :sm="12" :lg="8"
             v-for="task in taskStore.tasks"
             :key="task.id"
-            class="fluent-card p-6 hover:scale-105 transform transition-all cursor-pointer animate-slide-up"
-            @click="viewTask(task)"
           >
-            <!-- Task Header -->
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ task.name || '未命名任务' }}</h3>
-                <p class="text-sm text-gray-500">任务 ID: {{ task.id }}</p>
+            <div
+              class="fluent-card p-6 hover:scale-105 transform transition-all cursor-pointer animate-slide-up"
+              @click="viewTask(task)"
+            >
+              <!-- Task Header -->
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ task.name || '未命名任务' }}</h3>
+                  <p class="text-sm text-gray-500">任务 ID: {{ task.id }}</p>
+                </div>
+                <a-tag :color="task.is_active ? 'success' : 'default'">
+                  {{ task.is_active ? '启用' : '禁用' }}
+                </a-tag>
               </div>
-              <span :class="task.is_active ? 'status-success' : 'status-info'">
-                {{ task.is_active ? '启用' : '禁用' }}
-              </span>
-            </div>
 
-            <!-- Task Details -->
-            <div class="space-y-2 mb-4">
-              <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                接龙ID: {{ getThreadId(task) }}
+              <!-- Task Details -->
+              <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                  <TagOutlined class="mr-2" />
+                  接龙ID: {{ getThreadId(task) }}
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                  <ClockCircleOutlined class="mr-2" />
+                  最后打卡: {{ task.last_check_in_time ? formatDateTime(task.last_check_in_time) : '未打卡' }}
+                </div>
+                <div class="flex items-center text-sm">
+                  <CheckCircleOutlined class="mr-2 text-gray-600" />
+                  <span v-if="task.last_check_in_status" :class="{
+                    'text-green-600 font-medium': task.last_check_in_status === 'success',
+                    'text-blue-600 font-medium': task.last_check_in_status === 'out_of_time',
+                    'text-red-600 font-medium': task.last_check_in_status === 'failure',
+                    'text-yellow-600 font-medium': task.last_check_in_status === 'unknown'
+                  }">
+                    {{
+                      task.last_check_in_status === 'success' ? '✅ 打卡成功' :
+                      task.last_check_in_status === 'out_of_time' ? '🕐 时间范围外' :
+                      task.last_check_in_status === 'failure' ? '❌ 打卡失败' :
+                      '❗ 打卡异常'
+                    }}
+                  </span>
+                  <span v-else class="text-gray-500">暂无打卡记录</span>
+                </div>
               </div>
-              <div class="flex items-center text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                最后打卡: {{ task.last_check_in_time ? formatDateTime(task.last_check_in_time) : '未打卡' }}
-              </div>
-              <div class="flex items-center text-sm">
-                <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span v-if="task.last_check_in_status" :class="{
-                  'text-green-600 font-medium': task.last_check_in_status === 'success',
-                  'text-blue-600 font-medium': task.last_check_in_status === 'out_of_time',
-                  'text-red-600 font-medium': task.last_check_in_status === 'failure',
-                  'text-yellow-600 font-medium': task.last_check_in_status === 'unknown'
-                }">
-                  {{
-                    task.last_check_in_status === 'success' ? '✅ 打卡成功' :
-                    task.last_check_in_status === 'out_of_time' ? '🕐 时间范围外' :
-                    task.last_check_in_status === 'failure' ? '❌ 打卡失败' :
-                    '❗ 打卡异常'
-                  }}
-                </span>
-                <span v-else class="text-gray-500">暂无打卡记录</span>
-              </div>
-            </div>
 
-            <!-- Task Actions -->
-            <div class="flex gap-2 pt-4 border-t border-gray-100">
-              <button
-                @click.stop="handleCheckIn(task.id)"
-                :disabled="checkInLoading[task.id]"
-                class="flex-1 py-2 px-4 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-colors text-sm font-medium disabled:opacity-50"
-              >
-                {{ checkInLoading[task.id] ? '打卡中...' : '立即打卡' }}
-              </button>
-              <button
-                @click.stop="toggleTaskStatus(task)"
-                class="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-              >
-                {{ task.is_active ? '禁用' : '启用' }}
-              </button>
-              <button
-                @click.stop="editTask(task)"
-                class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-              <button
-                @click.stop="deleteTask(task)"
-                class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              <!-- Task Actions -->
+              <div class="flex gap-2 pt-4 border-t border-gray-100">
+                <a-button
+                  type="primary"
+                  size="small"
+                  :loading="checkInLoading[task.id]"
+                  @click.stop="handleCheckIn(task.id)"
+                  class="flex-1"
+                >
+                  {{ checkInLoading[task.id] ? '打卡中...' : '立即打卡' }}
+                </a-button>
+                <a-button
+                  size="small"
+                  @click.stop="toggleTaskStatus(task)"
+                  class="flex-1"
+                >
+                  {{ task.is_active ? '禁用' : '启用' }}
+                </a-button>
+                <a-button
+                  type="primary"
+                  size="small"
+                  ghost
+                  @click.stop="editTask(task)"
+                  class="icon-button"
+                >
+                  <template #icon><EditOutlined /></template>
+                </a-button>
+                <a-button
+                  danger
+                  size="small"
+                  @click.stop="deleteTask(task)"
+                  class="icon-button"
+                >
+                  <template #icon><DeleteOutlined /></template>
+                </a-button>
+              </div>
             </div>
-          </div>
-        </div>
+          </a-col>
+        </a-row>
       </div>
     </div>
 
     <!-- Create/Edit Task Dialog -->
-    <el-dialog
-      v-model="showCreateDialog"
+    <a-modal
+      v-model:open="showCreateDialog"
       :title="editingTask ? '编辑任务' : '从模板创建任务'"
-      width="700px"
-      :close-on-click-modal="false"
+      :width="isMobile ? '100%' : 700"
+      :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
+      :maskClosable="false"
     >
       <!-- 只显示从模板创建 -->
       <div v-if="!editingTask">
         <div v-if="loadingTemplates" class="text-center py-8">
-          <el-icon class="is-loading" :size="32"><Loading /></el-icon>
+          <a-spin size="large" />
           <p class="text-gray-500 mt-2">加载模板中...</p>
         </div>
 
@@ -197,7 +202,7 @@
 
         <div v-else>
           <!-- Template Selection -->
-          <el-form-item label="选择模板" label-width="100px" v-if="!selectedTemplate">
+          <a-form-item label="选择模板" v-if="!selectedTemplate">
             <div class="grid grid-cols-1 gap-3">
               <div
                 v-for="template in activeTemplates"
@@ -209,121 +214,117 @@
                 <p class="text-sm text-gray-600">{{ template.description || '无描述' }}</p>
               </div>
             </div>
-          </el-form-item>
+          </a-form-item>
 
           <!-- Template Form -->
-          <el-form v-if="selectedTemplate" :model="templateTaskForm" ref="templateFormRef" label-width="120px">
+          <a-form v-if="selectedTemplate" :model="templateTaskForm" ref="templateFormRef" layout="vertical">
             <div class="mb-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
               <div class="flex items-center">
-                <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <FileTextOutlined class="text-blue-600 mr-2" />
                 <span class="text-sm font-medium text-blue-900">使用模板：{{ selectedTemplate.name }}</span>
               </div>
-              <el-button size="small" text @click="selectedTemplate = null">更换模板</el-button>
+              <a-button size="small" type="link" @click="selectedTemplate = null">更换模板</a-button>
             </div>
 
-            <el-form-item label="任务名称" prop="task_name">
-              <el-input v-model="templateTaskForm.task_name" placeholder="可选，留空则自动生成" />
-            </el-form-item>
+            <a-form-item label="任务名称" name="task_name">
+              <a-input v-model:value="templateTaskForm.task_name" placeholder="可选，留空则自动生成" />
+            </a-form-item>
 
-            <el-form-item label="接龙 ID" prop="thread_id" required>
-              <el-input v-model="templateTaskForm.thread_id" placeholder="请输入接龙项目 ID" />
-            </el-form-item>
+            <a-form-item label="接龙 ID" name="thread_id" required>
+              <a-input v-model:value="templateTaskForm.thread_id" placeholder="请输入接龙项目 ID" />
+            </a-form-item>
 
-            <el-divider content-position="left">填写字段信息</el-divider>
+            <a-divider orientation="left">填写字段信息</a-divider>
 
             <!-- Dynamic Fields -->
             <div v-for="(fieldConfig, key) in visibleFields" :key="key">
-              <el-form-item
+              <a-form-item
                 :label="fieldConfig.display_name"
                 :required="fieldConfig.required"
               >
                 <!-- Text Input -->
-                <el-input
+                <a-input
                   v-if="fieldConfig.field_type === 'text'"
-                  v-model="templateTaskForm.field_values[key]"
+                  v-model:value="templateTaskForm.field_values[key]"
                   :placeholder="fieldConfig.placeholder || `请输入${fieldConfig.display_name}`"
                 />
 
                 <!-- Textarea -->
-                <el-input
+                <a-textarea
                   v-else-if="fieldConfig.field_type === 'textarea'"
-                  v-model="templateTaskForm.field_values[key]"
-                  type="textarea"
+                  v-model:value="templateTaskForm.field_values[key]"
                   :rows="3"
                   :placeholder="fieldConfig.placeholder || `请输入${fieldConfig.display_name}`"
                 />
 
                 <!-- Number Input -->
-                <el-input-number
+                <a-input-number
                   v-else-if="fieldConfig.field_type === 'number'"
-                  v-model="templateTaskForm.field_values[key]"
+                  v-model:value="templateTaskForm.field_values[key]"
                   :placeholder="fieldConfig.placeholder || `请输入${fieldConfig.display_name}`"
                   style="width: 100%"
                 />
 
                 <!-- Select -->
-                <el-select
+                <a-select
                   v-else-if="fieldConfig.field_type === 'select'"
-                  v-model="templateTaskForm.field_values[key]"
+                  v-model:value="templateTaskForm.field_values[key]"
                   :placeholder="fieldConfig.placeholder || `请选择${fieldConfig.display_name}`"
                   style="width: 100%"
                 >
-                  <el-option
+                  <a-select-option
                     v-for="option in fieldConfig.options"
                     :key="option.value"
-                    :label="option.label"
                     :value="option.value"
-                  />
-                </el-select>
+                  >
+                    {{ option.label }}
+                  </a-select-option>
+                </a-select>
 
                 <span v-if="fieldConfig.default_value" class="text-xs text-gray-500 mt-1">
                   默认值: {{ fieldConfig.default_value }}
                 </span>
-              </el-form-item>
+              </a-form-item>
             </div>
-          </el-form>
+          </a-form>
         </div>
       </div>
 
       <!-- Edit Mode Form - 简化版，只显示任务名称和启用状态 -->
-      <el-form v-if="editingTask" :model="taskForm" :rules="taskRules" ref="taskFormRef" label-width="100px">
-        <el-form-item label="任务名称" prop="name">
-          <el-input v-model="taskForm.name" placeholder="请输入任务名称（例如：公司打卡）" />
-        </el-form-item>
+      <a-form v-if="editingTask" :model="taskForm" :rules="taskRules" ref="taskFormRef" layout="vertical">
+        <a-form-item label="任务名称" name="name">
+          <a-input v-model:value="taskForm.name" placeholder="请输入任务名称（例如：公司打卡）" />
+        </a-form-item>
 
-        <el-form-item label="启用状态">
-          <el-switch v-model="taskForm.is_active" />
+        <a-form-item label="启用状态">
+          <a-switch v-model:checked="taskForm.is_active" />
           <span class="ml-2 text-sm text-gray-500">
             {{ taskForm.is_active ? '启用自动打卡' : '禁用自动打卡（仍可手动打卡）' }}
           </span>
-        </el-form-item>
+        </a-form-item>
 
         <!-- 新增：Crontab 编辑器 -->
-        <el-form-item label="打卡时间表">
+        <a-form-item label="打卡时间表">
           <CrontabEditor v-model="taskForm.cron_expression" />
-        </el-form-item>
+        </a-form-item>
 
-        <el-divider content-position="left">任务 Payload 配置（只读）</el-divider>
+        <a-divider orientation="left">任务 Payload 配置（只读）</a-divider>
 
         <div class="mb-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-gray-600">完整的打卡请求配置</span>
-            <button
+            <a-button
+              size="small"
+              type="primary"
+              ghost
               @click="copyPayload"
-              type="button"
-              class="px-3 py-1 text-xs bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors flex items-center gap-1"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
+              <template #icon><CopyOutlined /></template>
               复制
-            </button>
+            </a-button>
           </div>
-          <el-input
-            v-model="formattedPayload"
-            type="textarea"
+          <a-textarea
+            v-model:value="formattedPayload"
             :rows="12"
             readonly
             class="font-mono text-xs"
@@ -333,26 +334,38 @@
             💡 此配置由模板自动生成，如需修改请删除任务后从模板重新创建
           </p>
         </div>
-      </el-form>
+      </a-form>
 
       <template #footer>
         <div class="flex gap-3 justify-end">
-          <button @click="showCreateDialog = false" class="md3-button-text">取消</button>
-          <button @click="handleSubmit" :disabled="submitting" class="md3-button-filled">
+          <a-button @click="showCreateDialog = false">取消</a-button>
+          <a-button type="primary" :loading="submitting" @click="handleSubmit">
             {{ submitting ? '提交中...' : (editingTask ? '保存修改' : '创建任务') }}
-          </button>
+          </a-button>
         </div>
       </template>
-    </el-dialog>
+    </a-modal>
   </Layout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { message, Modal } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
+import {
+  PlusOutlined,
+  FileTextOutlined,
+  CheckCircleOutlined,
+  StopOutlined,
+  TagOutlined,
+  ClockCircleOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CopyOutlined,
+} from '@ant-design/icons-vue'
 import Layout from '@/components/Layout.vue'
 import CrontabEditor from '@/components/CrontabEditor.vue'
+import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useTaskStore } from '@/stores/task'
 import { useTemplateStore } from '@/stores/template'
 import { copyToClipboard, formatDateTime } from '@/utils/helpers'
@@ -360,6 +373,7 @@ import { copyToClipboard, formatDateTime } from '@/utils/helpers'
 const router = useRouter()
 const taskStore = useTaskStore()
 const templateStore = useTemplateStore()
+const { isMobile } = useBreakpoint()
 
 const loading = ref(false)
 const showCreateDialog = ref(false)
@@ -463,9 +477,9 @@ const formattedPayload = computed(() => {
 const copyPayload = async () => {
   const success = await copyToClipboard(formattedPayload.value)
   if (success) {
-    ElMessage.success('Payload 已复制到剪贴板')
+    message.success('Payload 已复制到剪贴板')
   } else {
-    ElMessage.error('复制失败')
+    message.error('复制失败')
   }
 }
 
@@ -480,7 +494,7 @@ watch(selectedTemplate, async (newTemplate) => {
   try {
     templatePreview.value = await templateStore.previewTemplate(newTemplate.id)
   } catch (error) {
-    ElMessage.error('获取模板配置失败')
+    message.error('获取模板配置失败')
     templatePreview.value = null
     return
   }
@@ -531,7 +545,7 @@ const loadTemplates = async () => {
   try {
     activeTemplates.value = await templateStore.fetchActiveTemplates()
   } catch (error) {
-    ElMessage.error(error.message || '加载模板失败')
+    message.error(error.message || '加载模板失败')
   } finally {
     loadingTemplates.value = false
   }
@@ -569,7 +583,7 @@ const fetchTasks = async () => {
   try {
     await taskStore.fetchMyTasks()
   } catch (error) {
-    ElMessage.error(error.message || '加载任务列表失败')
+    message.error(error.message || '加载任务列表失败')
   } finally {
     loading.value = false
   }
@@ -604,34 +618,32 @@ const editTask = (task) => {
 }
 
 // 删除任务
-const deleteTask = async (task) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除任务"${task.name || '未命名任务'}"吗？此操作不可恢复。`,
-      '删除确认',
-      {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
-        type: 'warning',
+const deleteTask = (task) => {
+  Modal.confirm({
+    title: '删除确认',
+    content: `确定要删除任务"${task.name || task.id}"吗？此操作不可恢复。`,
+    okText: '确定删除',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
+      try {
+        await taskStore.deleteTask(task.id)
+        message.success('任务删除成功')
+        await fetchTasks()
+      } catch (error) {
+        message.error(error.message || '删除任务失败')
       }
-    )
-
-    await taskStore.deleteTask(task.id)
-    ElMessage.success('任务删除成功')
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '删除任务失败')
-    }
-  }
+    },
+  })
 }
 
 // 切换任务状态
 const toggleTaskStatus = async (task) => {
   try {
     await taskStore.toggleTask(task.id)
-    ElMessage.success(task.is_active ? '任务已禁用' : '任务已启用')
+    message.success(task.is_active ? '任务已禁用' : '任务已启用')
   } catch (error) {
-    ElMessage.error(error.message || '切换任务状态失败')
+    message.error(error.message || '切换任务状态失败')
   }
 }
 
@@ -646,21 +658,21 @@ const handleCheckIn = async (taskId) => {
     // 获取 record_id
     const recordId = result.record_id
     if (!recordId) {
-      ElMessage.error('打卡请求失败:未获取到记录ID')
+      message.error('打卡请求失败:未获取到记录ID')
       checkInLoading.value[taskId] = false
       return
     }
 
     // 如果初始状态就是失败,显示错误并刷新任务列表
     if (result.status === 'failure') {
-      ElMessage.error(result.message || '打卡失败')
+      message.error(result.message || '打卡失败')
       checkInLoading.value[taskId] = false
       await fetchTasks()
       return
     }
 
     // 显示提示消息
-    ElMessage.info('打卡任务已启动，正在后台处理...')
+    message.info('打卡任务已启动，正在后台处理...')
 
     // 用于存储 interval ID，以便在超时时清理
     let pollIntervalId = null
@@ -677,12 +689,12 @@ const handleCheckIn = async (taskId) => {
 
           if (status.status === 'success') {
             // 打卡成功
-            ElMessage.success('打卡成功！')
+            message.success('打卡成功！')
             await fetchTasks()
           } else {
             // 打卡失败或其他状态 (failure, out_of_time, unknown 等)
             const errorMsg = status.error_message || status.response_text || '打卡失败'
-            ElMessage.error(errorMsg)
+            message.error(errorMsg)
             await fetchTasks()
           }
         }
@@ -692,7 +704,7 @@ const handleCheckIn = async (taskId) => {
         console.error('轮询状态失败:', error)
         clearInterval(pollIntervalId)
         checkInLoading.value[taskId] = false
-        ElMessage.error('查询打卡状态失败')
+        message.error('查询打卡状态失败')
       }
     }, 2000) // 每 2 秒查询一次
 
@@ -701,14 +713,14 @@ const handleCheckIn = async (taskId) => {
       if (checkInLoading.value[taskId]) {
         clearInterval(pollIntervalId)
         checkInLoading.value[taskId] = false
-        ElMessage.warning('打卡处理时间较长，请稍后查看打卡记录')
+        message.warning('打卡处理时间较长，请稍后查看打卡记录')
       }
     }, 30000)
 
   } catch (error) {
     console.error('启动打卡失败:', error)
     checkInLoading.value[taskId] = false
-    ElMessage.error(error.message || '启动打卡任务失败')
+    message.error(error.message || '启动打卡任务失败')
   }
 }
 
@@ -723,17 +735,17 @@ const handleSubmit = async () => {
       await taskFormRef.value.validate()
 
       await taskStore.updateTask(editingTask.value.id, taskForm)
-      ElMessage.success('任务更新成功')
+      message.success('任务更新成功')
     }
     // Create from template
     else if (createMode.value === 'template') {
       if (!selectedTemplate.value) {
-        ElMessage.warning('请选择一个模板')
+        message.warning('请选择一个模板')
         return
       }
 
       if (!templateTaskForm.thread_id) {
-        ElMessage.warning('请输入接龙 ID')
+        message.warning('请输入接龙 ID')
         return
       }
 
@@ -744,7 +756,7 @@ const handleSubmit = async () => {
         templateTaskForm.task_name || null
       )
 
-      ElMessage.success('任务创建成功')
+      message.success('任务创建成功')
     }
     // Create manually
     else {
@@ -752,14 +764,14 @@ const handleSubmit = async () => {
       await taskFormRef.value.validate()
 
       await taskStore.createTask(taskForm)
-      ElMessage.success('任务创建成功')
+      message.success('任务创建成功')
     }
 
     showCreateDialog.value = false
     resetForm()
     await fetchTasks()
   } catch (error) {
-    ElMessage.error(error.message || '操作失败')
+    message.error(error.message || '操作失败')
   } finally {
     submitting.value = false
   }
@@ -798,5 +810,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Additional component-specific styles if needed */
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 4px 8px;
+}
 </style>

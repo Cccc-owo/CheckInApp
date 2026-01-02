@@ -1,40 +1,40 @@
 <template>
   <Layout>
     <div class="admin-logs-container">
-      <el-card>
-        <template #header>
+      <a-card>
+        <template #title>
           <div class="card-header">
             <div>
-              <el-icon><Document /></el-icon>
+              <FileTextOutlined />
               <span>系统日志</span>
             </div>
-            <el-button type="primary" :icon="Refresh" @click="handleRefresh">
+            <a-button type="primary" @click="handleRefresh">
+              <template #icon><ReloadOutlined /></template>
               刷新
-            </el-button>
+            </a-button>
           </div>
         </template>
 
-        <el-alert
-          title="日志查看"
+        <a-alert
+          message="日志查看"
+          description="显示最新的系统日志信息（默认显示最近 200 行）"
           type="info"
           :closable="false"
           show-icon
           style="margin-bottom: 20px"
-        >
-          <p>显示最新的系统日志信息（默认显示最近 200 行）</p>
-        </el-alert>
+        />
 
         <div v-if="adminStore.loading" class="loading-container">
-          <el-skeleton :rows="10" animated />
+          <a-skeleton :active="true" :paragraph="{ rows: 10 }" />
         </div>
 
         <div v-else class="logs-content">
-          <el-input
-            v-model="logContent"
-            type="textarea"
+          <a-textarea
+            v-model:value="logContent"
             :rows="25"
-            readonly
+            :readonly="true"
             placeholder="暂无日志内容"
+            class="log-textarea"
           />
 
           <div class="log-info">
@@ -42,15 +42,15 @@
             <span>最后更新: {{ lastUpdate }}</span>
           </div>
         </div>
-      </el-card>
+      </a-card>
     </div>
   </Layout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Document, Refresh } from '@element-plus/icons-vue'
+import { message } from 'ant-design-vue'
+import { FileTextOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import Layout from '@/components/Layout.vue'
 import { useAdminStore } from '@/stores/admin'
 import { formatDateTime } from '@/utils/helpers'
@@ -73,12 +73,12 @@ const handleRefresh = async () => {
       // 确保是字符串
       logContent.value = typeof data.logs === 'string' ? data.logs : String(data.logs)
       lastUpdate.value = formatDateTime(new Date())
-      ElMessage.success('刷新成功')
+      message.success('刷新成功')
     } else {
       logContent.value = '无日志内容'
     }
   } catch (error) {
-    ElMessage.error(error.message || '刷新失败')
+    message.error(error.message || '刷新失败')
   }
 }
 
@@ -103,7 +103,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: bold;
 }
 
 .loading-container {
@@ -122,7 +121,7 @@ onMounted(() => {
   color: #909399;
 }
 
-:deep(.el-textarea__inner) {
+.log-textarea :deep(textarea) {
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   line-height: 1.6;

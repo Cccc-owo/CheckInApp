@@ -25,7 +25,7 @@ class AuthService:
 
         Args:
             alias: 用户别名
-            client_ip: 客户端 IP 地址
+            client_ip: 客户端 IP 地址（用于会话标识）
             db: 数据库会话
 
         Returns:
@@ -42,11 +42,11 @@ class AuthService:
 
         if existing_user:
             # 检查是否为空 jwt_sub（测试账号）
-            if not existing_user.jwt_sub or existing_user.jwt_sub == "":
-                logger.warning(f"用户 {alias} 是测试账号（空 jwt_sub），禁止登录")
+            if not existing_user.jwt_sub:
+                logger.warning(f"用户 {alias} 是测试账号（未绑定 QQ），禁止扫码登录")
                 return {
                     "status": "error",
-                    "message": "此账户为测试账号，暂未绑定 QQ，无法登录"
+                    "message": "此账户为测试账号，暂未绑定 QQ，无法扫码登录"
                 }
 
             # 老用户：刷新 Token
@@ -243,7 +243,6 @@ class AuthService:
                     }
 
                 # 创建新用户（待审批状态）
-                client_ip = session_data.get("client_ip", "")
                 new_user = User(
                     jwt_sub=jwt_sub,
                     alias=alias,
@@ -251,7 +250,6 @@ class AuthService:
                     jwt_exp=jwt_exp,
                     role="user",
                     is_approved=False,  # 待审批
-                    registered_ip=client_ip
                 )
 
                 db.add(new_user)
@@ -427,7 +425,9 @@ class AuthService:
             "message": "登录成功",
             "user_id": user.id,
             "authorization": user.authorization,
-            "alias": user.alias
+            "alias": user.alias,
+            "role": user.role,
+            "is_approved": user.is_approved
         }
 
         # 如果 Token 有问题，添加警告信息
@@ -475,3 +475,29 @@ class AuthService:
         except Exception as e:
             logger.error(f"密码验证异常：{e}")
             return False
+
+    @staticmethod
+    def cancel_qrcode_session(session_id: str) -> Dict[str, Any]:
+        """
+        取消二维码登录会话
+
+        Args:
+            session_id: 会话 ID
+
+        Returns:
+            包含取消结果的字典
+        """
+        from backend.workers.token_refresher import cancel_session
+
+        success = cancel_session(session_id)
+
+        if success:
+            return {
+                "success": True,
+                "message": "会话已取消"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "取消失败或会话不存在"
+            }

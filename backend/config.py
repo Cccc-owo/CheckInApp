@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     SMTP_SENDER_PASSWORD: str = ""
     SMTP_USE_SSL: bool = True
 
+    # 前端 URL 配置（用于邮件中的链接）
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # 定时任务配置（可通过环境变量配置）
     TOKEN_CHECK_INTERVAL_MINUTES: int = 30  # Token 检查间隔（分钟）
     SESSION_CLEANUP_INTERVAL_HOURS: int = 24  # 会话清理间隔（小时）

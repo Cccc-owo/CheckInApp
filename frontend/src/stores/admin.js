@@ -34,16 +34,6 @@ export const useAdminStore = defineStore('admin', {
       }
     },
 
-    // 批量启用/禁用用户
-    async batchToggleActive(userIds, isActive) {
-      try {
-        const result = await adminAPI.batchToggleActive(userIds, isActive)
-        return result
-      } catch (error) {
-        throw new Error(error.message || '批量操作失败')
-      }
-    },
-
     // 批量触发打卡
     async batchCheckIn(userIds) {
       try {

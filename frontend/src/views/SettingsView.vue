@@ -1,144 +1,141 @@
 <template>
   <Layout>
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
+    <div class="settings-view">
       <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">个人设置</h1>
 
         <!-- 基本信息卡片 -->
         <div class="md3-card p-6 mb-6">
           <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-            <el-icon class="mr-2"><User /></el-icon>
+            <UserOutlined class="mr-2" />
             基本信息
           </h2>
 
-          <el-descriptions :column="1" border>
-            <el-descriptions-item label="用户ID">{{ user?.id }}</el-descriptions-item>
-            <el-descriptions-item label="当前别名">{{ user?.alias }}</el-descriptions-item>
-            <el-descriptions-item label="角色">
-              <el-tag :type="user?.role === 'admin' ? 'danger' : 'success'">
+          <a-descriptions :column="1" bordered>
+            <a-descriptions-item label="用户ID">{{ user?.id }}</a-descriptions-item>
+            <a-descriptions-item label="当前用户名">{{ user?.alias }}</a-descriptions-item>
+            <a-descriptions-item label="角色">
+              <a-tag :color="user?.role === 'admin' ? 'error' : 'success'">
                 {{ user?.role === 'admin' ? '管理员' : '普通用户' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="密码状态">
-              <el-tag :type="hasPassword ? 'success' : 'warning'">
+              </a-tag>
+            </a-descriptions-item>
+            <a-descriptions-item label="密码状态">
+              <a-tag :color="hasPassword ? 'success' : 'warning'">
                 {{ hasPassword ? '已设置' : '未设置' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="创建时间">
+              </a-tag>
+            </a-descriptions-item>
+            <a-descriptions-item label="创建时间">
               {{ formatDate(user?.created_at) }}
-            </el-descriptions-item>
-          </el-descriptions>
+            </a-descriptions-item>
+          </a-descriptions>
         </div>
 
         <!-- 修改邮箱 -->
         <div class="md3-card p-6 mb-6">
           <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-            <el-icon class="mr-2"><Edit /></el-icon>
+            <EditOutlined class="mr-2" />
             修改个人信息
           </h2>
 
-          <el-form
+          <a-form
             :model="profileForm"
             :rules="profileRules"
             ref="profileFormRef"
-            label-width="100px"
+            layout="vertical"
           >
-            <el-form-item label="邮箱" prop="email">
-              <el-input
-                v-model="profileForm.email"
+            <a-form-item label="邮箱" name="email">
+              <a-input
+                v-model:value="profileForm.email"
                 placeholder="请输入邮箱地址（可选）"
-                clearable
+                allow-clear
               />
-            </el-form-item>
+            </a-form-item>
 
-            <el-alert
-              title="用户名无法修改"
+            <a-alert
+              message="用户名无法修改"
+              description="用户名只能由管理员修改，如需修改请联系管理员"
               type="info"
               :closable="false"
               show-icon
-              style="margin-bottom: 16px"
-            >
-              <p>用户名只能由管理员修改，如需修改请联系管理员</p>
-            </el-alert>
+              style="margin-bottom: 24px"
+            />
 
-            <el-form-item>
-              <el-button
-                type="primary"
-                :loading="profileLoading"
-                @click="handleUpdateProfile"
-              >
-                保存
-              </el-button>
-              <el-button @click="resetProfileForm">重置</el-button>
-            </el-form-item>
-          </el-form>
+            <a-form-item style="margin-top: 8px">
+              <a-space>
+                <a-button
+                  type="primary"
+                  :loading="profileLoading"
+                  @click="handleUpdateProfile"
+                >
+                  保存
+                </a-button>
+                <a-button @click="resetProfileForm">重置</a-button>
+              </a-space>
+            </a-form-item>
+          </a-form>
         </div>
 
         <!-- 设置/修改密码 -->
         <div class="md3-card p-6">
           <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-            <el-icon class="mr-2"><Key /></el-icon>
+            <KeyOutlined class="mr-2" />
             {{ hasPassword ? '修改密码' : '设置密码' }}
           </h2>
 
-          <el-alert
+          <a-alert
             v-if="!hasPassword"
-            title="您还未设置密码"
+            message="您还未设置密码"
+            description="设置密码后，您可以使用用户名+密码的方式快速登录"
             type="warning"
-            description="设置密码后，您可以使用别名+密码的方式快速登录"
             class="mb-4"
             show-icon
             :closable="false"
           />
 
-          <el-form
+          <a-form
             :model="passwordForm"
-            label-width="120px"
+            layout="vertical"
           >
-            <el-form-item
+            <a-form-item
               v-if="hasPassword"
               label="当前密码"
             >
-              <el-input
-                v-model="passwordForm.currentPassword"
-                type="password"
+              <a-input-password
+                v-model:value="passwordForm.currentPassword"
                 placeholder="请输入当前密码"
-                show-password
-                clearable
+                allow-clear
               />
-            </el-form-item>
+            </a-form-item>
 
-            <el-form-item label="新密码">
-              <el-input
-                v-model="passwordForm.newPassword"
-                type="password"
+            <a-form-item label="新密码">
+              <a-input-password
+                v-model:value="passwordForm.newPassword"
                 placeholder="请输入新密码（至少6个字符）"
-                show-password
-                clearable
+                allow-clear
               />
-            </el-form-item>
+            </a-form-item>
 
-            <el-form-item label="确认新密码">
-              <el-input
-                v-model="passwordForm.confirmPassword"
-                type="password"
+            <a-form-item label="确认新密码">
+              <a-input-password
+                v-model:value="passwordForm.confirmPassword"
                 placeholder="请再次输入新密码"
-                show-password
-                clearable
+                allow-clear
               />
-            </el-form-item>
+            </a-form-item>
 
-            <el-form-item>
-              <el-button
-                type="primary"
-                :loading="passwordLoading"
-                @click="handleUpdatePassword"
-              >
-                {{ hasPassword ? '修改密码' : '设置密码' }}
-              </el-button>
-              <el-button @click="resetPasswordForm">重置</el-button>
-            </el-form-item>
-          </el-form>
+            <a-form-item style="margin-top: 8px">
+              <a-space>
+                <a-button
+                  type="primary"
+                  :loading="passwordLoading"
+                  @click="handleUpdatePassword"
+                >
+                  {{ hasPassword ? '修改密码' : '设置密码' }}
+                </a-button>
+                <a-button @click="resetPasswordForm">重置</a-button>
+              </a-space>
+            </a-form-item>
+          </a-form>
         </div>
       </div>
     </div>
@@ -147,8 +144,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { User, Edit, Key } from '@element-plus/icons-vue'
+import { message } from 'ant-design-vue'
+import { UserOutlined, EditOutlined, KeyOutlined } from '@ant-design/icons-vue'
 import { userAPI } from '@/api'
 import Layout from '@/components/Layout.vue'
 
@@ -186,7 +183,7 @@ const loadUserInfo = async () => {
     // 从后端返回的数据中获取密码状态
     hasPassword.value = user.value.has_password || false
   } catch (error) {
-    ElMessage.error(error.message || '加载用户信息失败')
+    message.error(error.message || '加载用户信息失败')
   }
 }
 
@@ -202,12 +199,12 @@ const handleUpdateProfile = async () => {
       email: profileForm.value.email || null,
     })
 
-    ElMessage.success('个人信息修改成功')
+    message.success('个人信息修改成功')
     await loadUserInfo()
   } catch (error) {
-    if (error.errors) return // 验证错误
+    if (error.errorFields) return // 验证错误
     const errorMsg = error.response?.data?.detail || error.message || '修改失败'
-    ElMessage.error(errorMsg)
+    message.error(errorMsg)
   } finally {
     profileLoading.value = false
   }
@@ -224,27 +221,27 @@ const handleUpdatePassword = async () => {
   try {
     // 手动验证
     if (hasPassword.value && !passwordForm.value.currentPassword) {
-      ElMessage.error('请输入当前密码')
+      message.error('请输入当前密码')
       return
     }
 
     if (!passwordForm.value.newPassword) {
-      ElMessage.error('请输入新密码')
+      message.error('请输入新密码')
       return
     }
 
     if (passwordForm.value.newPassword.length < 6) {
-      ElMessage.error('密码至少需要6个字符')
+      message.error('密码至少需要6个字符')
       return
     }
 
     if (!passwordForm.value.confirmPassword) {
-      ElMessage.error('请再次输入新密码')
+      message.error('请再次输入新密码')
       return
     }
 
     if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-      ElMessage.error('两次输入的密码不一致')
+      message.error('两次输入的密码不一致')
       return
     }
 
@@ -260,12 +257,12 @@ const handleUpdatePassword = async () => {
 
     await userAPI.updateProfile(updateData)
 
-    ElMessage.success(hasPassword.value ? '密码修改成功' : '密码设置成功')
+    message.success(hasPassword.value ? '密码修改成功' : '密码设置成功')
     hasPassword.value = true
     resetPasswordForm()
   } catch (error) {
     const errorMsg = error.response?.data?.detail || error.message || '操作失败'
-    ElMessage.error(errorMsg)
+    message.error(errorMsg)
   } finally {
     passwordLoading.value = false
   }

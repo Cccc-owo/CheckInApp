@@ -100,6 +100,27 @@ async def get_qrcode_status(
         )
 
 
+@router.delete("/qrcode_session/{session_id}", response_model=dict, summary="取消二维码登录会话")
+async def cancel_qrcode_session(
+    session_id: str
+):
+    """
+    取消二维码登录会话
+
+    - **session_id**: 会话 ID
+
+    用于用户关闭二维码对话框时,终止后台的 Selenium 进程
+    """
+    try:
+        result = AuthService.cancel_qrcode_session(session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"取消会话失败: {str(e)}"
+        )
+
+
 @router.post("/verify_token", response_model=dict, summary="验证 Token 有效性")
 async def verify_token(
     request: TokenVerifyRequest,

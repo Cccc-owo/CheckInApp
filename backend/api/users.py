@@ -138,8 +138,11 @@ async def get_current_user_token_status(
                 minutes_until_expiry = (exp_timestamp - current_timestamp) // 60
                 expiring_soon = minutes_until_expiry <= 30
 
-        except ValueError:
-            pass
+        except ValueError as e:
+            # jwt_exp 格式不正确，记录警告
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"用户 {current_user.id} ({current_user.alias}) 的 jwt_exp 格式不正确: {current_user.jwt_exp}, 错误: {e}")
 
     return {
         "is_valid": is_valid,
@@ -256,7 +259,37 @@ async def update_user(
             )
 
     try:
+        # 获取更新前的用户状态
+        old_user = UserService.get_user_by_id(user_id, db)
+        if not old_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"用户 ID {user_id} 不存在"
+            )
+
+        # 保存更新前的审批状态 (先读取后转换为 Python bool)
+        old_approved_value = old_user.is_approved
+        was_approved_before = True if old_approved_value else False
+
+        # 更新用户信息
         user = UserService.update_user(user_id, user_data, db)
+
+        # 检查是否需要发送审批通过邮件
+        new_approved_value = user.is_approved
+        is_approved_now = True if new_approved_value else False
+
+        is_admin = (current_user.role == "admin")
+        needs_notification = (is_admin and (not was_approved_before) and is_approved_now)
+
+        if needs_notification:
+            try:
+                from backend.services.email_service import EmailService
+                EmailService.notify_user_approved(user)
+            except Exception as e:
+                # 邮件发送失败不影响审批操作
+                import logging
+                logging.getLogger(__name__).error(f"发送审批通过邮件失败: {e}")
+
         return user
     except ValueError as e:
         raise HTTPException(

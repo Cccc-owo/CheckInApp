@@ -32,10 +32,10 @@ class UserService:
 
         # 创建用户（管理员创建的用户没有 jwt_sub，需要后续扫码绑定）
         user = User(
-            jwt_sub="",  # 空字符串表示未绑定 QQ
+            jwt_sub=None,  # NULL 表示未绑定 QQ
             alias=user_data.alias,
             role=user_data.role or "user",
-            is_approved=True,  # 管理员创建的用户默认已审批
+            is_approved=user_data.is_approved if user_data.is_approved is not None else True,  # 使用请求中的值，默认已审批
             jwt_exp="0",
             authorization=None,
         )
@@ -114,12 +114,11 @@ class UserService:
 
         # 搜索过滤
         if search:
-            query = query.filter(
-                or_(
-                    User.alias.ilike(f"%{search}%"),
-                    User.jwt_sub.ilike(f"%{search}%")
-                )
-            )
+            # 注意：jwt_sub 可能为 NULL，需要处理
+            search_conditions = [User.alias.ilike(f"%{search}%")]
+            # 只有当 jwt_sub 不为空时才搜索
+            search_conditions.append(User.jwt_sub.ilike(f"%{search}%"))
+            query = query.filter(or_(*search_conditions))
 
         # 角色过滤
         if role:

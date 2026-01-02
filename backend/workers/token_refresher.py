@@ -86,6 +86,53 @@ def get_session_data(session_id: str) -> dict:
         return None
 
 
+def cancel_session(session_id: str) -> bool:
+    """
+    取消登录会话
+
+    Args:
+        session_id: 会话 ID
+
+    Returns:
+        是否成功取消
+    """
+    filepath = settings.SESSION_DIR / f"{session_id}.json"
+    lock_path = settings.SESSION_DIR / f"{session_id}.json.lock"
+
+    if not filepath.exists():
+        logger.warning(f"尝试取消不存在的会话: {session_id}")
+        return False
+
+    try:
+        with FileLock(lock_path, timeout=5):
+            # 读取当前会话数据
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+                if not content:
+                    return False
+                data = json.loads(content)
+
+            # 如果已经成功,不允许取消
+            if data.get('status') == 'success':
+                logger.info(f"会话 {session_id} 已成功,无法取消")
+                return False
+
+            # 标记为已取消
+            data['status'] = 'cancelled'
+            data['message'] = '用户取消登录'
+
+            # 写回文件
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+
+        logger.info(f"✅ 会话 {session_id} 已取消")
+        return True
+
+    except Exception as e:
+        logger.error(f"取消会话 {session_id} 失败: {e}")
+        return False
+
+
 def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, client_ip: str = "") -> None:
     """
     使用 Selenium 获取 QQ 扫码登录的 Token
@@ -193,7 +240,26 @@ def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, 
         current_step = "等待用户扫描登录 (Cookie 'token' 出现)"
         cookie_name_to_find = "token"
         logger.info(f"Selenium ({session_id}): {current_step}...")
-        WebDriverWait(driver, 120, 1).until(lambda d: d.get_cookie(cookie_name_to_find) is not None)  # 改为 120 秒（2分钟）
+
+        # 自定义等待逻辑:每秒检查cookie和session状态
+        max_wait_seconds = 120
+        import time
+        for i in range(max_wait_seconds):
+            # 检查session是否被取消
+            status = get_session_status(session_id)
+            if status == 'cancelled':
+                logger.info(f"Selenium ({session_id}): 用户取消了登录,终止会话")
+                raise Exception("用户取消登录")
+
+            # 检查cookie是否出现
+            cookie = driver.get_cookie(cookie_name_to_find)
+            if cookie:
+                break
+
+            time.sleep(1)
+        else:
+            # 超时未获取到cookie
+            raise TimeoutException("等待扫码超时")
 
         cookie = driver.get_cookie(cookie_name_to_find)
         if cookie:

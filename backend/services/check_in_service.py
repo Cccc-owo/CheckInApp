@@ -173,8 +173,9 @@ class CheckInService:
                         "status": "failure",
                         "message": f"{error_msg}，请重新扫码登录"
                     }
-            except ValueError:
-                pass
+            except ValueError as e:
+                # jwt_exp 格式不正确，记录警告后跳过 Token 过期验证
+                logger.warning(f"任务 {task.id} 的用户 jwt_exp 格式不正确: {user.jwt_exp}, 错误: {e}")
 
         # 创建待处理记录
         record_id = CheckInService.create_pending_check_in_record(task, trigger_type, db)
@@ -264,8 +265,9 @@ class CheckInService:
                         "message": f"{error_msg}，请重新扫码登录",
                         "record_id": record.id
                     }
-            except ValueError:
-                pass
+            except ValueError as e:
+                # jwt_exp 格式不正确，记录警告后跳过 Token 过期验证
+                logger.warning(f"任务 {task.id} 的用户 jwt_exp 格式不正确: {user.jwt_exp}, 错误: {e}")
 
         # 执行打卡（传递 task 对象和用户 token）
         logger.info(f"🤖 调用 Selenium Worker 执行打卡...")
@@ -409,8 +411,9 @@ class CheckInService:
                         logger.warning(f"任务 ID: {task.id} 的用户 Token 已过期，跳过")
                         results["skipped"] += 1
                         continue
-                except ValueError:
-                    pass
+                except ValueError as e:
+                    # jwt_exp 格式不正确，记录警告后继续执行打卡
+                    logger.warning(f"任务 {task.id} 的用户 jwt_exp 格式不正确: {task.user.jwt_exp}, 错误: {e}")
 
             # 执行打卡
             result = CheckInService.perform_task_check_in(task, "scheduled", db)
@@ -514,7 +517,7 @@ class CheckInService:
         status: Optional[str] = None
     ) -> List[CheckInRecord]:
         """
-        获取所有打卡记录（管理员）
+        获取所有打卡记录（管理员）- 使用联表查询优化性能
 
         Args:
             db: 数据库会话
@@ -526,7 +529,12 @@ class CheckInService:
         Returns:
             打卡记录列表
         """
-        query = db.query(CheckInRecord)
+        from sqlalchemy.orm import joinedload
+
+        # 使用 joinedload 预加载关联的 task 和 user，避免 N+1 查询
+        query = db.query(CheckInRecord).options(
+            joinedload(CheckInRecord.task).joinedload(CheckInTask.user)
+        )
 
         if task_id:
             query = query.filter(CheckInRecord.task_id == task_id)
@@ -543,15 +551,18 @@ class CheckInService:
         """
         为打卡记录添加用户和任务信息
 
+        注意：如果使用了 joinedload，task 和 user 已经预加载，不会产生额外查询
+
         Args:
             record: 打卡记录对象
-            db: 数据库会话
+            db: 数据库会话（可选，仅在未使用 joinedload 时使用）
 
         Returns:
             包含额外信息的记录字典
         """
-        # 获取任务信息
-        task = db.query(CheckInTask).filter(CheckInTask.id == record.task_id).first()
+        # 尝试使用已加载的关联对象，如果没有则查询
+        task = record.task if hasattr(record, 'task') and record.task else \
+               db.query(CheckInTask).filter(CheckInTask.id == record.task_id).first()
 
         # 获取用户信息
         user = None
@@ -559,14 +570,17 @@ class CheckInService:
         thread_id = None
 
         if task:
-            user = db.query(User).filter(User.id == task.user_id).first()
+            # 尝试使用已加载的 user，否则查询
+            user = task.user if hasattr(task, 'user') and task.user else \
+                   db.query(User).filter(User.id == task.user_id).first()
             task_name = task.name
 
             # 从 payload_config 提取 ThreadId
             try:
                 payload = json.loads(str(task.payload_config))
                 thread_id = payload.get('ThreadId')
-            except:
+            except (json.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
+                logger.debug(f"解析任务 {task.id} 的 payload_config 失败: {e}")
                 pass
 
         # 转换为字典并添加额外字段

@@ -1,18 +1,17 @@
 <template>
   <Layout>
-    <div class="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
+    <div class="task-records-view">
       <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="mb-8 animate-fade-in">
-          <button
+        <div class="mb-8">
+          <a-button
             @click="router.back()"
-            class="mb-4 flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            type="link"
+            class="mb-4 flex items-center"
           >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
+            <template #icon><LeftOutlined /></template>
             返回任务列表
-          </button>
+          </a-button>
 
           <div v-if="currentTask" class="fluent-card p-6">
             <div class="flex items-start justify-between">
@@ -20,102 +19,104 @@
                 <h1 class="text-3xl font-bold text-gradient mb-2">{{ currentTask.name || '未命名任务' }}</h1>
                 <div class="flex items-center gap-4 text-sm text-gray-600">
                   <span class="flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                    </svg>
+                    <NumberOutlined class="mr-1" />
                     接龙 ID: {{ getThreadId(currentTask) }}
                   </span>
-                  <span :class="currentTask.is_active ? 'status-success' : 'status-info'">
+                  <a-tag :color="currentTask.is_active ? 'success' : 'default'">
                     {{ currentTask.is_active ? '启用中' : '已禁用' }}
-                  </span>
+                  </a-tag>
                 </div>
               </div>
-              <button
+              <a-button
+                type="primary"
+                :loading="checkInLoading"
                 @click="handleManualCheckIn"
-                :disabled="checkInLoading"
-                class="md3-button-filled"
               >
                 {{ checkInLoading ? '打卡中...' : '立即打卡' }}
-              </button>
+              </a-button>
             </div>
           </div>
         </div>
 
         <!-- Stats Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
-          <div class="fluent-card p-5 animate-slide-up">
-            <p class="text-sm text-gray-600 mb-1">总打卡次数</p>
-            <p class="text-2xl font-bold text-gray-800">{{ recordStats.total }}</p>
-          </div>
-          <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.05s">
-            <p class="text-sm text-gray-600 mb-1">成功次数</p>
-            <p class="text-2xl font-bold text-green-600">{{ recordStats.success }}</p>
-          </div>
-          <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.1s">
-            <p class="text-sm text-gray-600 mb-1">时间范围外</p>
-            <p class="text-2xl font-bold text-blue-600">{{ recordStats.outOfTime }}</p>
-          </div>
-          <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.15s">
-            <p class="text-sm text-gray-600 mb-1">失败次数</p>
-            <p class="text-2xl font-bold text-red-600">{{ recordStats.failure }}</p>
-          </div>
-          <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.2s">
-            <p class="text-sm text-gray-600 mb-1">异常次数</p>
-            <p class="text-2xl font-bold text-orange-600">{{ recordStats.unknown }}</p>
-          </div>
-          <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.25s">
-            <p class="text-sm text-gray-600 mb-1">成功率</p>
-            <p class="text-2xl font-bold text-purple-600">{{ recordStats.successRate }}%</p>
-          </div>
-        </div>
+        <a-row :gutter="[16, 16]" class="mb-6">
+          <a-col :xs="12" :sm="8" :md="4">
+            <div class="fluent-card p-5 animate-slide-up">
+              <p class="text-sm text-gray-600 mb-1">总打卡次数</p>
+              <p class="text-2xl font-bold text-gray-800">{{ recordStats.total }}</p>
+            </div>
+          </a-col>
+          <a-col :xs="12" :sm="8" :md="4">
+            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.05s">
+              <p class="text-sm text-gray-600 mb-1">成功次数</p>
+              <p class="text-2xl font-bold text-green-600">{{ recordStats.success }}</p>
+            </div>
+          </a-col>
+          <a-col :xs="12" :sm="8" :md="4">
+            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.1s">
+              <p class="text-sm text-gray-600 mb-1">时间范围外</p>
+              <p class="text-2xl font-bold text-blue-600">{{ recordStats.outOfTime }}</p>
+            </div>
+          </a-col>
+          <a-col :xs="12" :sm="8" :md="4">
+            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.15s">
+              <p class="text-sm text-gray-600 mb-1">失败次数</p>
+              <p class="text-2xl font-bold text-red-600">{{ recordStats.failure }}</p>
+            </div>
+          </a-col>
+          <a-col :xs="12" :sm="8" :md="4">
+            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.2s">
+              <p class="text-sm text-gray-600 mb-1">异常次数</p>
+              <p class="text-2xl font-bold text-orange-600">{{ recordStats.unknown }}</p>
+            </div>
+          </a-col>
+          <a-col :xs="12" :sm="8" :md="4">
+            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.25s">
+              <p class="text-sm text-gray-600 mb-1">成功率</p>
+              <p class="text-2xl font-bold text-purple-600">{{ recordStats.successRate }}%</p>
+            </div>
+          </a-col>
+        </a-row>
 
         <!-- Filters -->
         <div class="fluent-card p-4 mb-6">
-          <div class="flex flex-wrap items-center gap-4">
+          <a-space wrap :size="[16, 16]">
             <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-gray-700">状态筛选:</span>
-              <el-radio-group v-model="filterStatus" size="small" @change="handleFilterChange">
-                <el-radio-button label="">全部</el-radio-button>
-                <el-radio-button label="success">成功</el-radio-button>
-                <el-radio-button label="out_of_time">时间范围外</el-radio-button>
-                <el-radio-button label="failure">失败</el-radio-button>
-                <el-radio-button label="unknown">异常</el-radio-button>
-              </el-radio-group>
+              <a-radio-group v-model:value="filterStatus" button-style="solid" size="small" @change="handleFilterChange">
+                <a-radio-button value="">全部</a-radio-button>
+                <a-radio-button value="success">成功</a-radio-button>
+                <a-radio-button value="out_of_time">时间范围外</a-radio-button>
+                <a-radio-button value="failure">失败</a-radio-button>
+                <a-radio-button value="unknown">异常</a-radio-button>
+              </a-radio-group>
             </div>
 
             <div class="flex items-center gap-2">
               <span class="text-sm font-medium text-gray-700">触发方式:</span>
-              <el-radio-group v-model="filterTrigger" size="small" @change="handleFilterChange">
-                <el-radio-button label="">全部</el-radio-button>
-                <el-radio-button label="scheduler">自动</el-radio-button>
-                <el-radio-button label="manual">手动</el-radio-button>
-              </el-radio-group>
+              <a-radio-group v-model:value="filterTrigger" button-style="solid" size="small" @change="handleFilterChange">
+                <a-radio-button value="">全部</a-radio-button>
+                <a-radio-button value="scheduler">自动</a-radio-button>
+                <a-radio-button value="manual">手动</a-radio-button>
+              </a-radio-group>
             </div>
 
-            <div class="flex-1"></div>
-
-            <el-button size="small" @click="fetchRecords">
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+            <a-button size="small" @click="fetchRecords">
+              <template #icon><ReloadOutlined /></template>
               刷新
-            </el-button>
-          </div>
+            </a-button>
+          </a-space>
         </div>
 
         <!-- Records List -->
         <div v-if="loading" class="space-y-4">
-          <div v-for="i in 5" :key="i" class="fluent-card p-6">
-            <div class="skeleton h-6 w-1/4 mb-3"></div>
-            <div class="skeleton h-4 w-full mb-2"></div>
-            <div class="skeleton h-4 w-3/4"></div>
-          </div>
+          <a-card v-for="i in 5" :key="i">
+            <a-skeleton :active="true" :paragraph="{ rows: 3 }" />
+          </a-card>
         </div>
 
         <div v-else-if="records.length === 0" class="fluent-card p-12 text-center">
-          <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
+          <FileTextOutlined class="text-8xl text-gray-300 mb-4" />
           <h3 class="text-xl font-semibold text-gray-700 mb-2">暂无打卡记录</h3>
           <p class="text-gray-500">当前筛选条件下没有找到任何打卡记录</p>
         </div>
@@ -128,34 +129,32 @@
           >
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <div class="flex items-center gap-3 mb-2">
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
                   <h3 class="text-lg font-semibold text-gray-800">
                     打卡记录 #{{ record.id }}
                   </h3>
-                  <span
+                  <a-tag
                     v-if="record.status === 'success'"
-                    class="status-success"
-                  >✅ 打卡成功</span>
-                  <span
+                    color="success"
+                  >✅ 打卡成功</a-tag>
+                  <a-tag
                     v-else-if="record.status === 'out_of_time'"
-                    class="status-info"
-                  >🕐 时间范围外</span>
-                  <span
+                    color="default"
+                  >🕐 时间范围外</a-tag>
+                  <a-tag
                     v-else-if="record.status === 'unknown'"
-                    class="status-warning"
-                  >❗ 打卡异常</span>
-                  <span
+                    color="warning"
+                  >❗ 打卡异常</a-tag>
+                  <a-tag
                     v-else
-                    class="status-error"
-                  >❌ 打卡失败</span>
-                  <span :class="record.trigger_type === 'scheduled' ? 'status-info' : 'status-warning'">
+                    color="error"
+                  >❌ 打卡失败</a-tag>
+                  <a-tag :color="record.trigger_type === 'scheduled' ? 'blue' : 'orange'">
                     {{ record.trigger_type === 'scheduled' ? '自动触发' : '手动触发' }}
-                  </span>
+                  </a-tag>
                 </div>
                 <div class="flex items-center text-sm text-gray-600">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <ClockCircleOutlined class="mr-1" />
                   {{ formatDateTime(record.check_in_time) }}
                 </div>
               </div>
@@ -178,14 +177,16 @@
 
         <!-- Pagination -->
         <div v-if="!loading && records.length > 0" class="mt-6 flex justify-center">
-          <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50, 100]"
+          <a-pagination
+            v-model:current="currentPage"
+            v-model:pageSize="pageSize"
             :total="total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handlePageChange"
+            :pageSizeOptions="['10', '20', '50', '100']"
+            show-size-changer
+            show-quick-jumper
+            :show-total="total => `共 ${total} 条记录`"
+            @change="handlePageChange"
+            @showSizeChange="handleSizeChange"
           />
         </div>
       </div>
@@ -196,7 +197,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
+import {
+  LeftOutlined,
+  NumberOutlined,
+  FileTextOutlined,
+  ClockCircleOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons-vue'
 import Layout from '@/components/Layout.vue'
 import { useTaskStore } from '@/stores/task'
 import { formatDateTime } from '@/utils/helpers'
@@ -257,7 +265,7 @@ const fetchTaskDetail = async () => {
   try {
     currentTask.value = await taskStore.fetchTask(taskId.value)
   } catch (error) {
-    ElMessage.error(error.message || '获取任务详情失败')
+    message.error(error.message || '获取任务详情失败')
     router.push('/tasks')
   }
 }
@@ -293,7 +301,7 @@ const fetchRecords = async () => {
       total.value = 0
     }
   } catch (error) {
-    ElMessage.error(error.message || '获取打卡记录失败')
+    message.error(error.message || '获取打卡记录失败')
   } finally {
     loading.value = false
   }
@@ -304,27 +312,22 @@ const handleManualCheckIn = async () => {
   checkInLoading.value = true
 
   // 显示持久化通知
-  const loadingMessage = ElMessage({
-    message: '正在打卡中，请稍候... 您可以继续浏览其他页面',
-    type: 'info',
-    duration: 0,
-    showClose: false
-  })
+  const hide = message.loading('正在打卡中，请稍候... 您可以继续浏览其他页面', 0)
 
   try {
     const result = await taskStore.checkInTask(taskId.value)
-    loadingMessage.close()
+    hide()
 
     if (result.success) {
-      ElMessage.success('打卡成功')
+      message.success('打卡成功')
       // 刷新记录列表
       await fetchRecords()
     } else {
-      ElMessage.warning(result.message || '打卡失败')
+      message.warning(result.message || '打卡失败')
     }
   } catch (error) {
-    loadingMessage.close()
-    ElMessage.error(error.message || '打卡失败')
+    hide()
+    message.error(error.message || '打卡失败')
   } finally {
     checkInLoading.value = false
   }

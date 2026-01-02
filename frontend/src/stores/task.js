@@ -107,7 +107,13 @@ export const useTaskStore = defineStore('task', {
         const updatedTask = await api.task.toggleTask(taskId)
         const index = this.tasks.findIndex(t => t.id === taskId)
         if (index !== -1) {
-          this.tasks[index] = updatedTask
+          // 保留原任务的 last_check_in_time 和 last_check_in_status
+          const originalTask = this.tasks[index]
+          this.tasks[index] = {
+            ...updatedTask,
+            last_check_in_time: updatedTask.last_check_in_time || originalTask.last_check_in_time,
+            last_check_in_status: updatedTask.last_check_in_status || originalTask.last_check_in_status,
+          }
         }
         return updatedTask
       } catch (error) {

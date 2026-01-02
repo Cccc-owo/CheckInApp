@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
+from pydantic import BaseModel, Field
 
 from backend.models import get_db, User
 from backend.schemas.task import TaskCreate, TaskUpdate, TaskResponse
@@ -9,6 +10,11 @@ from backend.services.task_service import TaskService
 from backend.dependencies import get_current_user
 
 router = APIRouter()
+
+
+class CronValidateRequest(BaseModel):
+    """Cron 表达式验证请求"""
+    cron_expression: str = Field(..., min_length=9, description="Crontab 表达式")
 
 
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED, summary="创建打卡任务")
@@ -181,7 +187,7 @@ async def toggle_task(
 
 
 @router.post("/validate-cron", summary="验证 Crontab 表达式")
-async def validate_cron_expression(request: dict):
+async def validate_cron_expression(request: CronValidateRequest):
     """
     验证 Crontab 表达式并预览下一个执行时间
 
@@ -199,7 +205,7 @@ async def validate_cron_expression(request: dict):
         "description": "每天 20:00"
     }
     """
-    cron_expr = request.get('cron_expression', '').strip()
+    cron_expr = request.cron_expression.strip()
 
     if not cron_expr:
         raise HTTPException(

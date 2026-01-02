@@ -17,45 +17,51 @@
     <!-- 快速模式：仅日期 20:00 -->
     <div v-if="mode === 'quick'" class="mode-content">
       <div class="quick-option">
-        <el-radio v-model="selectedQuick" label="20:00">
-          <span class="option-label">每天 20:00（默认）</span>
-          <span class="option-desc">推荐的默认时间</span>
-        </el-radio>
+        <a-radio-group v-model:value="selectedQuick">
+          <a-radio value="20:00">
+            <span class="option-label">每天 20:00（默认）</span>
+            <span class="option-desc">推荐的默认时间</span>
+          </a-radio>
+        </a-radio-group>
       </div>
     </div>
 
-    <!-- 自定义模式：可视化构建器 -->
+    <!-- 自定义模式:可视化构建器 -->
     <div v-if="mode === 'custom'" class="mode-content">
-      <el-form label-width="120px">
-        <el-form-item label="时间">
-          <el-time-select
-            v-model="customTime"
-            :start="'00:00'"
-            :end="'23:30'"
-            step="00:30"
+      <a-form layout="vertical">
+        <a-form-item label="时间" name="customTime">
+          <a-time-picker
+            id="cron-custom-time"
+            v-model:value="customTimeValue"
             format="HH:mm"
             placeholder="选择时间"
+            :minute-step="30"
+            @change="onCustomTimeChange"
+            style="width: 100%"
           />
-        </el-form-item>
-        <el-form-item label="频率">
-          <el-select v-model="customFrequency">
-            <el-option label="每天" value="daily" />
-            <el-option label="工作日（周一-周五）" value="weekday" />
-            <el-option label="周末（周六-周日）" value="weekend" />
-          </el-select>
-        </el-form-item>
-      </el-form>
+        </a-form-item>
+        <a-form-item label="频率" name="customFrequency">
+          <a-select
+            id="cron-custom-frequency"
+            v-model:value="customFrequency"
+            style="width: 100%"
+          >
+            <a-select-option value="daily">每天</a-select-option>
+            <a-select-option value="weekday">工作日（周一-周五）</a-select-option>
+            <a-select-option value="weekend">周末（周六-周日）</a-select-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
     </div>
 
     <!-- 高级模式：原始 Crontab 表达式 -->
     <div v-if="mode === 'advanced'" class="mode-content">
       <div class="expression-input">
-        <el-input
-          v-model="advancedExpression"
-          type="textarea"
+        <a-textarea
+          v-model:value="advancedExpression"
           placeholder="输入 crontab 表达式（例如：0 20 * * *）"
           :rows="2"
-          @input="validateExpression"
+          @input="handleAdvancedInput"
         />
         <div class="help-text">
           格式: 分钟 小时 日期 月份 星期
@@ -80,7 +86,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
+import dayjs from 'dayjs'
 import client from '@/api/client'
 
 const props = defineProps({
@@ -102,6 +109,7 @@ const selectedQuick = ref('20:00')
 
 // 自定义模式
 const customTime = ref('20:00')
+const customTimeValue = ref(dayjs('20:00', 'HH:mm'))
 const customFrequency = ref('daily')
 
 // 高级模式
@@ -112,26 +120,62 @@ const validationStatus = ref('')
 // 通用
 const nextExecutions = ref([])
 
+// 标志：是否正在手动编辑高级模式（防止自动解析导致模式切换）
+let isManualEditing = false
+
 // 切换模式 - 防止页面刷新
 function switchMode(newMode) {
   mode.value = newMode
+
+  // 切换到快速模式时，自动选择默认值并触发保存
+  if (newMode === 'quick') {
+    selectedQuick.value = '20:00'
+    const cron = buildCrontabFromQuick()
+    advancedExpression.value = cron
+    emit('update:modelValue', cron)
+    if (cron) validateAndPreview(cron)
+  }
+  // 切换到自定义模式时，基于当前值构建 cron
+  else if (newMode === 'custom') {
+    const cron = buildCrontabFromCustom()
+    advancedExpression.value = cron
+    emit('update:modelValue', cron)
+    if (cron) validateAndPreview(cron)
+  }
+  // 切换到高级模式时，使用当前的 advancedExpression
+  else if (newMode === 'advanced') {
+    if (advancedExpression.value) {
+      emit('update:modelValue', advancedExpression.value)
+      validateAndPreview(advancedExpression.value)
+    }
+  }
+}
+
+// 处理时间选择器变化
+function onCustomTimeChange(time) {
+  if (time) {
+    customTime.value = time.format('HH:mm')
+  }
 }
 
 // 监听 - 只在有效值时更新
 watch(selectedQuick, () => {
   const cron = buildCrontabFromQuick()
+  advancedExpression.value = cron
   emit('update:modelValue', cron)
   if (cron) validateAndPreview(cron)
 })
 
 watch(customFrequency, () => {
   const cron = buildCrontabFromCustom()
+  advancedExpression.value = cron
   emit('update:modelValue', cron)
   if (cron) validateAndPreview(cron)
 })
 
 watch(customTime, () => {
   const cron = buildCrontabFromCustom()
+  advancedExpression.value = cron
   emit('update:modelValue', cron)
   if (cron) validateAndPreview(cron)
 })
@@ -157,14 +201,29 @@ function buildCrontabFromCustom() {
   return `${minute} ${hour} * * ${dow}`
 }
 
-async function validateExpression() {
-  if (!advancedExpression.value.trim()) {
-    validationMessage.value = ''
-    nextExecutions.value = []
-    return
+// 处理高级模式输入 - 使用防抖以避免频繁调用API
+let debounceTimer = null
+function handleAdvancedInput() {
+  // 设置手动编辑标志
+  isManualEditing = true
+
+  // 立即触发 emit，保证值实时同步
+  emit('update:modelValue', advancedExpression.value)
+
+  // 使用防抖延迟验证
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
   }
 
-  await validateAndPreview(advancedExpression.value)
+  debounceTimer = setTimeout(async () => {
+    if (!advancedExpression.value.trim()) {
+      validationMessage.value = ''
+      nextExecutions.value = []
+      return
+    }
+
+    await validateAndPreview(advancedExpression.value)
+  }, 500) // 500ms 防抖延迟
 }
 
 async function validateAndPreview(expr) {
@@ -191,12 +250,78 @@ async function validateAndPreview(expr) {
   }
 }
 
-// 初始化
+// 解析 cron 表达式并设置对应的模式
+function parseCronExpression(cron) {
+  if (!cron) return
+
+  advancedExpression.value = cron
+
+  // 尝试匹配快速模式: 0 20 * * *
+  if (cron === '0 20 * * *') {
+    mode.value = 'quick'
+    selectedQuick.value = '20:00'
+    validateAndPreview(cron)
+    return
+  }
+
+  // 尝试解析为自定义模式
+  const parts = cron.trim().split(/\s+/)
+  if (parts.length === 5) {
+    const [minute, hour, day, month, dow] = parts
+
+    // 检查是否是简单的每天或工作日/周末模式
+    if (day === '*' && month === '*') {
+      const hourNum = parseInt(hour)
+      const minuteNum = parseInt(minute)
+
+      if (!isNaN(hourNum) && !isNaN(minuteNum) && hourNum >= 0 && hourNum < 24 && minuteNum >= 0 && minuteNum < 60) {
+        mode.value = 'custom'
+        customTime.value = `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+        customTimeValue.value = dayjs(customTime.value, 'HH:mm')
+
+        // 识别频率
+        if (dow === '*') {
+          customFrequency.value = 'daily'
+        } else if (dow === '1-5') {
+          customFrequency.value = 'weekday'
+        } else if (dow === '0,6' || dow === '6,0') {
+          customFrequency.value = 'weekend'
+        } else {
+          // 不支持的星期模式，使用高级模式
+          mode.value = 'advanced'
+        }
+
+        validateAndPreview(cron)
+        return
+      }
+    }
+  }
+
+  // 其他情况使用高级模式
+  mode.value = 'advanced'
+  validateAndPreview(cron)
+}
+
+// 初始化 - 解析传入的 cron 表达式
 watch(() => props.modelValue, (newVal) => {
+  // 如果正在手动编辑高级模式，跳过自动解析
+  if (isManualEditing) {
+    isManualEditing = false // 重置标志
+    return
+  }
+
   if (newVal) {
-    advancedExpression.value = newVal
+    parseCronExpression(newVal)
   }
 }, { immediate: true })
+
+// 组件卸载时清理防抖定时器，防止内存泄漏
+onBeforeUnmount(() => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+    debounceTimer = null
+  }
+})
 </script>
 
 <style scoped>

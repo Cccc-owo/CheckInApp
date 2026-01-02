@@ -1,220 +1,252 @@
 <template>
   <Layout>
     <div class="admin-users-container">
-      <el-card>
-        <template #header>
+      <a-card>
+        <template #title>
           <div class="card-header">
             <div>
-              <el-icon><UserFilled /></el-icon>
+              <UserOutlined />
               <span>用户管理</span>
             </div>
-            <div class="actions">
-              <el-button type="success" :icon="Plus" @click="handleCreate">
+            <a-space class="actions">
+              <a-button type="primary" @click="handleCreate">
+                <template #icon><PlusOutlined /></template>
                 创建用户
-              </el-button>
-              <el-button type="primary" :icon="Refresh" @click="handleRefresh">
+              </a-button>
+              <a-button @click="handleRefresh">
+                <template #icon><ReloadOutlined /></template>
                 刷新
-              </el-button>
-            </div>
+              </a-button>
+            </a-space>
           </div>
         </template>
 
         <!-- Tab 切换 -->
-        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <a-tabs v-model:activeKey="activeTab" @change="handleTabChange">
           <!-- 待审批用户 Tab -->
-          <el-tab-pane label="待审批用户" name="pending">
-            <el-table
-              :data="pendingUsers"
-              v-loading="loading"
-              stripe
-              border
+          <a-tab-pane key="pending" tab="待审批用户">
+            <!-- 桌面端表格 -->
+            <a-table
+              v-if="!isMobile"
+              :dataSource="pendingUsers"
+              :columns="pendingColumns"
+              :loading="loading"
+              :row-key="record => record.id"
+              :scroll="{ x: 'max-content' }"
+              bordered
             >
-              <el-table-column prop="id" label="ID" width="80" />
-              <el-table-column prop="alias" label="用户名" min-width="150" />
-              <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
-              <el-table-column prop="registered_ip" label="注册IP" width="150" />
-
-              <el-table-column prop="created_at" label="注册时间" width="180">
-                <template #default="{ row }">
-                  {{ formatDateTime(row.created_at) }}
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'created_at'">
+                  {{ formatDateTime(record.created_at) }}
                 </template>
-              </el-table-column>
-
-              <el-table-column label="操作" width="200" fixed="right">
-                <template #default="{ row }">
-                  <el-button type="success" size="small" @click="handleApprove(row)">
-                    通过
-                  </el-button>
-                  <el-button type="danger" size="small" @click="handleReject(row)">
-                    拒绝
-                  </el-button>
+                <template v-else-if="column.key === 'actions'">
+                  <a-space>
+                    <a-button type="primary" size="small" @click="handleApprove(record)">
+                      通过
+                    </a-button>
+                    <a-button danger size="small" @click="handleReject(record)">
+                      拒绝
+                    </a-button>
+                  </a-space>
                 </template>
-              </el-table-column>
-            </el-table>
+              </template>
+            </a-table>
 
-            <el-empty v-if="!loading && pendingUsers.length === 0" description="暂无待审批用户" />
-          </el-tab-pane>
+            <!-- 移动端卡片视图 -->
+            <a-space v-else direction="vertical" :size="16" style="width: 100%">
+              <a-card v-for="user in pendingUsers" :key="user.id" size="small" :loading="loading">
+                <a-descriptions :column="1" size="small" bordered>
+                  <a-descriptions-item label="ID">{{ user.id }}</a-descriptions-item>
+                  <a-descriptions-item label="用户名">{{ user.alias }}</a-descriptions-item>
+                  <a-descriptions-item label="邮箱">{{ user.email || '-' }}</a-descriptions-item>
+                  <a-descriptions-item label="注册时间">{{ formatDateTime(user.created_at) }}</a-descriptions-item>
+                </a-descriptions>
+                <a-space class="mt-3" style="width: 100%">
+                  <a-button type="primary" size="small" block @click="handleApprove(user)">通过</a-button>
+                  <a-button danger size="small" block @click="handleReject(user)">拒绝</a-button>
+                </a-space>
+              </a-card>
+              <a-empty v-if="!loading && pendingUsers.length === 0" description="暂无数据" />
+            </a-space>
+          </a-tab-pane>
 
           <!-- 所有用户 Tab -->
-          <el-tab-pane label="所有用户" name="all">
-            <!-- 用户表格 -->
-            <el-table
-              :data="userStore.users"
-              v-loading="loading"
-              stripe
-              border
-              @selection-change="handleSelectionChange"
+          <a-tab-pane key="all" tab="所有用户">
+            <!-- 桌面端表格 -->
+            <a-table
+              v-if="!isMobile"
+              :dataSource="userStore.users"
+              :columns="allColumns"
+              :loading="loading"
+              :row-key="record => record.id"
+              :row-selection="rowSelection"
+              :scroll="{ x: 'max-content' }"
+              bordered
             >
-              <el-table-column type="selection" width="55" />
-              <el-table-column prop="id" label="ID" width="80" />
-              <el-table-column prop="alias" label="用户名" min-width="150" show-overflow-tooltip />
-              <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
-
-              <el-table-column prop="role" label="角色" width="100">
-                <template #default="{ row }">
-                  <el-tag :type="row.role === 'admin' ? 'danger' : 'primary'">
-                    {{ row.role === 'admin' ? '管理员' : '用户' }}
-                  </el-tag>
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'role'">
+                  <a-tag :color="record.role === 'admin' ? 'error' : 'blue'">
+                    {{ record.role === 'admin' ? '管理员' : '用户' }}
+                  </a-tag>
                 </template>
-              </el-table-column>
-
-              <el-table-column prop="is_approved" label="审批状态" width="100">
-                <template #default="{ row }">
-                  <el-tag :type="row.is_approved ? 'success' : 'warning'">
-                    {{ row.is_approved ? '已审批' : '待审批' }}
-                  </el-tag>
+                <template v-else-if="column.key === 'is_approved'">
+                  <a-tag :color="record.is_approved ? 'success' : 'warning'">
+                    {{ record.is_approved ? '已审批' : '待审批' }}
+                  </a-tag>
                 </template>
-              </el-table-column>
-
-              <el-table-column prop="registered_ip" label="注册IP" width="150" />
-
-              <el-table-column prop="jwt_exp" label="Token 过期时间" width="180">
-                <template #default="{ row }">
-                  {{ row.jwt_exp && row.jwt_exp !== '0' ? formatDateTime(parseInt(row.jwt_exp) * 1000) : '-' }}
+                <template v-else-if="column.key === 'jwt_exp'">
+                  {{ record.jwt_exp && record.jwt_exp !== '0' ? formatDateTime(parseInt(record.jwt_exp) * 1000) : '-' }}
                 </template>
-              </el-table-column>
-
-              <el-table-column prop="created_at" label="创建时间" width="180">
-                <template #default="{ row }">
-                  {{ formatDateTime(row.created_at) }}
+                <template v-else-if="column.key === 'created_at'">
+                  {{ formatDateTime(record.created_at) }}
                 </template>
-              </el-table-column>
-
-              <el-table-column label="操作" width="200" fixed="right">
-                <template #default="{ row }">
-                  <el-button type="primary" size="small" @click="handleEdit(row)">
-                    编辑
-                  </el-button>
-                  <el-button type="danger" size="small" @click="handleDelete(row)">
-                    删除
-                  </el-button>
+                <template v-else-if="column.key === 'actions'">
+                  <a-space>
+                    <a-button type="primary" size="small" @click="handleEdit(record)">
+                      编辑
+                    </a-button>
+                    <a-button danger size="small" @click="handleDelete(record)">
+                      删除
+                    </a-button>
+                  </a-space>
                 </template>
-              </el-table-column>
-            </el-table>
+              </template>
+            </a-table>
+
+            <!-- 移动端卡片视图 -->
+            <a-space v-else direction="vertical" :size="16" style="width: 100%">
+              <a-card v-for="user in userStore.users" :key="user.id" size="small" :loading="loading">
+                <a-descriptions :column="1" size="small" bordered>
+                  <a-descriptions-item label="ID">{{ user.id }}</a-descriptions-item>
+                  <a-descriptions-item label="用户名">{{ user.alias }}</a-descriptions-item>
+                  <a-descriptions-item label="邮箱">{{ user.email || '-' }}</a-descriptions-item>
+                  <a-descriptions-item label="角色">
+                    <a-tag :color="user.role === 'admin' ? 'error' : 'blue'">
+                      {{ user.role === 'admin' ? '管理员' : '用户' }}
+                    </a-tag>
+                  </a-descriptions-item>
+                  <a-descriptions-item label="审批状态">
+                    <a-tag :color="user.is_approved ? 'success' : 'warning'">
+                      {{ user.is_approved ? '已审批' : '待审批' }}
+                    </a-tag>
+                  </a-descriptions-item>
+                  <a-descriptions-item label="Token过期">
+                    {{ user.jwt_exp && user.jwt_exp !== '0' ? formatDateTime(parseInt(user.jwt_exp) * 1000) : '-' }}
+                  </a-descriptions-item>
+                  <a-descriptions-item label="创建时间">{{ formatDateTime(user.created_at) }}</a-descriptions-item>
+                </a-descriptions>
+                <a-space class="mt-3" style="width: 100%">
+                  <a-button type="primary" size="small" block @click="handleEdit(user)">编辑</a-button>
+                  <a-button danger size="small" block @click="handleDelete(user)">删除</a-button>
+                </a-space>
+              </a-card>
+            </a-space>
 
             <!-- 批量操作 -->
             <div class="batch-actions" v-if="selectedUsers.length > 0">
-              <el-alert
-                :title="`已选择 ${selectedUsers.length} 个用户`"
+              <a-alert
+                :message="`已选择 ${selectedUsers.length} 个用户`"
                 type="info"
                 :closable="false"
               >
-                <template #default>
-                  <div style="margin-top: 10px;">
-                    <el-button type="success" size="small" @click="handleBatchApprove">
+                <template #description>
+                  <a-space style="margin-top: 10px;">
+                    <a-button type="primary" size="small" @click="handleBatchApprove">
                       批量审批
-                    </el-button>
-                    <el-button type="danger" size="small" @click="handleBatchDelete">
+                    </a-button>
+                    <a-button danger size="small" @click="handleBatchDelete">
                       批量删除
-                    </el-button>
-                  </div>
+                    </a-button>
+                  </a-space>
                 </template>
-              </el-alert>
+              </a-alert>
             </div>
-          </el-tab-pane>
-        </el-tabs>
-      </el-card>
+          </a-tab-pane>
+        </a-tabs>
+      </a-card>
 
       <!-- 创建/编辑用户对话框 -->
-      <el-dialog
+      <a-modal
         :title="dialogMode === 'create' ? '创建用户' : '编辑用户'"
-        v-model="dialogVisible"
-        width="600px"
+        v-model:open="dialogVisible"
+        :width="isMobile ? '100%' : 600"
+        :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
       >
-        <el-form
+        <a-form
           ref="formRef"
           :model="formData"
           :rules="formRules"
-          label-width="120px"
+          layout="vertical"
         >
-          <el-form-item label="用户名" prop="alias">
-            <el-input v-model="formData.alias" placeholder="请输入用户名" />
-          </el-form-item>
+          <a-form-item label="用户名" name="alias">
+            <a-input v-model:value="formData.alias" placeholder="请输入用户名" />
+          </a-form-item>
 
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model="formData.email" placeholder="请输入邮箱" />
-          </el-form-item>
+          <a-form-item label="邮箱" name="email">
+            <a-input v-model:value="formData.email" placeholder="请输入邮箱" />
+          </a-form-item>
 
-          <el-form-item label="角色" prop="role">
-            <el-select v-model="formData.role" placeholder="请选择角色">
-              <el-option label="用户" value="user" />
-              <el-option label="管理员" value="admin" />
-            </el-select>
-          </el-form-item>
+          <a-form-item label="角色" name="role">
+            <a-select v-model:value="formData.role" placeholder="请选择角色">
+              <a-select-option value="user">用户</a-select-option>
+              <a-select-option value="admin">管理员</a-select-option>
+            </a-select>
+          </a-form-item>
 
-          <el-form-item label="审批状态" prop="is_approved">
-            <el-switch v-model="formData.is_approved" />
+          <a-form-item label="审批状态" name="is_approved">
+            <a-switch v-model:checked="formData.is_approved" />
             <span class="form-hint">是否已审批通过</span>
-          </el-form-item>
+          </a-form-item>
 
-          <el-form-item label="密码" prop="password">
-            <el-input
-              v-model="formData.password"
-              type="password"
+          <a-form-item label="密码" name="password">
+            <a-input-password
+              v-model:value="formData.password"
               :placeholder="dialogMode === 'create' ? '请输入密码' : '留空则不修改密码'"
-              show-password
             />
             <span class="form-hint" v-if="dialogMode === 'edit'">
               留空则不修改密码
             </span>
-          </el-form-item>
+          </a-form-item>
 
-          <el-form-item label="重置密码" v-if="dialogMode === 'edit'">
-            <el-switch v-model="formData.reset_password" />
+          <a-form-item label="重置密码" v-if="dialogMode === 'edit'">
+            <a-switch v-model:checked="formData.reset_password" />
             <span class="form-hint-danger" v-if="formData.reset_password">
               ⚠️ 将重置为默认密码
             </span>
-          </el-form-item>
-        </el-form>
+          </a-form-item>
+        </a-form>
 
         <template #footer>
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit" :loading="submitting">
+          <a-button @click="dialogVisible = false">取消</a-button>
+          <a-button type="primary" @click="handleSubmit" :loading="submitting">
             确定
-          </el-button>
+          </a-button>
         </template>
-      </el-dialog>
+      </a-modal>
     </div>
   </Layout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { UserFilled, Plus, Refresh } from '@element-plus/icons-vue'
+import { message, Modal } from 'ant-design-vue'
+import { UserOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import Layout from '@/components/Layout.vue'
+import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useUserStore } from '@/stores/user'
 import { useAdminStore } from '@/stores/admin'
 import { adminAPI } from '@/api/index'
 
 const userStore = useUserStore()
 const adminStore = useAdminStore()
+const { isMobile } = useBreakpoint()
 
 // 状态
 const loading = ref(false)
 const activeTab = ref('all') // 默认展示所有用户
 const pendingUsers = ref([])
 const selectedUsers = ref([])
+const selectedRowKeys = ref([])
 const dialogVisible = ref(false)
 const dialogMode = ref('create')
 const submitting = ref(false)
@@ -256,13 +288,43 @@ const formatDateTime = (timestamp) => {
   })
 }
 
+// 待审批用户表格列
+const pendingColumns = [
+  { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+  { title: '用户名', dataIndex: 'alias', key: 'alias', ellipsis: true },
+  { title: '邮箱', dataIndex: 'email', key: 'email', ellipsis: true },
+  { title: '注册时间', dataIndex: 'created_at', key: 'created_at', width: 180 },
+  { title: '操作', key: 'actions', width: 200, fixed: 'right' },
+]
+
+// 所有用户表格列
+const allColumns = [
+  { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+  { title: '用户名', dataIndex: 'alias', key: 'alias', ellipsis: true },
+  { title: '邮箱', dataIndex: 'email', key: 'email', ellipsis: true },
+  { title: '角色', dataIndex: 'role', key: 'role', width: 100 },
+  { title: '审批状态', dataIndex: 'is_approved', key: 'is_approved', width: 100 },
+  { title: 'Token 过期时间', dataIndex: 'jwt_exp', key: 'jwt_exp', width: 180 },
+  { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 180 },
+  { title: '操作', key: 'actions', width: 200, fixed: 'right' },
+]
+
+// 行选择配置
+const rowSelection = {
+  selectedRowKeys: selectedRowKeys,
+  onChange: (keys, rows) => {
+    selectedRowKeys.value = keys
+    selectedUsers.value = rows
+  },
+}
+
 // 获取待审批用户
 const fetchPendingUsers = async () => {
   loading.value = true
   try {
     pendingUsers.value = await adminAPI.getPendingUsers()
   } catch (error) {
-    ElMessage.error(error.message || '获取待审批用户失败')
+    message.error(error.message || '获取待审批用户失败')
   } finally {
     loading.value = false
   }
@@ -279,48 +341,41 @@ const handleTabChange = (tab) => {
 
 // 审批通过用户
 const handleApprove = async (user) => {
-  try {
-    await ElMessageBox.confirm(
-      `确认通过用户 "${user.alias}" 的审批吗？`,
-      '审批确认',
-      {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'success',
+  Modal.confirm({
+    title: '审批确认',
+    content: `确认通过用户 "${user.alias}" 的审批吗？`,
+    okText: '确认',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        await adminAPI.approveUser(user.id)
+        message.success('审批成功')
+        fetchPendingUsers()
+      } catch (error) {
+        message.error(error.message || '审批失败')
       }
-    )
-
-    await adminAPI.approveUser(user.id)
-    ElMessage.success('审批成功')
-    fetchPendingUsers()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '审批失败')
-    }
-  }
+    },
+  })
 }
 
 // 拒绝用户
 const handleReject = async (user) => {
-  try {
-    await ElMessageBox.confirm(
-      `确认拒绝用户 "${user.alias}" 的申请吗？拒绝后将删除该用户。`,
-      '拒绝确认',
-      {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning',
+  Modal.confirm({
+    title: '拒绝确认',
+    content: `确认拒绝用户 "${user.alias}" 的申请吗？拒绝后将删除该用户。`,
+    okText: '确认',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
+      try {
+        await adminAPI.rejectUser(user.id)
+        message.success('已拒绝并删除用户')
+        fetchPendingUsers()
+      } catch (error) {
+        message.error(error.message || '操作失败')
       }
-    )
-
-    await adminAPI.rejectUser(user.id)
-    ElMessage.success('已拒绝并删除用户')
-    fetchPendingUsers()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '操作失败')
-    }
-  }
+    },
+  })
 }
 
 // 刷新数据
@@ -331,9 +386,9 @@ const handleRefresh = async () => {
     loading.value = true
     try {
       await userStore.fetchUsers()
-      ElMessage.success('刷新成功')
+      message.success('刷新成功')
     } catch (error) {
-      ElMessage.error(error.message || '刷新失败')
+      message.error(error.message || '刷新失败')
     } finally {
       loading.value = false
     }
@@ -379,23 +434,23 @@ const handleSubmit = async () => {
 
     // 检查密码设置冲突
     if (dialogMode.value === 'edit' && formData.value.password && formData.value.reset_password) {
-      ElMessage.warning('不能同时设置新密码和重置密码，请选择其一')
+      message.warning('不能同时设置新密码和重置密码，请选择其一')
       submitting.value = false
       return
     }
 
     if (dialogMode.value === 'create') {
       await userStore.createUser(formData.value)
-      ElMessage.success('创建成功')
+      message.success('创建成功')
     } else {
       await userStore.updateUser(formData.value.id, formData.value)
-      ElMessage.success('更新成功')
+      message.success('更新成功')
     }
 
     dialogVisible.value = false
     await handleRefresh()
   } catch (error) {
-    ElMessage.error(error.message || '操作失败')
+    message.error(error.message || '操作失败')
   } finally {
     submitting.value = false
   }
@@ -403,96 +458,77 @@ const handleSubmit = async () => {
 
 // 删除用户
 const handleDelete = (user) => {
-  ElMessageBox.confirm(`确定要删除用户 "${user.alias}" 吗？`, '警告', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(async () => {
+  Modal.confirm({
+    title: '警告',
+    content: `确定要删除用户 "${user.alias}" 吗？`,
+    okText: '确定',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
       try {
         await userStore.deleteUser(user.id)
-        ElMessage.success('删除成功')
+        message.success('删除成功')
         await handleRefresh()
       } catch (error) {
-        ElMessage.error(error.message || '删除失败')
+        message.error(error.message || '删除失败')
       }
-    })
-    .catch(() => {})
-}
-
-// 选择改变
-const handleSelectionChange = (selection) => {
-  selectedUsers.value = selection
+    },
+  })
 }
 
 // 批量审批
-const handleBatchApprove = async () => {
-  try {
-    await ElMessageBox.confirm(
-      `确认批量审批 ${selectedUsers.value.length} 个用户吗？`,
-      '批量审批确认',
-      {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'success',
+const handleBatchApprove = () => {
+  Modal.confirm({
+    title: '批量审批确认',
+    content: `确认批量审批 ${selectedUsers.value.length} 个用户吗？`,
+    okText: '确认',
+    cancelText: '取消',
+    onOk: async () => {
+      const userIds = selectedUsers.value.map((u) => u.id)
+      let successCount = 0
+      let failureCount = 0
+
+      for (const userId of userIds) {
+        try {
+          await adminAPI.approveUser(userId)
+          successCount++
+        } catch (error) {
+          failureCount++
+        }
       }
-    )
 
-    const userIds = selectedUsers.value.map((u) => u.id)
-    let successCount = 0
-    let failureCount = 0
-
-    for (const userId of userIds) {
-      try {
-        await adminAPI.approveUser(userId)
-        successCount++
-      } catch (error) {
-        failureCount++
-      }
-    }
-
-    ElMessage.success(`批量审批完成：成功 ${successCount}，失败 ${failureCount}`)
-    await handleRefresh()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '批量审批失败')
-    }
-  }
+      message.success(`批量审批完成：成功 ${successCount}，失败 ${failureCount}`)
+      await handleRefresh()
+    },
+  })
 }
 
 // 批量删除
-const handleBatchDelete = async () => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除选中的 ${selectedUsers.value.length} 个用户吗？此操作不可恢复！`,
-      '批量删除警告',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
+const handleBatchDelete = () => {
+  Modal.confirm({
+    title: '批量删除警告',
+    content: `确定要删除选中的 ${selectedUsers.value.length} 个用户吗？此操作不可恢复！`,
+    okText: '确定',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
+      const userIds = selectedUsers.value.map((u) => u.id)
+      let successCount = 0
+      let failureCount = 0
+
+      for (const userId of userIds) {
+        try {
+          await userStore.deleteUser(userId)
+          successCount++
+        } catch (error) {
+          failureCount++
+        }
       }
-    )
 
-    const userIds = selectedUsers.value.map((u) => u.id)
-    let successCount = 0
-    let failureCount = 0
-
-    for (const userId of userIds) {
-      try {
-        await userStore.deleteUser(userId)
-        successCount++
-      } catch (error) {
-        failureCount++
-      }
-    }
-
-    ElMessage.success(`批量删除完成：成功 ${successCount}，失败 ${failureCount}`)
-    await handleRefresh()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.message || '批量删除失败')
-    }
-  }
+      message.success(`批量删除完成：成功 ${successCount}，失败 ${failureCount}`)
+      await handleRefresh()
+    },
+  })
 }
 
 onMounted(() => {
@@ -519,10 +555,6 @@ onMounted(() => {
   gap: 8px;
 }
 
-.actions {
-  gap: 10px;
-}
-
 .batch-actions {
   margin-top: 15px;
 }
@@ -539,5 +571,9 @@ onMounted(() => {
   display: block;
   margin-left: 0;
   margin-top: 4px;
+}
+
+.mt-3 {
+  margin-top: 12px;
 }
 </style>

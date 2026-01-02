@@ -670,7 +670,7 @@ CheckInApp/
 - `GET /api/check_in/records/count` - 记录统计
 
 ### 管理员 (`/api/admin`)
-- `POST /api/admin/batch_toggle_active` - 批量启用/禁用
+
 - `POST /api/admin/batch_check_in` - 批量打卡
 - `GET /api/admin/logs` - 系统日志
 - `GET /api/admin/stats` - 系统统计

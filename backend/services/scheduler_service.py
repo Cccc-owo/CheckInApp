@@ -13,7 +13,6 @@ from backend.config import settings
 from backend.models import get_db, User, CheckInTask
 from backend.services.check_in_service import CheckInService
 from backend.services.admin_service import AdminService
-from backend.workers.email_notifier import send_expiration_notification
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +181,10 @@ def check_token_expiration():
                         # 使用用户账户的邮箱发送通知
                         if user.email:
                             logger.info(f"用户 {user.alias} 的 Token 即将过期，发送邮件提醒到 {user.email}...")
-                            send_expiration_notification(user.email, user.jwt_exp)
+                            from backend.services.email_service import EmailService
+                            jwt_exp_value = user.jwt_exp
+                            jwt_exp_str = str(jwt_exp_value) if jwt_exp_value is not None else "0"
+                            EmailService.notify_token_expiring(user, jwt_exp_str)
                             notified_count += 1
 
                 except ValueError:

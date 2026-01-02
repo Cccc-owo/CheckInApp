@@ -1,23 +1,12 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
-import {
-  User,
-  Key,
-  Calendar,
-  Refresh,
-  Document,
-  List,
-  Plus,
-  UserFilled,
-  DataAnalysis,
-  Loading,
-  SuccessFilled,
-  WarningFilled,
-  CircleCloseFilled
-} from '@element-plus/icons-vue'
+
+// Ant Design Vue
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/reset.css'
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
+import { ConfigProvider } from 'ant-design-vue'
+import antdTheme from './antd-theme'
 
 import App from './App.vue'
 import router from './router'
@@ -26,29 +15,16 @@ import './style.css'
 const app = createApp(App)
 const pinia = createPinia()
 
-// 按需注册 Element Plus 图标（仅注册使用的13个）
-const icons = {
-  User,
-  Key,
-  Calendar,
-  Refresh,
-  Document,
-  List,
-  Plus,
-  UserFilled,
-  DataAnalysis,
-  Loading,
-  SuccessFilled,
-  WarningFilled,
-  CircleCloseFilled
-}
-
-for (const [key, component] of Object.entries(icons)) {
-  app.component(key, component)
-}
-
 app.use(pinia)
 app.use(router)
-app.use(ElementPlus, { locale: zhCn })
+
+// Ant Design Vue with custom theme
+app.use(Antd)
+
+// Configure Ant Design globally
+app.config.globalProperties.$antdConfig = {
+  theme: antdTheme,
+  locale: zhCN,
+}
 
 app.mount('#app')
