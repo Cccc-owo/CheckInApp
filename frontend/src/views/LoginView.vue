@@ -351,6 +351,12 @@ const handleLoginError = error => {
   bottom: 0;
   overflow-y: auto;
   padding: 16px;
+  transition: background 0.3s ease;
+}
+
+/* 暗色模式背景 */
+.dark .login-container {
+  background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
 }
 
 .login-card {
@@ -358,6 +364,11 @@ const handleLoginError = error => {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   width: 100%;
   margin: 20px 0;
+}
+
+/* 暗色模式卡片阴影 */
+.dark .login-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .card-header {
@@ -368,12 +379,24 @@ const handleLoginError = error => {
   margin: 0;
   font-size: 24px;
   color: #303133;
+  transition: color 0.3s ease;
+}
+
+/* 暗色模式标题 */
+.dark .card-header h2 {
+  color: #e6e1e5;
 }
 
 .subtitle {
   margin: 10px 0 0 0;
   font-size: 14px;
   color: #909399;
+  transition: color 0.3s ease;
+}
+
+/* 暗色模式副标题 */
+.dark .subtitle {
+  color: #cac4d0;
 }
 
 .mode-switch {
@@ -389,10 +412,20 @@ const handleLoginError = error => {
   color: #2196f3;
   cursor: pointer;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 .link-text:hover {
   text-decoration: underline;
+}
+
+/* 暗色模式链接 */
+.dark .link-text {
+  color: #64b5f6;
+}
+
+.dark .link-text:hover {
+  color: #90caf9;
 }
 
 .tips {
@@ -411,6 +444,13 @@ const handleLoginError = error => {
   border-top: 1px dashed #e0e0e0;
   color: #606266;
   font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* 暗色模式提示注释 */
+.dark .tip-note {
+  border-top-color: #49454f;
+  color: #cac4d0;
 }
 
 /* 确保 Ant Design Row 占满高度 */

@@ -202,6 +202,38 @@ export default function getAntdTheme(isDark = false) {
         colorText: isDark ? '#e6e1e5' : '#1c1b1f',
       },
 
+      // === Segmented 组件 ===
+      Segmented: {
+        borderRadius: 12,
+        borderRadiusSM: 8,
+        // 根据源码，Segmented 使用这些 token 映射：
+        // labelColor <- colorTextLabel
+        // labelColorHover <- colorText
+        // bgColor <- colorBgLayout
+        // bgColorHover <- colorFillSecondary
+        // bgColorSelected <- colorBgElevated
+
+        // 未选中项文字颜色
+        colorTextLabel: isDark ? '#938f99' : '#79747e',
+        labelColor: isDark ? '#938f99' : '#79747e',
+
+        // 选中项和 hover 时的文字颜色
+        colorText: isDark ? '#ffffff' : '#1c1b1f',
+        labelColorHover: isDark ? '#ffffff' : '#1c1b1f',
+
+        // 整体背景色
+        colorBgLayout: isDark ? '#26252a' : '#f5f5f5',
+        bgColor: isDark ? '#26252a' : '#f5f5f5',
+
+        // hover 背景色（降低透明度，保持文字可见）
+        colorFillSecondary: isDark ? 'rgba(129, 199, 132, 0.12)' : 'rgba(76, 175, 80, 0.08)',
+        bgColorHover: isDark ? 'rgba(129, 199, 132, 0.12)' : 'rgba(76, 175, 80, 0.08)',
+
+        // 选中项背景色（主题色）
+        colorBgElevated: isDark ? '#81c784' : '#4caf50',
+        bgColorSelected: isDark ? '#81c784' : '#4caf50',
+      },
+
       // === Tooltip 组件 ===
       Tooltip: {
         colorBgSpotlight: isDark ? '#313033' : '#f5f5f5', // Tooltip 背景色（跟随主题）
