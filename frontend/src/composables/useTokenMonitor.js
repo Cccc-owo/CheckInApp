@@ -20,6 +20,10 @@ let monitorTimer = null
 let warningShown = false
 let isMonitoring = false // 新增：防止重复启动
 
+// 检查间隔（毫秒）
+const NORMAL_CHECK_INTERVAL = 15 * 60 * 1000  // 正常情况：15 分钟
+const URGENT_CHECK_INTERVAL = 5 * 60 * 1000   // Token 即将过期：5 分钟
+
 export function useTokenMonitor() {
   const authStore = useAuthStore()
   const userStore = useUserStore()
@@ -99,15 +103,36 @@ export function useTokenMonitor() {
           })
           warningShown = true
         }
+
+        // Token 即将过期时，切换到更频繁的检查（5 分钟）
+        adjustCheckInterval(URGENT_CHECK_INTERVAL)
       }
       // Token 状态正常
       else if (remainingMinutes !== null && remainingMinutes > 60) {
         // 重置警告标志
         warningShown = false
+
+        // 恢复正常检查频率（15 分钟）
+        adjustCheckInterval(NORMAL_CHECK_INTERVAL)
       }
 
     } catch (error) {
       console.error('检查 Token 状态失败:', error)
+    }
+  }
+
+  // 调整检查间隔
+  const adjustCheckInterval = (newInterval) => {
+    if (monitorTimer) {
+      const currentInterval = monitorTimer._idleTimeout || 0
+
+      // 只有当新间隔与当前间隔不同时才重启定时器
+      if (currentInterval !== newInterval) {
+        clearInterval(monitorTimer)
+        monitorTimer = setInterval(() => {
+          checkTokenStatus()
+        }, newInterval)
+      }
     }
   }
 
@@ -123,10 +148,10 @@ export function useTokenMonitor() {
     // 立即检查一次
     checkTokenStatus()
 
-    // 每 2 分钟检查一次
+    // 默认使用正常检查频率（15 分钟）
     monitorTimer = setInterval(() => {
       checkTokenStatus()
-    }, 2 * 60 * 1000) // 2 分钟
+    }, NORMAL_CHECK_INTERVAL)
   }
 
   // 停止监控

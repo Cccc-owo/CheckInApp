@@ -200,6 +200,8 @@ class AuthService:
 
                 user.authorization = pure_token  # 存储清理后的 token
                 user.jwt_exp = jwt_exp
+                user.token_expiring_notified = False  # 重置"即将过期"提醒标志
+                user.token_expired_notified = False  # 重置"已过期"提醒标志
                 user.updated_at = datetime.now()
                 db.commit()
                 db.refresh(user)

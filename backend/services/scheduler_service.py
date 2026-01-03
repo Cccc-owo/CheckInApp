@@ -174,18 +174,52 @@ def check_token_expiration():
                 try:
                     exp_timestamp = int(user.jwt_exp)
 
-                    # 检查是否在 30 分钟内过期（0 < 剩余时间 < 1800秒）
+                    # 检查 Token 状态并发送对应的提醒
                     time_until_expiry = exp_timestamp - current_timestamp
 
+                    # 情况1：Token 即将过期（过期前 30 分钟内，且还未过期）
                     if 0 < time_until_expiry < 1800:  # 30分钟 = 1800秒
-                        # 使用用户账户的邮箱发送通知
-                        if user.email:
+                        if user.email and not user.token_expiring_notified:
                             logger.info(f"用户 {user.alias} 的 Token 即将过期，发送邮件提醒到 {user.email}...")
                             from backend.services.email_service import EmailService
                             jwt_exp_value = user.jwt_exp
                             jwt_exp_str = str(jwt_exp_value) if jwt_exp_value is not None else "0"
-                            EmailService.notify_token_expiring(user, jwt_exp_str)
-                            notified_count += 1
+
+                            # 发送"即将过期"邮件
+                            success = EmailService.notify_token_expiring(user, jwt_exp_str)
+
+                            if success:
+                                user.token_expiring_notified = True
+                                db.commit()
+                                notified_count += 1
+                                logger.info(f"用户 {user.alias} 的 Token 即将过期邮件已发送并标记")
+                            else:
+                                logger.warning(f"用户 {user.alias} 的 Token 即将过期邮件发送失败")
+
+                    # 情况2：Token 已过期（过期后 30 分钟内）
+                    elif -1800 < time_until_expiry <= 0:  # 过期后 30 分钟内
+                        if user.email and not user.token_expired_notified:
+                            logger.info(f"用户 {user.alias} 的 Token 已过期，发送邮件提醒到 {user.email}...")
+                            from backend.services.email_service import EmailService
+
+                            # 发送"已过期"邮件（可以使用不同的邮件模板或内容）
+                            success = EmailService.notify_token_expired(user)
+
+                            if success:
+                                user.token_expired_notified = True
+                                db.commit()
+                                notified_count += 1
+                                logger.info(f"用户 {user.alias} 的 Token 已过期邮件已发送并标记")
+                            else:
+                                logger.warning(f"用户 {user.alias} 的 Token 已过期邮件发送失败")
+
+                    # 情况3：Token 正常（剩余时间 > 30 分钟），重置提醒标志
+                    elif time_until_expiry >= 1800:
+                        if user.token_expiring_notified or user.token_expired_notified:
+                            user.token_expiring_notified = False
+                            user.token_expired_notified = False
+                            db.commit()
+                            logger.info(f"用户 {user.alias} 的 Token 已刷新，重置所有提醒标志")
 
                 except ValueError:
                     logger.warning(f"用户 {user.alias} 的 jwt_exp 格式不正确: {user.jwt_exp}")

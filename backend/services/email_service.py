@@ -511,7 +511,118 @@ class EmailService:
                     <p><strong>如何刷新凭证：</strong></p>
                     <ol style="margin: 10px 0; padding-left: 20px;">
                         <li>登录系统（扫码或密码登录）</li>
-                        <li>在个人设置中点击"刷新凭证"</li>
+                        <li>在个人设置旁的按钮中进行刷新 Token</li>
+                        <li>使用手机 QQ 扫描二维码完成刷新</li>
+                    </ol>
+
+                    <p style="text-align: center;">
+                        <a href="{settings.FRONTEND_URL}/login" class="btn">立即登录刷新</a>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>此邮件由系统自动发送，请勿直接回复。</p>
+                    <p>接龙自动打卡系统 © {datetime.now().year}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        return EmailService.send_email([str(user_email)], subject, body_html)
+
+    @staticmethod
+    def notify_token_expired(user: User) -> bool:
+        """
+        通知用户 Token 已过期
+
+        Args:
+            user: 用户对象
+
+        Returns:
+            是否发送成功
+        """
+        user_email = user.email
+        if user_email is None:
+            logger.info(f"用户 {user.alias} 未设置邮箱，跳过 Token 已过期通知")
+            return False
+
+        # 构建邮件内容
+        subject = f"【接龙自动打卡系统】登录凭证已过期 - {user.alias}"
+
+        body_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background-color: #dc3545;
+                    color: white;
+                    padding: 20px;
+                    text-align: center;
+                    border-radius: 5px 5px 0 0;
+                }}
+                .content {{
+                    background-color: #f9f9f9;
+                    padding: 20px;
+                    border: 1px solid #ddd;
+                    border-radius: 0 0 5px 5px;
+                }}
+                .error-box {{
+                    background-color: #f8d7da;
+                    border-left: 4px solid #dc3545;
+                    padding: 15px;
+                    margin: 15px 0;
+                }}
+                .footer {{
+                    margin-top: 20px;
+                    text-align: center;
+                    color: #999;
+                    font-size: 12px;
+                }}
+                .btn {{
+                    display: inline-block;
+                    padding: 12px 24px;
+                    background-color: #667eea;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin: 10px 0;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h2>❌ 登录凭证已过期</h2>
+                </div>
+                <div class="content">
+                    <p>您好，{user.alias}！</p>
+                    <p>您的 QQ 登录凭证已过期，系统已无法自动执行打卡任务。</p>
+
+                    <div class="error-box">
+                        <strong>⚠️ 重要提示：</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>登录凭证已过期，所有自动打卡任务已暂停</li>
+                            <li>请尽快登录系统刷新凭证以恢复服务</li>
+                            <li>如果您已设置密码，可以使用密码登录后扫码刷新凭证</li>
+                        </ul>
+                    </div>
+
+                    <p><strong>如何刷新 Token：</strong></p>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>登录系统（扫码或密码登录）</li>
+                        <li>在个人设置旁的按钮中进行刷新 Token</li>
                         <li>使用手机 QQ 扫描二维码完成刷新</li>
                     </ol>
 
