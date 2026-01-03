@@ -18,9 +18,9 @@
 
 ## 技术栈
 
-**后端**: FastAPI + SQLAlchemy + APScheduler + Selenium
-**前端**: Vue 3 + Ant Design Vue + Pinia
-**数据库**: SQLite
+**后端**: FastAPI + SQLAlchemy + APScheduler + Selenium  
+**前端**: Vue 3 + Ant Design Vue + Pinia  
+**数据库**: SQLite  
 
 ## 快速开始
 
