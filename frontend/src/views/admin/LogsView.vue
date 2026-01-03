@@ -48,43 +48,44 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
-import { FileTextOutlined, ReloadOutlined } from '@ant-design/icons-vue'
-import Layout from '@/components/Layout.vue'
-import { useAdminStore } from '@/stores/admin'
-import { formatDateTime } from '@/utils/helpers'
+import { ref, computed, onMounted } from 'vue';
+import { message } from 'ant-design-vue';
+import { FileTextOutlined, ReloadOutlined } from '@ant-design/icons-vue';
+import Layout from '@/components/Layout.vue';
+import { useAdminStore } from '@/stores/admin';
+import { formatDateTime } from '@/utils/helpers';
 
-const adminStore = useAdminStore()
+const adminStore = useAdminStore();
 
-const logContent = ref('')
-const lastUpdate = ref('')
+const logContent = ref('');
+const lastUpdate = ref('');
 
 const logLines = computed(() => {
-  if (!logContent.value) return 0
-  const content = typeof logContent.value === 'string' ? logContent.value : String(logContent.value)
-  return content.split('\n').length
-})
+  if (!logContent.value) return 0;
+  const content =
+    typeof logContent.value === 'string' ? logContent.value : String(logContent.value);
+  return content.split('\n').length;
+});
 
 const handleRefresh = async () => {
   try {
-    const data = await adminStore.fetchLogs({ lines: 200 })
+    const data = await adminStore.fetchLogs({ lines: 200 });
     if (data.logs) {
       // 确保是字符串
-      logContent.value = typeof data.logs === 'string' ? data.logs : String(data.logs)
-      lastUpdate.value = formatDateTime(new Date())
-      message.success('刷新成功')
+      logContent.value = typeof data.logs === 'string' ? data.logs : String(data.logs);
+      lastUpdate.value = formatDateTime(new Date());
+      message.success('刷新成功');
     } else {
-      logContent.value = '无日志内容'
+      logContent.value = '无日志内容';
     }
   } catch (error) {
-    message.error(error.message || '刷新失败')
+    message.error(error.message || '刷新失败');
   }
-}
+};
 
 onMounted(() => {
-  handleRefresh()
-})
+  handleRefresh();
+});
 </script>
 
 <style scoped>

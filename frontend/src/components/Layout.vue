@@ -8,16 +8,16 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import Navbar from './Navbar.vue'
-import { useTokenMonitor } from '@/composables/useTokenMonitor'
+import { onMounted } from 'vue';
+import Navbar from './Navbar.vue';
+import { useTokenMonitor } from '@/composables/useTokenMonitor';
 
 // 启动全局 Token 监控
-const { startMonitoring } = useTokenMonitor()
+const { startMonitoring } = useTokenMonitor();
 
 onMounted(() => {
-  startMonitoring()
-})
+  startMonitoring();
+});
 </script>
 
 <style scoped>
@@ -26,7 +26,11 @@ onMounted(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, var(--md-sys-color-surface-container-lowest) 0%, var(--md-sys-color-surface-container-low) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--md-sys-color-surface-container-lowest) 0%,
+    var(--md-sys-color-surface-container-low) 100%
+  );
 }
 
 .main-content {

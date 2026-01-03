@@ -10,6 +10,19 @@ from backend.schemas.user import UserCreate, UserUpdate, UserUpdateProfile
 logger = logging.getLogger(__name__)
 
 
+def escape_like_pattern(text: str) -> str:
+    """
+    转义 LIKE 查询中的特殊字符
+
+    Args:
+        text: 原始搜索文本
+
+    Returns:
+        转义后的文本
+    """
+    return text.replace('%', r'\%').replace('_', r'\_')
+
+
 class UserService:
     """用户服务"""
 
@@ -114,10 +127,12 @@ class UserService:
 
         # 搜索过滤
         if search:
+            # 转义 LIKE 特殊字符，防止通配符滥用
+            escaped_search = escape_like_pattern(search)
             # 注意：jwt_sub 可能为 NULL，需要处理
-            search_conditions = [User.alias.ilike(f"%{search}%")]
+            search_conditions = [User.alias.ilike(f"%{escaped_search}%")]
             # 只有当 jwt_sub 不为空时才搜索
-            search_conditions.append(User.jwt_sub.ilike(f"%{search}%"))
+            search_conditions.append(User.jwt_sub.ilike(f"%{escaped_search}%"))
             query = query.filter(or_(*search_conditions))
 
         # 角色过滤

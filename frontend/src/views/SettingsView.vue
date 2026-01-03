@@ -37,12 +37,7 @@
             修改个人信息
           </h2>
 
-          <a-form
-            :model="profileForm"
-            :rules="profileRules"
-            ref="profileFormRef"
-            layout="vertical"
-          >
+          <a-form ref="profileFormRef" :model="profileForm" :rules="profileRules" layout="vertical">
             <a-form-item label="邮箱" name="email">
               <a-input
                 v-model:value="profileForm.email"
@@ -62,11 +57,7 @@
 
             <a-form-item style="margin-top: 8px">
               <a-space>
-                <a-button
-                  type="primary"
-                  :loading="profileLoading"
-                  @click="handleUpdateProfile"
-                >
+                <a-button type="primary" :loading="profileLoading" @click="handleUpdateProfile">
                   保存
                 </a-button>
                 <a-button @click="resetProfileForm">重置</a-button>
@@ -92,14 +83,8 @@
             :closable="false"
           />
 
-          <a-form
-            :model="passwordForm"
-            layout="vertical"
-          >
-            <a-form-item
-              v-if="hasPassword"
-              label="当前密码"
-            >
+          <a-form :model="passwordForm" layout="vertical">
+            <a-form-item v-if="hasPassword" label="当前密码">
               <a-input-password
                 v-model:value="passwordForm.currentPassword"
                 placeholder="请输入当前密码"
@@ -125,11 +110,7 @@
 
             <a-form-item style="margin-top: 8px">
               <a-space>
-                <a-button
-                  type="primary"
-                  :loading="passwordLoading"
-                  @click="handleUpdatePassword"
-                >
+                <a-button type="primary" :loading="passwordLoading" @click="handleUpdatePassword">
                   {{ hasPassword ? '修改密码' : '设置密码' }}
                 </a-button>
                 <a-button @click="resetPasswordForm">重置</a-button>
@@ -143,130 +124,128 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
-import { UserOutlined, EditOutlined, KeyOutlined } from '@ant-design/icons-vue'
-import { userAPI } from '@/api'
-import Layout from '@/components/Layout.vue'
+import { ref, onMounted } from 'vue';
+import { message } from 'ant-design-vue';
+import { UserOutlined, EditOutlined, KeyOutlined } from '@ant-design/icons-vue';
+import { userAPI } from '@/api';
+import Layout from '@/components/Layout.vue';
 
-const profileFormRef = ref(null)
-const profileLoading = ref(false)
-const passwordLoading = ref(false)
+const profileFormRef = ref(null);
+const profileLoading = ref(false);
+const passwordLoading = ref(false);
 
-const user = ref(null)
-const hasPassword = ref(false)
+const user = ref(null);
+const hasPassword = ref(false);
 
 // 个人信息表单
 const profileForm = ref({
   email: '',
-})
+});
 
 const profileRules = {
-  email: [
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' },
-  ],
-}
+  email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],
+};
 
 // 密码表单
 const passwordForm = ref({
   currentPassword: '',
   newPassword: '',
   confirmPassword: '',
-})
+});
 
 // 加载用户信息
 const loadUserInfo = async () => {
   try {
-    user.value = await userAPI.getCurrentUser()
-    profileForm.value.email = user.value.email || ''
+    user.value = await userAPI.getCurrentUser();
+    profileForm.value.email = user.value.email || '';
 
     // 从后端返回的数据中获取密码状态
-    hasPassword.value = user.value.has_password || false
+    hasPassword.value = user.value.has_password || false;
   } catch (error) {
-    message.error(error.message || '加载用户信息失败')
+    message.error(error.message || '加载用户信息失败');
   }
-}
+};
 
 // 更新个人信息
 const handleUpdateProfile = async () => {
-  if (!profileFormRef.value) return
+  if (!profileFormRef.value) return;
 
   try {
-    await profileFormRef.value.validate()
-    profileLoading.value = true
+    await profileFormRef.value.validate();
+    profileLoading.value = true;
 
     await userAPI.updateProfile({
       email: profileForm.value.email || null,
-    })
+    });
 
-    message.success('个人信息修改成功')
-    await loadUserInfo()
+    message.success('个人信息修改成功');
+    await loadUserInfo();
   } catch (error) {
-    if (error.errorFields) return // 验证错误
-    const errorMsg = error.response?.data?.detail || error.message || '修改失败'
-    message.error(errorMsg)
+    if (error.errorFields) return; // 验证错误
+    const errorMsg = error.response?.data?.detail || error.message || '修改失败';
+    message.error(errorMsg);
   } finally {
-    profileLoading.value = false
+    profileLoading.value = false;
   }
-}
+};
 
 // 重置个人信息表单
 const resetProfileForm = () => {
-  profileForm.value.email = user.value?.email || ''
-  profileFormRef.value?.clearValidate()
-}
+  profileForm.value.email = user.value?.email || '';
+  profileFormRef.value?.clearValidate();
+};
 
 // 更新密码
 const handleUpdatePassword = async () => {
   try {
     // 手动验证
     if (hasPassword.value && !passwordForm.value.currentPassword) {
-      message.error('请输入当前密码')
-      return
+      message.error('请输入当前密码');
+      return;
     }
 
     if (!passwordForm.value.newPassword) {
-      message.error('请输入新密码')
-      return
+      message.error('请输入新密码');
+      return;
     }
 
     if (passwordForm.value.newPassword.length < 6) {
-      message.error('密码至少需要6个字符')
-      return
+      message.error('密码至少需要6个字符');
+      return;
     }
 
     if (!passwordForm.value.confirmPassword) {
-      message.error('请再次输入新密码')
-      return
+      message.error('请再次输入新密码');
+      return;
     }
 
     if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-      message.error('两次输入的密码不一致')
-      return
+      message.error('两次输入的密码不一致');
+      return;
     }
 
-    passwordLoading.value = true
+    passwordLoading.value = true;
 
     const updateData = {
       new_password: passwordForm.value.newPassword,
-    }
+    };
 
     if (hasPassword.value) {
-      updateData.current_password = passwordForm.value.currentPassword
+      updateData.current_password = passwordForm.value.currentPassword;
     }
 
-    await userAPI.updateProfile(updateData)
+    await userAPI.updateProfile(updateData);
 
-    message.success(hasPassword.value ? '密码修改成功' : '密码设置成功')
-    hasPassword.value = true
-    resetPasswordForm()
+    message.success(hasPassword.value ? '密码修改成功' : '密码设置成功');
+    hasPassword.value = true;
+    resetPasswordForm();
   } catch (error) {
-    const errorMsg = error.response?.data?.detail || error.message || '操作失败'
-    message.error(errorMsg)
+    const errorMsg = error.response?.data?.detail || error.message || '操作失败';
+    message.error(errorMsg);
   } finally {
-    passwordLoading.value = false
+    passwordLoading.value = false;
   }
-}
+};
 
 // 重置密码表单
 const resetPasswordForm = () => {
@@ -274,25 +253,25 @@ const resetPasswordForm = () => {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-  }
-}
+  };
+};
 
 // 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
+const formatDate = dateString => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-  })
-}
+  });
+};
 
 onMounted(() => {
-  loadUserInfo()
-})
+  loadUserInfo();
+});
 </script>
 
 <style scoped>

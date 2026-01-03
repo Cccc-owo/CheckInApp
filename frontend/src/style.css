@@ -15,7 +15,12 @@
 @layer base {
   :root {
     /* === MD3 Typography === */
-    font-family: 'Roboto', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+      'Roboto',
+      'Inter',
+      system-ui,
+      -apple-system,
+      sans-serif;
     line-height: 1.5;
     font-weight: 400;
     color-scheme: light;
@@ -130,8 +135,9 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   #app {
@@ -140,7 +146,12 @@
   }
 
   /* === Typography Styles === */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-weight: 400;
     line-height: 1.2;
     color: var(--md-sys-color-on-surface);
@@ -270,15 +281,17 @@
     background-color: var(--md-sys-color-surface-container-low);
     color: var(--md-sys-color-on-surface);
     border-radius: 12px;
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-                0px 1px 3px 1px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
+      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .md3-card:hover {
-    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-                0px 4px 8px 3px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
+      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
 
@@ -307,19 +320,22 @@
     @apply md3-button;
     background-color: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-                0px 1px 3px 1px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
+      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
   }
 
   .md3-button-filled:hover {
-    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-                0px 4px 8px 3px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
+      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
 
   .md3-button-filled:active {
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-                0px 1px 3px 1px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
+      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
     transform: translateY(0);
   }
 
@@ -495,14 +511,16 @@
   /* === Card === */
   .ant-card {
     border-radius: 12px;
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-                0px 1px 3px 1px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
+      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .ant-card:hover {
-    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-                0px 4px 8px 3px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
+      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
 
@@ -537,13 +555,15 @@
   }
 
   .ant-btn-primary {
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-                0px 1px 3px 1px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
+      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
   }
 
   .ant-btn-primary:hover {
-    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-                0px 4px 8px 3px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
+      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
 
@@ -672,8 +692,9 @@
   /* === Dropdown === */
   .ant-dropdown-menu {
     border-radius: 12px;
-    box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.15),
-                0px 6px 10px 4px rgba(0, 0, 0, 0.10);
+    box-shadow:
+      0px 2px 3px 0px rgba(0, 0, 0, 0.15),
+      0px 6px 10px 4px rgba(0, 0, 0, 0.1);
   }
 
   .ant-dropdown-menu-item {
@@ -715,12 +736,22 @@
   }
 
   /* 只对包含 ant-descriptions-item-content 的 td 应用白色背景 */
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr td:has(.ant-descriptions-item-content) {
+  .ant-descriptions.ant-descriptions-bordered
+    .ant-descriptions-view
+    table
+    tbody
+    tr
+    td:has(.ant-descriptions-item-content) {
     background-color: var(--md-sys-color-surface) !important;
   }
 
   /* 对包含 ant-descriptions-item-label 的 td 应用灰色背景（跨列的 label） */
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr td:has(.ant-descriptions-item-label) {
+  .ant-descriptions.ant-descriptions-bordered
+    .ant-descriptions-view
+    table
+    tbody
+    tr
+    td:has(.ant-descriptions-item-label) {
     background-color: var(--md-sys-color-surface-container) !important;
   }
 
@@ -736,22 +767,42 @@
   }
 
   /* 圆角 - 第一行第一个 th（左上角）*/
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr:first-child th:first-child {
+  .ant-descriptions.ant-descriptions-bordered
+    .ant-descriptions-view
+    table
+    tbody
+    tr:first-child
+    th:first-child {
     border-top-left-radius: 7px !important;
   }
 
   /* 圆角 - 第一行最后一个 td（右上角）*/
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr:first-child td:last-child {
+  .ant-descriptions.ant-descriptions-bordered
+    .ant-descriptions-view
+    table
+    tbody
+    tr:first-child
+    td:last-child {
     border-top-right-radius: 7px !important;
   }
 
   /* 圆角 - 最后一行第一个 th（左下角）*/
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr:last-child th:first-child {
+  .ant-descriptions.ant-descriptions-bordered
+    .ant-descriptions-view
+    table
+    tbody
+    tr:last-child
+    th:first-child {
     border-bottom-left-radius: 7px !important;
   }
 
   /* 圆角 - 最后一行最后一个 td（右下角）*/
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr:last-child td:last-child {
+  .ant-descriptions.ant-descriptions-bordered
+    .ant-descriptions-view
+    table
+    tbody
+    tr:last-child
+    td:last-child {
     border-bottom-right-radius: 7px !important;
   }
 }
@@ -944,28 +995,33 @@
   }
 
   .elevation-1 {
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-                0px 1px 3px 1px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
+      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
   }
 
   .elevation-2 {
-    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.12),
-                0px 2px 6px 2px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.12),
+      0px 2px 6px 2px rgba(0, 0, 0, 0.08);
   }
 
   .elevation-3 {
-    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-                0px 4px 8px 3px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
+      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
   }
 
   .elevation-4 {
-    box-shadow: 0px 2px 3px 0px rgba(0, 0, 0, 0.15),
-                0px 6px 10px 4px rgba(0, 0, 0, 0.10);
+    box-shadow:
+      0px 2px 3px 0px rgba(0, 0, 0, 0.15),
+      0px 6px 10px 4px rgba(0, 0, 0, 0.1);
   }
 
   .elevation-5 {
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.18),
-                0px 8px 12px 6px rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0px 4px 4px 0px rgba(0, 0, 0, 0.18),
+      0px 8px 12px 6px rgba(0, 0, 0, 0.12);
   }
 
   /* Text Colors */

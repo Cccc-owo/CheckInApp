@@ -29,16 +29,17 @@
                 </a-descriptions-item>
 
                 <a-descriptions-item label="剩余时间">
-                  <a-tag v-if="tokenStatus.is_valid" :color="tokenStatus.expiring_soon ? 'warning' : 'success'">
+                  <a-tag
+                    v-if="tokenStatus.is_valid"
+                    :color="tokenStatus.expiring_soon ? 'warning' : 'success'"
+                  >
                     {{ formatRemainTime }}
                   </a-tag>
                   <a-tag v-else color="error">已过期</a-tag>
                 </a-descriptions-item>
 
                 <a-descriptions-item label="即将过期">
-                  <a-tag v-if="!tokenStatus.is_valid" color="error">
-                    已过期
-                  </a-tag>
+                  <a-tag v-if="!tokenStatus.is_valid" color="error"> 已过期 </a-tag>
                   <a-tag v-else :color="tokenStatus.expiring_soon ? 'warning' : 'success'">
                     {{ tokenStatus.expiring_soon ? '是' : '否' }}
                   </a-tag>
@@ -78,11 +79,7 @@
                 :loading="taskStore.loading"
                 style="width: 100%; max-width: 400px; margin-bottom: 20px"
               >
-                <a-select-option
-                  v-for="task in taskStore.tasks"
-                  :key="task.id"
-                  :value="task.id"
-                >
+                <a-select-option v-for="task in taskStore.tasks" :key="task.id" :value="task.id">
                   <div style="display: flex; justify-content: space-between; align-items: center">
                     <span>{{ task.name }}</span>
                     <a-tag size="small" :color="task.is_active ? 'success' : 'default'">
@@ -112,14 +109,24 @@
                   </a-descriptions-item>
                   <a-descriptions-item label="状态">
                     <a-tag
-                      :color="lastCheckIn.status === 'success' ? 'success' :
-                             lastCheckIn.status === 'out_of_time' ? 'default' :
-                             lastCheckIn.status === 'unknown' ? 'warning' : 'error'"
+                      :color="
+                        lastCheckIn.status === 'success'
+                          ? 'success'
+                          : lastCheckIn.status === 'out_of_time'
+                            ? 'default'
+                            : lastCheckIn.status === 'unknown'
+                              ? 'warning'
+                              : 'error'
+                      "
                     >
                       {{
-                        lastCheckIn.status === 'success' ? '成功' :
-                        lastCheckIn.status === 'out_of_time' ? '时间范围外' :
-                        lastCheckIn.status === 'unknown' ? '异常' : '失败'
+                        lastCheckIn.status === 'success'
+                          ? '成功'
+                          : lastCheckIn.status === 'out_of_time'
+                            ? '时间范围外'
+                            : lastCheckIn.status === 'unknown'
+                              ? '异常'
+                              : '失败'
                       }}
                     </a-tag>
                   </a-descriptions-item>
@@ -166,161 +173,160 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
-import { CalendarOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons-vue'
-import Layout from '@/components/Layout.vue'
-import { useAuthStore } from '@/stores/auth'
-import { useUserStore } from '@/stores/user'
-import { useTaskStore } from '@/stores/task'
-import { useCheckInStore } from '@/stores/checkIn'
-import { formatDateTime } from '@/utils/helpers'
-import { usePollStatus } from '@/composables/usePollStatus'
+import { ref, computed, onMounted } from 'vue';
+import { message } from 'ant-design-vue';
+import { CalendarOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons-vue';
+import Layout from '@/components/Layout.vue';
+import { useAuthStore } from '@/stores/auth';
+import { useUserStore } from '@/stores/user';
+import { useTaskStore } from '@/stores/task';
+import { useCheckInStore } from '@/stores/checkIn';
+import { formatDateTime } from '@/utils/helpers';
+import { usePollStatus } from '@/composables/usePollStatus';
 
-const authStore = useAuthStore()
-const userStore = useUserStore()
-const taskStore = useTaskStore()
-const checkInStore = useCheckInStore()
+const authStore = useAuthStore();
+const userStore = useUserStore();
+const taskStore = useTaskStore();
+const checkInStore = useCheckInStore();
 
 // 使用轮询 composable
 const { startPolling } = usePollStatus({
-  interval: 2000,      // 每 2 秒轮询一次
-  maxRetries: 15,      // 最多 15 次 (30 秒)
-  backoff: false       // 不使用指数退避
-})
+  interval: 2000, // 每 2 秒轮询一次
+  maxRetries: 15, // 最多 15 次 (30 秒)
+  backoff: false, // 不使用指数退避
+});
 
-const tokenStatusLoading = ref(false)
-const checkInLoading = ref(false)
-const selectedTaskId = ref(null)
+const tokenStatusLoading = ref(false);
+const checkInLoading = ref(false);
+const selectedTaskId = ref(null);
 
-const tokenStatus = computed(() => userStore.tokenStatus)
+const tokenStatus = computed(() => userStore.tokenStatus);
 const lastCheckIn = computed(() => {
   if (checkInStore.myRecords.length > 0) {
-    return checkInStore.myRecords[0]
+    return checkInStore.myRecords[0];
   }
-  return null
-})
+  return null;
+});
 
 const formatExpireTime = computed(() => {
-  if (!tokenStatus.value || !tokenStatus.value.expires_at) return '-'
-  return formatDateTime(tokenStatus.value.expires_at * 1000)
-})
+  if (!tokenStatus.value || !tokenStatus.value.expires_at) return '-';
+  return formatDateTime(tokenStatus.value.expires_at * 1000);
+});
 
 const formatRemainTime = computed(() => {
-  if (!tokenStatus.value || !tokenStatus.value.expires_at) return '-'
+  if (!tokenStatus.value || !tokenStatus.value.expires_at) return '-';
 
-  const now = Date.now()
-  const expireTime = tokenStatus.value.expires_at * 1000
-  const diff = expireTime - now
+  const now = Date.now();
+  const expireTime = tokenStatus.value.expires_at * 1000;
+  const diff = expireTime - now;
 
-  if (diff <= 0) return '已过期'
+  if (diff <= 0) return '已过期';
 
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-  if (days > 0) return `${days} 天 ${hours} 小时`
-  if (hours > 0) return `${hours} 小时 ${minutes} 分钟`
-  return `${minutes} 分钟`
-})
+  if (days > 0) return `${days} 天 ${hours} 小时`;
+  if (hours > 0) return `${hours} 小时 ${minutes} 分钟`;
+  return `${minutes} 分钟`;
+});
 
 // 获取 Token 状态
 const fetchTokenStatus = async () => {
-  tokenStatusLoading.value = true
+  tokenStatusLoading.value = true;
   try {
-    await userStore.fetchTokenStatus()
+    await userStore.fetchTokenStatus();
   } catch (error) {
-    message.error(error.message || '获取 Token 状态失败')
+    message.error(error.message || '获取 Token 状态失败');
   } finally {
-    tokenStatusLoading.value = false
+    tokenStatusLoading.value = false;
   }
-}
+};
 
 // 手动打卡
 const handleCheckIn = async () => {
   if (!selectedTaskId.value) {
-    message.warning('请先选择要打卡的任务')
-    return
+    message.warning('请先选择要打卡的任务');
+    return;
   }
 
-  checkInLoading.value = true
+  checkInLoading.value = true;
 
   try {
     // 调用异步打卡接口，立即返回 record_id
-    const result = await taskStore.checkInTask(selectedTaskId.value)
+    const result = await taskStore.checkInTask(selectedTaskId.value);
 
     // 获取 record_id
-    const recordId = result.record_id
+    const recordId = result.record_id;
     if (!recordId) {
-      message.error('打卡请求失败：未获取到记录ID')
-      checkInLoading.value = false
-      return
+      message.error('打卡请求失败：未获取到记录ID');
+      checkInLoading.value = false;
+      return;
     }
 
     // 如果初始状态就是失败,显示错误并刷新记录
     if (result.status === 'failure') {
-      message.error(result.message || '打卡失败')
-      checkInLoading.value = false
-      checkInStore.fetchMyRecords({ limit: 1 })
-      return
+      message.error(result.message || '打卡失败');
+      checkInLoading.value = false;
+      checkInStore.fetchMyRecords({ limit: 1 });
+      return;
     }
 
     // 显示提示消息
-    message.info('打卡任务已启动，正在后台处理...')
+    message.info('打卡任务已启动，正在后台处理...');
 
     // 使用轮询 composable 检查打卡状态
     startPolling(
       async () => {
-        const status = await taskStore.getCheckInRecordStatus(recordId)
+        const status = await taskStore.getCheckInRecordStatus(recordId);
         return {
           completed: status.status !== 'pending',
           success: status.status === 'success',
-          data: status
-        }
+          data: status,
+        };
       },
       {
         onSuccess: () => {
-          checkInLoading.value = false
-          message.success('打卡成功！')
-          checkInStore.fetchMyRecords({ limit: 1 })
+          checkInLoading.value = false;
+          message.success('打卡成功！');
+          checkInStore.fetchMyRecords({ limit: 1 });
         },
-        onFailure: (statusData) => {
-          checkInLoading.value = false
-          const errorMsg = statusData.error_message || statusData.response_text || '打卡失败'
-          message.error(errorMsg)
-          checkInStore.fetchMyRecords({ limit: 1 })
+        onFailure: statusData => {
+          checkInLoading.value = false;
+          const errorMsg = statusData.error_message || statusData.response_text || '打卡失败';
+          message.error(errorMsg);
+          checkInStore.fetchMyRecords({ limit: 1 });
         },
         onTimeout: () => {
-          checkInLoading.value = false
-          message.warning('打卡处理时间较长，请稍后查看打卡记录')
-        }
+          checkInLoading.value = false;
+          message.warning('打卡处理时间较长，请稍后查看打卡记录');
+        },
       }
-    )
-
+    );
   } catch (error) {
-    console.error('启动打卡失败:', error)
-    checkInLoading.value = false
-    message.error(error.message || '启动打卡任务失败')
+    console.error('启动打卡失败:', error);
+    checkInLoading.value = false;
+    message.error(error.message || '启动打卡任务失败');
   }
-}
+};
 
 onMounted(async () => {
-  fetchTokenStatus()
-  checkInStore.fetchMyRecords({ limit: 1 })
+  fetchTokenStatus();
+  checkInStore.fetchMyRecords({ limit: 1 });
 
   // 加载任务列表
   try {
-    await taskStore.fetchMyTasks()
+    await taskStore.fetchMyTasks();
     // 如果只有一个任务，自动选中（优先选择启用的任务）
     if (taskStore.activeTasks.length === 1) {
-      selectedTaskId.value = taskStore.activeTasks[0].id
+      selectedTaskId.value = taskStore.activeTasks[0].id;
     } else if (taskStore.tasks.length === 1) {
-      selectedTaskId.value = taskStore.tasks[0].id
+      selectedTaskId.value = taskStore.tasks[0].id;
     }
   } catch (error) {
-    message.error(error.message || '加载任务列表失败')
+    message.error(error.message || '加载任务列表失败');
   }
-})
+});
 </script>
 
 <style scoped>

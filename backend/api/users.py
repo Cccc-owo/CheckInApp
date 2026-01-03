@@ -8,6 +8,7 @@ from backend.schemas.task import TaskResponse
 from backend.services.user_service import UserService
 from backend.services.task_service import TaskService
 from backend.dependencies import get_current_user, get_current_admin_user
+from backend.exceptions import ValidationError, AuthorizationError, ResourceNotFoundError
 
 router = APIRouter()
 
@@ -21,18 +22,15 @@ async def create_user(
     """
     创建用户（需要管理员权限）
 
-    - **jwt_sub**: QQ 扫码登录的唯一用户标识
     - **alias**: 用户别名（用于登录）
     - **role**: 角色（可选，默认 "user"）
+    - **email**: 邮箱地址（可选）
     """
     try:
         user = UserService.create_user(user_data, db)
         return user
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise ValidationError(str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -51,7 +49,6 @@ async def get_current_user_info(
     user_dict = {
         "id": current_user.id,
         "alias": current_user.alias,
-        "jwt_sub": current_user.jwt_sub,
         "role": current_user.role,
         "is_approved": current_user.is_approved,
         "jwt_exp": current_user.jwt_exp,
@@ -99,10 +96,7 @@ async def update_current_user_profile(
         user = UserService.update_user_profile(current_user.id, profile_data, db)
         return user
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise ValidationError(str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -147,7 +141,6 @@ async def get_current_user_token_status(
     return {
         "is_valid": is_valid,
         "jwt_exp": current_user.jwt_exp,
-        "jwt_sub": current_user.jwt_sub,
         "expires_at": expires_at,
         "days_until_expiry": days_until_expiry,
         "expiring_soon": expiring_soon
@@ -179,7 +172,7 @@ async def get_current_user_tasks(
 async def get_all_users(
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(100, ge=1, le=500, description="限制记录数"),
-    search: Optional[str] = Query(None, description="搜索关键词（alias 或 jwt_sub）"),
+    search: Optional[str] = Query(None, description="搜索关键词（alias）"),
     role: Optional[str] = Query(None, description="过滤角色 (user/admin)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user)
@@ -189,7 +182,7 @@ async def get_all_users(
 
     - **skip**: 跳过记录数
     - **limit**: 限制记录数
-    - **search**: 搜索关键词（模糊匹配 alias 或 jwt_sub）
+    - **search**: 搜索关键词（模糊匹配 alias）
     - **role**: 过滤角色（user/admin）
     """
     try:
@@ -216,17 +209,11 @@ async def get_user(
     """
     # 检查权限
     if current_user.role != "admin" and current_user.id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="权限不足，只能查看自己的信息"
-        )
+        raise AuthorizationError("权限不足，只能查看自己的信息")
 
     user = UserService.get_user_by_id(user_id, db)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"用户 ID {user_id} 不存在"
-        )
+        raise ResourceNotFoundError(f"用户 ID {user_id} 不存在")
 
     return user
 
@@ -247,25 +234,16 @@ async def update_user(
     # 检查权限
     if current_user.role != "admin":
         if current_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="权限不足，只能更新自己的信息"
-            )
+            raise AuthorizationError("权限不足，只能更新自己的信息")
         # 普通用户不能修改 role
         if user_data.role is not None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="普通用户不能修改角色"
-            )
+            raise AuthorizationError("普通用户不能修改角色")
 
     try:
         # 获取更新前的用户状态
         old_user = UserService.get_user_by_id(user_id, db)
         if not old_user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"用户 ID {user_id} 不存在"
-            )
+            raise ResourceNotFoundError(f"用户 ID {user_id} 不存在")
 
         # 保存更新前的审批状态 (先读取后转换为 Python bool)
         old_approved_value = old_user.is_approved
@@ -316,10 +294,7 @@ async def delete_user(
         UserService.delete_user(user_id, db)
         return None
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise ResourceNotFoundError(str(e))
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

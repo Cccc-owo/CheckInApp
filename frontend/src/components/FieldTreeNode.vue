@@ -1,13 +1,15 @@
 <template>
-  <div class="field-tree-node border border-outline-variant rounded-md3 p-4 bg-surface shadow-md3-1 hover:shadow-md3-2 transition-shadow">
+  <div
+    class="field-tree-node border border-outline-variant rounded-md3 p-4 bg-surface shadow-md3-1 hover:shadow-md3-2 transition-shadow"
+  >
     <!-- 普通字段 -->
     <div v-if="isFieldConfig" class="field-config">
       <div class="flex items-center justify-between mb-3 pb-2 border-b border-outline-variant">
         <div class="flex items-center gap-3">
           <button
             type="button"
-            @click="isCollapsed = !isCollapsed"
             class="hover:bg-surface-container rounded-md3 p-1 transition-colors"
+            @click="isCollapsed = !isCollapsed"
           >
             <svg
               class="w-4 h-4 text-on-surface-variant transition-transform"
@@ -16,29 +18,54 @@
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+            />
           </svg>
           <span class="font-mono text-base font-bold text-primary">{{ fieldKey }}</span>
           <a-tag type="primary" size="small">普通字段</a-tag>
         </div>
         <div class="flex gap-2">
-          <a-button size="small" @click="handleMove('up')" title="上移">
+          <a-button size="small" title="上移" @click="handleMove('up')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
             </svg>
           </a-button>
-          <a-button size="small" @click="handleMove('down')" title="下移">
+          <a-button size="small" title="下移" @click="handleMove('down')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </a-button>
           <a-button size="small" type="danger" plain @click="handleDelete">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
             删除
           </a-button>
@@ -56,8 +83,8 @@
         <div class="flex items-center gap-3">
           <button
             type="button"
-            @click="isCollapsed = !isCollapsed"
             class="hover:bg-surface-container rounded-md3 p-1 transition-colors"
+            @click="isCollapsed = !isCollapsed"
           >
             <svg
               class="w-4 h-4 text-on-surface-variant transition-transform"
@@ -66,35 +93,65 @@
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 10h16M4 14h16M4 18h16"
+            />
           </svg>
           <span class="font-mono text-base font-bold text-secondary">{{ fieldKey }}</span>
           <a-tag type="warning" size="small">数组字段</a-tag>
         </div>
         <div class="flex gap-2">
-          <a-button size="small" @click="handleMove('up')" title="上移">
+          <a-button size="small" title="上移" @click="handleMove('up')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
             </svg>
           </a-button>
-          <a-button size="small" @click="handleMove('down')" title="下移">
+          <a-button size="small" title="下移" @click="handleMove('down')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </a-button>
           <a-button size="small" type="primary" @click="addArrayItem">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
             </svg>
             添加元素
           </a-button>
           <a-button size="small" type="danger" plain @click="handleDelete">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
             删除
           </a-button>
@@ -102,7 +159,10 @@
       </div>
 
       <div v-show="!isCollapsed">
-        <div v-if="localFieldConfig.length === 0" class="text-center py-6 bg-surface-container-low rounded-md3 border border-dashed border-outline">
+        <div
+          v-if="localFieldConfig.length === 0"
+          class="text-center py-6 bg-surface-container-low rounded-md3 border border-dashed border-outline"
+        >
           <p class="text-sm text-on-surface-variant mb-2">数组为空</p>
           <a-button size="small" type="primary" @click="addArrayItem">添加第一个元素</a-button>
         </div>
@@ -121,8 +181,15 @@
             </div>
 
             <!-- 如果数组元素是字段配置对象，直接渲染为字段编辑器 -->
-            <div v-if="typeof item === 'object' && !Array.isArray(item) && 'display_name' in item" class="bg-surface rounded-md3 p-3">
-              <FieldConfigEditor :model-value="item" @update:model-value="updateArrayItemField(index, $event)" :field-key="`元素${index + 1}`" />
+            <div
+              v-if="typeof item === 'object' && !Array.isArray(item) && 'display_name' in item"
+              class="bg-surface rounded-md3 p-3"
+            >
+              <FieldConfigEditor
+                :model-value="item"
+                :field-key="`元素${index + 1}`"
+                @update:model-value="updateArrayItemField(index, $event)"
+              />
             </div>
 
             <!-- 如果数组元素是对象（但不是字段配置），递归渲染其中的字段 -->
@@ -138,9 +205,20 @@
                 @move="$emit('move', $event)"
               />
 
-              <a-button class="w-full" size="small" type="primary" plain @click="addFieldToArrayItem(index)">
+              <a-button
+                class="w-full"
+                size="small"
+                type="primary"
+                plain
+                @click="addFieldToArrayItem(index)"
+              >
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
                 </svg>
                 添加字段
               </a-button>
@@ -168,8 +246,8 @@
         <div class="flex items-center gap-3">
           <button
             type="button"
-            @click="isCollapsed = !isCollapsed"
             class="hover:bg-surface-container rounded-md3 p-1 transition-colors"
+            @click="isCollapsed = !isCollapsed"
           >
             <svg
               class="w-4 h-4 text-on-surface-variant transition-transform"
@@ -178,35 +256,65 @@
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
           <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
           <span class="font-mono text-base font-bold text-accent">{{ fieldKey }}</span>
           <a-tag type="success" size="small">对象字段</a-tag>
         </div>
         <div class="flex gap-2">
-          <a-button size="small" @click="handleMove('up')" title="上移">
+          <a-button size="small" title="上移" @click="handleMove('up')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
             </svg>
           </a-button>
-          <a-button size="small" @click="handleMove('down')" title="下移">
+          <a-button size="small" title="下移" @click="handleMove('down')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </a-button>
           <a-button size="small" type="primary" @click="addFieldToObject">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
             </svg>
             添加子字段
           </a-button>
           <a-button size="small" type="danger" plain @click="handleDelete">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
             删除
           </a-button>
@@ -214,34 +322,47 @@
       </div>
 
       <div v-show="!isCollapsed">
-        <div v-if="Object.keys(localFieldConfig).length === 0" class="text-center py-6 bg-surface-container-low rounded-md3 border border-dashed border-outline">
+        <div
+          v-if="Object.keys(localFieldConfig).length === 0"
+          class="text-center py-6 bg-surface-container-low rounded-md3 border border-dashed border-outline"
+        >
           <p class="text-sm text-on-surface-variant mb-2">对象为空</p>
-          <a-button size="small" type="primary" @click="addFieldToObject">添加第一个子字段</a-button>
+          <a-button size="small" type="primary" @click="addFieldToObject"
+            >添加第一个子字段</a-button
+          >
         </div>
 
         <div v-else class="space-y-3 mt-3 pl-4 border-l-4 border-accent">
-        <!-- 递归渲染对象中的字段 -->
-        <FieldTreeNode
-          v-for="(subConfig, subKey) in localFieldConfig"
-          :key="subKey"
-          :field-key="subKey"
-          :field-config="subConfig"
-          :path="[...path, subKey]"
-          @update="$emit('update', $event)"
-          @delete="$emit('delete', $event)"
-          @move="$emit('move', $event)"
-        />
+          <!-- 递归渲染对象中的字段 -->
+          <FieldTreeNode
+            v-for="(subConfig, subKey) in localFieldConfig"
+            :key="subKey"
+            :field-key="subKey"
+            :field-config="subConfig"
+            :path="[...path, subKey]"
+            @update="$emit('update', $event)"
+            @delete="$emit('delete', $event)"
+            @move="$emit('move', $event)"
+          />
         </div>
       </div>
     </div>
 
     <!-- 添加字段对话框 -->
-    <a-modal v-model:open="addFieldDialogVisible" :title="currentArrayIndex === -1 ? '添加数组元素' : '添加字段'" width="400px">
+    <a-modal
+      v-model:open="addFieldDialogVisible"
+      :title="currentArrayIndex === -1 ? '添加数组元素' : '添加字段'"
+      width="400px"
+    >
       <a-form>
         <a-form-item :label="currentArrayIndex === -1 ? '字段名（可选）' : '字段名'">
           <a-input
             v-model:value="newFieldName"
-            :placeholder="currentArrayIndex === -1 ? '留空则作为数组元素，填写则作为对象字段' : '例如: FieldId, Values, Texts'"
+            :placeholder="
+              currentArrayIndex === -1
+                ? '留空则作为数组元素，填写则作为对象字段'
+                : '例如: FieldId, Values, Texts'
+            "
           />
         </a-form-item>
         <a-form-item label="元素类型">
@@ -262,119 +383,131 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
-import { message } from 'ant-design-vue'
-import FieldConfigEditor from './FieldConfigEditor.vue'
+import { ref, computed, watch, nextTick } from 'vue';
+import { message } from 'ant-design-vue';
+import FieldConfigEditor from './FieldConfigEditor.vue';
 
 const props = defineProps({
   fieldKey: {
     type: String,
-    required: true
+    required: true,
   },
   fieldConfig: {
     type: [Object, Array],
-    required: true
+    required: true,
   },
   path: {
     type: Array,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const emit = defineEmits(['update', 'delete', 'move'])
+const emit = defineEmits(['update', 'delete', 'move']);
 
-const localFieldConfig = ref(JSON.parse(JSON.stringify(props.fieldConfig)))
-const addFieldDialogVisible = ref(false)
-const newFieldName = ref('')
-const newFieldType = ref('field')
-const currentArrayIndex = ref(null)
-const isAddingToObject = ref(false)
-const isCollapsed = ref(false)
+const localFieldConfig = ref(JSON.parse(JSON.stringify(props.fieldConfig)));
+const addFieldDialogVisible = ref(false);
+const newFieldName = ref('');
+const newFieldType = ref('field');
+const currentArrayIndex = ref(null);
+const isAddingToObject = ref(false);
+const isCollapsed = ref(false);
 
 // 标志位，防止循环更新
-let isUpdatingFromProps = false
+let isUpdatingFromProps = false;
 
 // 监听 props.fieldConfig 的变化，同步更新 localFieldConfig
-watch(() => props.fieldConfig, (newVal) => {
-  isUpdatingFromProps = true
-  localFieldConfig.value = JSON.parse(JSON.stringify(newVal))
-  // 使用 nextTick 确保在下一个 tick 后重置标志
-  nextTick(() => {
-    isUpdatingFromProps = false
-  })
-}, { deep: true })
+watch(
+  () => props.fieldConfig,
+  newVal => {
+    isUpdatingFromProps = true;
+    localFieldConfig.value = JSON.parse(JSON.stringify(newVal));
+    // 使用 nextTick 确保在下一个 tick 后重置标志
+    nextTick(() => {
+      isUpdatingFromProps = false;
+    });
+  },
+  { deep: true }
+);
 
 // 判断字段类型
 const isFieldConfig = computed(() => {
-  return typeof props.fieldConfig === 'object' &&
-         !Array.isArray(props.fieldConfig) &&
-         'display_name' in props.fieldConfig
-})
+  return (
+    typeof props.fieldConfig === 'object' &&
+    !Array.isArray(props.fieldConfig) &&
+    'display_name' in props.fieldConfig
+  );
+});
 
 const isArray = computed(() => {
-  return Array.isArray(props.fieldConfig)
-})
+  return Array.isArray(props.fieldConfig);
+});
 
 const isObject = computed(() => {
-  return typeof props.fieldConfig === 'object' &&
-         !Array.isArray(props.fieldConfig) &&
-         !('display_name' in props.fieldConfig)
-})
+  return (
+    typeof props.fieldConfig === 'object' &&
+    !Array.isArray(props.fieldConfig) &&
+    !('display_name' in props.fieldConfig)
+  );
+});
 
 // 监听本地配置变化 - 只在非 props 更新时触发
-watch(localFieldConfig, (newVal) => {
-  if (!isUpdatingFromProps) {
-    emit('update', { path: props.path, value: newVal })
-  }
-}, { deep: true })
+watch(
+  localFieldConfig,
+  newVal => {
+    if (!isUpdatingFromProps) {
+      emit('update', { path: props.path, value: newVal });
+    }
+  },
+  { deep: true }
+);
 
 // 删除字段
 const handleDelete = () => {
-  emit('delete', props.path)
-}
+  emit('delete', props.path);
+};
 
 // 移动字段
-const handleMove = (direction) => {
-  emit('move', { path: props.path, direction })
-}
+const handleMove = direction => {
+  emit('move', { path: props.path, direction });
+};
 
 // 添加数组元素
 const addArrayItem = () => {
   // 弹出对话框让用户选择添加元素类型
-  currentArrayIndex.value = -1  // 标记为添加数组元素
-  isAddingToObject.value = false
-  newFieldName.value = ''  // 数组元素不需要字段名，但复用对话框
-  newFieldType.value = 'field'
-  addFieldDialogVisible.value = true
-}
+  currentArrayIndex.value = -1; // 标记为添加数组元素
+  isAddingToObject.value = false;
+  newFieldName.value = ''; // 数组元素不需要字段名，但复用对话框
+  newFieldType.value = 'field';
+  addFieldDialogVisible.value = true;
+};
 
 // 删除数组元素
-const removeArrayItem = (index) => {
-  localFieldConfig.value.splice(index, 1)
-}
+const removeArrayItem = index => {
+  localFieldConfig.value.splice(index, 1);
+};
 
 // 更新数组元素的字段配置
 const updateArrayItemField = (index, newValue) => {
-  localFieldConfig.value[index] = newValue
-}
+  localFieldConfig.value[index] = newValue;
+};
 
 // 为数组元素添加字段
-const addFieldToArrayItem = (index) => {
-  currentArrayIndex.value = index
-  isAddingToObject.value = false
-  newFieldName.value = ''
-  newFieldType.value = 'field'
-  addFieldDialogVisible.value = true
-}
+const addFieldToArrayItem = index => {
+  currentArrayIndex.value = index;
+  isAddingToObject.value = false;
+  newFieldName.value = '';
+  newFieldType.value = 'field';
+  addFieldDialogVisible.value = true;
+};
 
 // 为对象添加字段
 const addFieldToObject = () => {
-  currentArrayIndex.value = null
-  isAddingToObject.value = true
-  newFieldName.value = ''
-  newFieldType.value = 'field'
-  addFieldDialogVisible.value = true
-}
+  currentArrayIndex.value = null;
+  isAddingToObject.value = true;
+  newFieldName.value = '';
+  newFieldType.value = 'field';
+  addFieldDialogVisible.value = true;
+};
 
 // 确认添加字段
 const confirmAddField = () => {
@@ -391,20 +524,20 @@ const confirmAddField = () => {
           required: false,
           hidden: false,
           value_type: 'string',
-          options: []
-        })
+          options: [],
+        });
       } else if (newFieldType.value === 'array') {
-        localFieldConfig.value.push([])
+        localFieldConfig.value.push([]);
       } else if (newFieldType.value === 'object') {
-        localFieldConfig.value.push({})
+        localFieldConfig.value.push({});
       }
 
-      addFieldDialogVisible.value = false
-      message.success('数组元素添加成功')
-      return
+      addFieldDialogVisible.value = false;
+      message.success('数组元素添加成功');
+      return;
     } else {
       // 字段名不为空，添加为包含命名字段的对象
-      const newObject = {}
+      const newObject = {};
       if (newFieldType.value === 'field') {
         newObject[newFieldName.value] = {
           display_name: '',
@@ -413,32 +546,32 @@ const confirmAddField = () => {
           required: false,
           hidden: false,
           value_type: 'string',
-          options: []
-        }
+          options: [],
+        };
       } else if (newFieldType.value === 'array') {
-        newObject[newFieldName.value] = []
+        newObject[newFieldName.value] = [];
       } else if (newFieldType.value === 'object') {
-        newObject[newFieldName.value] = {}
+        newObject[newFieldName.value] = {};
       }
 
-      localFieldConfig.value.push(newObject)
-      addFieldDialogVisible.value = false
-      message.success('带命名字段的对象添加成功')
-      return
+      localFieldConfig.value.push(newObject);
+      addFieldDialogVisible.value = false;
+      message.success('带命名字段的对象添加成功');
+      return;
     }
   }
 
   // 其他情况需要字段名
   if (!newFieldName.value) {
-    message.warning('请输入字段名')
-    return
+    message.warning('请输入字段名');
+    return;
   }
 
   if (isAddingToObject.value) {
     // 添加到对象字段
     if (localFieldConfig.value[newFieldName.value]) {
-      message.warning('该字段已存在')
-      return
+      message.warning('该字段已存在');
+      return;
     }
 
     if (newFieldType.value === 'field') {
@@ -449,19 +582,19 @@ const confirmAddField = () => {
         required: false,
         hidden: false,
         value_type: 'string',
-        options: []
-      }
+        options: [],
+      };
     } else if (newFieldType.value === 'array') {
-      localFieldConfig.value[newFieldName.value] = []
+      localFieldConfig.value[newFieldName.value] = [];
     } else if (newFieldType.value === 'object') {
-      localFieldConfig.value[newFieldName.value] = {}
+      localFieldConfig.value[newFieldName.value] = {};
     }
   } else if (currentArrayIndex.value !== null) {
     // 添加到数组元素
-    const arrayItem = localFieldConfig.value[currentArrayIndex.value]
+    const arrayItem = localFieldConfig.value[currentArrayIndex.value];
     if (arrayItem[newFieldName.value]) {
-      message.warning('该字段已存在')
-      return
+      message.warning('该字段已存在');
+      return;
     }
 
     if (newFieldType.value === 'field') {
@@ -472,18 +605,18 @@ const confirmAddField = () => {
         required: false,
         hidden: false,
         value_type: 'string',
-        options: []
-      }
+        options: [],
+      };
     } else if (newFieldType.value === 'array') {
-      arrayItem[newFieldName.value] = []
+      arrayItem[newFieldName.value] = [];
     } else if (newFieldType.value === 'object') {
-      arrayItem[newFieldName.value] = {}
+      arrayItem[newFieldName.value] = {};
     }
   }
 
-  addFieldDialogVisible.value = false
-  message.success('字段添加成功')
-}
+  addFieldDialogVisible.value = false;
+  message.success('字段添加成功');
+};
 </script>
 
 <style scoped>

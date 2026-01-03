@@ -13,12 +13,12 @@
  * }
  */
 
-import { ref } from 'vue'
-import { message } from 'ant-design-vue'
+import { ref } from 'vue';
+import { message } from 'ant-design-vue';
 
 export function useAsyncAction(options = {}) {
-  const loading = ref(false)
-  const error = ref(null)
+  const loading = ref(false);
+  const error = ref(null);
 
   /**
    * 执行异步操作
@@ -35,50 +35,50 @@ export function useAsyncAction(options = {}) {
       successMsg = options.successMsg,
       errorMsg = options.errorMsg,
       throwOnError = false,
-      silent = false
-    } = config
+      silent = false,
+    } = config;
 
-    loading.value = true
-    error.value = null
+    loading.value = true;
+    error.value = null;
 
     try {
-      const result = await asyncFn()
+      const result = await asyncFn();
 
       if (!silent && successMsg) {
-        message.success(successMsg)
+        message.success(successMsg);
       }
 
-      return result
+      return result;
     } catch (err) {
-      error.value = err
+      error.value = err;
 
       if (!silent) {
-        const msg = err.message || err.detail || errorMsg || '操作失败'
-        message.error(msg)
+        const msg = err.message || err.detail || errorMsg || '操作失败';
+        message.error(msg);
       }
 
       if (throwOnError) {
-        throw err
+        throw err;
       }
 
-      return null
+      return null;
     } finally {
-      loading.value = false
+      loading.value = false;
     }
-  }
+  };
 
   /**
    * 重置状态
    */
   const reset = () => {
-    loading.value = false
-    error.value = null
-  }
+    loading.value = false;
+    error.value = null;
+  };
 
   return {
     loading,
     error,
     execute,
-    reset
-  }
+    reset,
+  };
 }

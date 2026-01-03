@@ -1,12 +1,8 @@
 <template>
-  <a-card class="md3-card text-center" style="padding: 48px 20px;">
+  <a-card class="md3-card text-center" style="padding: 48px 20px">
     <!-- 图标 -->
     <div v-if="icon" class="mb-6">
-      <component
-        :is="icon"
-        class="text-8xl mx-auto"
-        :class="iconColorClass"
-      />
+      <component :is="icon" class="text-8xl mx-auto" :class="iconColorClass" />
     </div>
 
     <!-- 标题 -->
@@ -22,12 +18,7 @@
     <!-- 操作按钮（可选） -->
     <div v-if="$slots.action || actionText">
       <slot name="action">
-        <a-button
-          v-if="actionText"
-          type="primary"
-          @click="handleAction"
-          :loading="loading"
-        >
+        <a-button v-if="actionText" type="primary" :loading="loading" @click="handleAction">
           <template v-if="actionIcon" #icon>
             <component :is="actionIcon" />
           </template>
@@ -39,7 +30,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps({
   /**
@@ -47,7 +38,7 @@ const props = defineProps({
    */
   icon: {
     type: Object,
-    default: null
+    default: null,
   },
 
   /**
@@ -55,7 +46,7 @@ const props = defineProps({
    */
   title: {
     type: String,
-    default: ''
+    default: '',
   },
 
   /**
@@ -63,7 +54,7 @@ const props = defineProps({
    */
   description: {
     type: String,
-    default: ''
+    default: '',
   },
 
   /**
@@ -71,7 +62,7 @@ const props = defineProps({
    */
   actionText: {
     type: String,
-    default: ''
+    default: '',
   },
 
   /**
@@ -79,7 +70,7 @@ const props = defineProps({
    */
   actionIcon: {
     type: Object,
-    default: null
+    default: null,
   },
 
   /**
@@ -87,7 +78,7 @@ const props = defineProps({
    */
   loading: {
     type: Boolean,
-    default: false
+    default: false,
   },
 
   /**
@@ -96,15 +87,15 @@ const props = defineProps({
   iconColor: {
     type: String,
     default: 'neutral',
-    validator: (v) => ['primary', 'neutral', 'success', 'warning', 'error'].includes(v)
-  }
-})
+    validator: v => ['primary', 'neutral', 'success', 'warning', 'error'].includes(v),
+  },
+});
 
-const emit = defineEmits(['action'])
+const emit = defineEmits(['action']);
 
 const handleAction = () => {
-  emit('action')
-}
+  emit('action');
+};
 
 const iconColorClass = computed(() => {
   const colors = {
@@ -112,8 +103,8 @@ const iconColorClass = computed(() => {
     neutral: 'text-on-surface-variant',
     success: 'text-green-500',
     warning: 'text-orange-500',
-    error: 'text-error'
-  }
-  return colors[props.iconColor]
-})
+    error: 'text-error',
+  };
+  return colors[props.iconColor];
+});
 </script>

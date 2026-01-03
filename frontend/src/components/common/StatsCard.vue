@@ -28,11 +28,7 @@
     <!-- 趋势指示器（可选） -->
     <div v-if="trend !== undefined" class="mt-3 pt-3 border-t border-outline-variant">
       <div class="flex items-center text-sm">
-        <component
-          :is="trendIcon"
-          :class="trendColorClass"
-          class="mr-1"
-        />
+        <component :is="trendIcon" :class="trendColorClass" class="mr-1" />
         <span :class="trendColorClass" class="md3-label-small">
           {{ trendText }}
         </span>
@@ -42,12 +38,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import {
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  MinusOutlined
-} from '@ant-design/icons-vue'
+import { computed } from 'vue';
+import { ArrowUpOutlined, ArrowDownOutlined, MinusOutlined } from '@ant-design/icons-vue';
 
 const props = defineProps({
   /**
@@ -55,7 +47,7 @@ const props = defineProps({
    */
   label: {
     type: String,
-    required: true
+    required: true,
   },
 
   /**
@@ -63,7 +55,7 @@ const props = defineProps({
    */
   value: {
     type: [String, Number],
-    required: true
+    required: true,
   },
 
   /**
@@ -71,7 +63,7 @@ const props = defineProps({
    */
   subtitle: {
     type: String,
-    default: ''
+    default: '',
   },
 
   /**
@@ -79,7 +71,7 @@ const props = defineProps({
    */
   icon: {
     type: Object,
-    default: null
+    default: null,
   },
 
   /**
@@ -88,7 +80,7 @@ const props = defineProps({
   color: {
     type: String,
     default: 'primary',
-    validator: (v) => ['primary', 'success', 'warning', 'error', 'info', 'neutral'].includes(v)
+    validator: v => ['primary', 'success', 'warning', 'error', 'info', 'neutral'].includes(v),
   },
 
   /**
@@ -96,7 +88,7 @@ const props = defineProps({
    */
   delay: {
     type: Number,
-    default: 0
+    default: 0,
   },
 
   /**
@@ -104,7 +96,7 @@ const props = defineProps({
    */
   formatter: {
     type: Function,
-    default: null
+    default: null,
   },
 
   /**
@@ -112,7 +104,7 @@ const props = defineProps({
    */
   trend: {
     type: Number,
-    default: undefined
+    default: undefined,
   },
 
   /**
@@ -120,73 +112,73 @@ const props = defineProps({
    */
   trendText: {
     type: String,
-    default: ''
-  }
-})
+    default: '',
+  },
+});
 
 // 动画延迟
-const animationDelay = computed(() => `${props.delay}s`)
+const animationDelay = computed(() => `${props.delay}s`);
 
 // 格式化数值
 const formattedValue = computed(() => {
   if (props.formatter) {
-    return props.formatter(props.value)
+    return props.formatter(props.value);
   }
-  return props.value
-})
+  return props.value;
+});
 
 // 颜色映射
 const colorClasses = {
   primary: {
     value: 'text-primary',
     iconBg: 'bg-primary-100 dark:bg-primary-900/30',
-    icon: 'text-primary'
+    icon: 'text-primary',
   },
   success: {
     value: 'text-green-600 dark:text-green-400',
     iconBg: 'bg-green-100 dark:bg-green-900/30',
-    icon: 'text-green-600 dark:text-green-400'
+    icon: 'text-green-600 dark:text-green-400',
   },
   warning: {
     value: 'text-orange-600 dark:text-orange-400',
     iconBg: 'bg-orange-100 dark:bg-orange-900/30',
-    icon: 'text-orange-600 dark:text-orange-400'
+    icon: 'text-orange-600 dark:text-orange-400',
   },
   error: {
     value: 'text-error',
     iconBg: 'bg-red-100 dark:bg-red-900/30',
-    icon: 'text-error'
+    icon: 'text-error',
   },
   info: {
     value: 'text-secondary',
     iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-    icon: 'text-secondary'
+    icon: 'text-secondary',
   },
   neutral: {
     value: 'text-on-surface',
     iconBg: 'bg-surface-container',
-    icon: 'text-on-surface-variant'
-  }
-}
+    icon: 'text-on-surface-variant',
+  },
+};
 
-const valueColorClass = computed(() => colorClasses[props.color].value)
-const iconBgClass = computed(() => colorClasses[props.color].iconBg)
-const iconColorClass = computed(() => colorClasses[props.color].icon)
+const valueColorClass = computed(() => colorClasses[props.color].value);
+const iconBgClass = computed(() => colorClasses[props.color].iconBg);
+const iconColorClass = computed(() => colorClasses[props.color].icon);
 
 // 趋势图标和颜色
 const trendIcon = computed(() => {
-  if (props.trend === undefined) return null
-  if (props.trend > 0) return ArrowUpOutlined
-  if (props.trend < 0) return ArrowDownOutlined
-  return MinusOutlined
-})
+  if (props.trend === undefined) return null;
+  if (props.trend > 0) return ArrowUpOutlined;
+  if (props.trend < 0) return ArrowDownOutlined;
+  return MinusOutlined;
+});
 
 const trendColorClass = computed(() => {
-  if (props.trend === undefined) return ''
-  if (props.trend > 0) return 'text-green-600 dark:text-green-400'
-  if (props.trend < 0) return 'text-red-600 dark:text-red-400'
-  return 'text-on-surface-variant'
-})
+  if (props.trend === undefined) return '';
+  if (props.trend > 0) return 'text-green-600 dark:text-green-400';
+  if (props.trend < 0) return 'text-red-600 dark:text-red-400';
+  return 'text-on-surface-variant';
+});
 </script>
 
 <style scoped>

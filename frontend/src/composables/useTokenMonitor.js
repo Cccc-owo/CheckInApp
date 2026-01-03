@@ -1,8 +1,8 @@
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { message } from 'ant-design-vue'
-import { useAuthStore } from '@/stores/auth'
-import { useUserStore } from '@/stores/user'
-import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue';
+import { message } from 'ant-design-vue';
+import { useAuthStore } from '@/stores/auth';
+import { useUserStore } from '@/stores/user';
+import { useRouter } from 'vue-router';
 
 /**
  * Token 过期监控 Composable
@@ -16,49 +16,49 @@ import { useRouter } from 'vue-router'
  */
 
 // 全局单例：确保整个应用只有一个监控实例
-let monitorTimer = null
-let warningShown = false
-let isMonitoring = false // 新增：防止重复启动
+let monitorTimer = null;
+let warningShown = false;
+let isMonitoring = false; // 新增：防止重复启动
 
 // 检查间隔（毫秒）
-const NORMAL_CHECK_INTERVAL = 15 * 60 * 1000  // 正常情况：15 分钟
-const URGENT_CHECK_INTERVAL = 5 * 60 * 1000   // Token 即将过期：5 分钟
+const NORMAL_CHECK_INTERVAL = 15 * 60 * 1000; // 正常情况：15 分钟
+const URGENT_CHECK_INTERVAL = 5 * 60 * 1000; // Token 即将过期：5 分钟
 
 export function useTokenMonitor() {
-  const authStore = useAuthStore()
-  const userStore = useUserStore()
-  const router = useRouter()
+  const authStore = useAuthStore();
+  const userStore = useUserStore();
+  const router = useRouter();
 
-  const tokenStatus = computed(() => userStore.tokenStatus)
-  const hasPassword = computed(() => authStore.user?.has_password || false)
+  const tokenStatus = computed(() => userStore.tokenStatus);
+  const hasPassword = computed(() => authStore.user?.has_password || false);
 
   // 计算 Token 剩余分钟数
   const getRemainingMinutes = () => {
-    if (!tokenStatus.value?.expires_at) return null
+    if (!tokenStatus.value?.expires_at) return null;
 
-    const now = Math.floor(Date.now() / 1000)
-    const expiresAt = tokenStatus.value.expires_at
-    const diffSeconds = expiresAt - now
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = tokenStatus.value.expires_at;
+    const diffSeconds = expiresAt - now;
 
-    return Math.floor(diffSeconds / 60)
-  }
+    return Math.floor(diffSeconds / 60);
+  };
 
   // 检查 Token 状态并显示提醒
   const checkTokenStatus = async () => {
     // 如果未登录，不检查
     if (!authStore.isAuthenticated) {
-      return
+      return;
     }
 
     try {
       // 获取最新的 Token 状态
-      await userStore.fetchTokenStatus()
+      await userStore.fetchTokenStatus();
 
-      const remainingMinutes = getRemainingMinutes()
+      const remainingMinutes = getRemainingMinutes();
 
       // Token 已过期（负数分钟）
       if (remainingMinutes !== null && remainingMinutes < 0) {
-        const expiredMinutes = Math.abs(remainingMinutes)
+        const expiredMinutes = Math.abs(remainingMinutes);
 
         // Token 过期后 5 分钟内提醒
         if (expiredMinutes <= 5) {
@@ -69,8 +69,8 @@ export function useTokenMonitor() {
                 content: `您的登录凭证已过期 ${expiredMinutes} 分钟，部分功能可能受限。建议您扫码刷新凭证。`,
                 duration: 8,
                 key: 'token-expired-warning',
-              })
-              warningShown = true
+              });
+              warningShown = true;
             }
           } else {
             // 没有密码的用户：必须重新登录
@@ -78,18 +78,18 @@ export function useTokenMonitor() {
               content: '您的登录凭证已过期，请重新扫码登录',
               duration: 5,
               key: 'token-expired-error',
-            })
+            });
 
             // 清除登录状态并跳转
-            authStore.logout()
-            router.push('/login')
+            authStore.logout();
+            router.push('/login');
           }
         } else if (expiredMinutes > 5) {
           // 过期超过 5 分钟
           if (!hasPassword.value) {
             // 没有密码的用户：强制退出
-            authStore.logout()
-            router.push('/login')
+            authStore.logout();
+            router.push('/login');
           }
         }
       }
@@ -100,82 +100,81 @@ export function useTokenMonitor() {
             content: `您的登录凭证将在 ${remainingMinutes} 分钟后过期，建议您提前刷新`,
             duration: 6,
             key: 'token-expiring-warning',
-          })
-          warningShown = true
+          });
+          warningShown = true;
         }
 
         // Token 即将过期时，切换到更频繁的检查（5 分钟）
-        adjustCheckInterval(URGENT_CHECK_INTERVAL)
+        adjustCheckInterval(URGENT_CHECK_INTERVAL);
       }
       // Token 状态正常
       else if (remainingMinutes !== null && remainingMinutes > 60) {
         // 重置警告标志
-        warningShown = false
+        warningShown = false;
 
         // 恢复正常检查频率（15 分钟）
-        adjustCheckInterval(NORMAL_CHECK_INTERVAL)
+        adjustCheckInterval(NORMAL_CHECK_INTERVAL);
       }
-
     } catch (error) {
-      console.error('检查 Token 状态失败:', error)
+      console.error('检查 Token 状态失败:', error);
     }
-  }
+  };
 
   // 调整检查间隔
-  const adjustCheckInterval = (newInterval) => {
+  const adjustCheckInterval = newInterval => {
     if (monitorTimer) {
-      const currentInterval = monitorTimer._idleTimeout || 0
+      const currentInterval = monitorTimer._idleTimeout || 0;
 
       // 只有当新间隔与当前间隔不同时才重启定时器
       if (currentInterval !== newInterval) {
-        clearInterval(monitorTimer)
+        clearInterval(monitorTimer);
         monitorTimer = setInterval(() => {
-          checkTokenStatus()
-        }, newInterval)
+          checkTokenStatus();
+        }, newInterval);
       }
     }
-  }
+  };
 
   // 启动监控
   const startMonitoring = () => {
     // 避免重复启动（单例模式）
     if (isMonitoring || monitorTimer) {
-      return
+      return;
     }
 
-    isMonitoring = true
+    isMonitoring = true;
 
     // 立即检查一次
-    checkTokenStatus()
+    checkTokenStatus();
 
     // 默认使用正常检查频率（15 分钟）
     monitorTimer = setInterval(() => {
-      checkTokenStatus()
-    }, NORMAL_CHECK_INTERVAL)
-  }
+      checkTokenStatus();
+    }, NORMAL_CHECK_INTERVAL);
+  };
 
   // 停止监控
   const stopMonitoring = () => {
     if (monitorTimer) {
-      clearInterval(monitorTimer)
-      monitorTimer = null
+      clearInterval(monitorTimer);
+      monitorTimer = null;
     }
-    isMonitoring = false
-    warningShown = false
-  }
+    isMonitoring = false;
+    warningShown = false;
+  };
 
   // 手动触发检查
   const checkNow = () => {
-    warningShown = false // 重置警告标志，允许再次显示
-    checkTokenStatus()
-  }
+    warningShown = false; // 重置警告标志，允许再次显示
+    checkTokenStatus();
+  };
 
   // 组件挂载时启动监控
   onMounted(() => {
     if (authStore.isAuthenticated) {
-      startMonitoring()
+      startMonitoring();
     }
-  })
+  });
 
   // 组件卸载时不停止监控（因为是全局单例）
   // onUnmounted 中不调用 stopMonitoring()，让监控持续运行
@@ -187,5 +186,5 @@ export function useTokenMonitor() {
     stopMonitoring,
     checkNow,
     getRemainingMinutes,
-  }
+  };
 }

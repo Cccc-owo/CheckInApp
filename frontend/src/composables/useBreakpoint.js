@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue';
 
 /**
  * 响应式断点检测 Composable
@@ -11,42 +11,42 @@ import { ref, onMounted, onUnmounted } from 'vue'
  * - xxl: ≥1600px (超大屏)
  */
 export function useBreakpoint() {
-  const isMobile = ref(window.innerWidth < 768)
-  const isTablet = ref(window.innerWidth >= 768 && window.innerWidth < 992)
-  const isDesktop = ref(window.innerWidth >= 992)
+  const isMobile = ref(window.innerWidth < 768);
+  const isTablet = ref(window.innerWidth >= 768 && window.innerWidth < 992);
+  const isDesktop = ref(window.innerWidth >= 992);
 
   // Ant Design 断点
-  const isXs = ref(window.innerWidth < 576)
-  const isSm = ref(window.innerWidth >= 576 && window.innerWidth < 768)
-  const isMd = ref(window.innerWidth >= 768 && window.innerWidth < 992)
-  const isLg = ref(window.innerWidth >= 992 && window.innerWidth < 1200)
-  const isXl = ref(window.innerWidth >= 1200 && window.innerWidth < 1600)
-  const isXxl = ref(window.innerWidth >= 1600)
+  const isXs = ref(window.innerWidth < 576);
+  const isSm = ref(window.innerWidth >= 576 && window.innerWidth < 768);
+  const isMd = ref(window.innerWidth >= 768 && window.innerWidth < 992);
+  const isLg = ref(window.innerWidth >= 992 && window.innerWidth < 1200);
+  const isXl = ref(window.innerWidth >= 1200 && window.innerWidth < 1600);
+  const isXxl = ref(window.innerWidth >= 1600);
 
   const updateBreakpoints = () => {
-    const width = window.innerWidth
+    const width = window.innerWidth;
 
     // 简化断点
-    isMobile.value = width < 768
-    isTablet.value = width >= 768 && width < 992
-    isDesktop.value = width >= 992
+    isMobile.value = width < 768;
+    isTablet.value = width >= 768 && width < 992;
+    isDesktop.value = width >= 992;
 
     // Ant Design 断点
-    isXs.value = width < 576
-    isSm.value = width >= 576 && width < 768
-    isMd.value = width >= 768 && width < 992
-    isLg.value = width >= 992 && width < 1200
-    isXl.value = width >= 1200 && width < 1600
-    isXxl.value = width >= 1600
-  }
+    isXs.value = width < 576;
+    isSm.value = width >= 576 && width < 768;
+    isMd.value = width >= 768 && width < 992;
+    isLg.value = width >= 992 && width < 1200;
+    isXl.value = width >= 1200 && width < 1600;
+    isXxl.value = width >= 1600;
+  };
 
   onMounted(() => {
-    window.addEventListener('resize', updateBreakpoints)
-  })
+    window.addEventListener('resize', updateBreakpoints);
+  });
 
   onUnmounted(() => {
-    window.removeEventListener('resize', updateBreakpoints)
-  })
+    window.removeEventListener('resize', updateBreakpoints);
+  });
 
   return {
     // 简化断点（常用）
@@ -61,5 +61,5 @@ export function useBreakpoint() {
     isLg,
     isXl,
     isXxl,
-  }
+  };
 }

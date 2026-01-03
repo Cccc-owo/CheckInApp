@@ -44,13 +44,7 @@
           </a-descriptions-item>
         </a-descriptions>
 
-        <a-alert
-          message="⚠️ 审批说明"
-          type="info"
-          :closable="false"
-          show-icon
-          class="mb-6"
-        >
+        <a-alert message="⚠️ 审批说明" type="info" :closable="false" show-icon class="mb-6">
           <template #description>
             <ul class="tips-list">
               <li>管理员将在 <strong>24 小时内</strong> 审核您的注册申请</li>
@@ -84,17 +78,13 @@
       v-model:open="showProfileModal"
       title="完善个人信息"
       :confirm-loading="profileLoading"
+      width="500px"
       @ok="handleUpdateProfile"
       @cancel="resetProfileForm"
-      width="500px"
     >
       <a-form :model="profileForm" layout="vertical">
         <a-form-item label="邮箱地址（可选）" name="email">
-          <a-input
-            v-model:value="profileForm.email"
-            placeholder="用于接收审批通知"
-            type="email"
-          />
+          <a-input v-model:value="profileForm.email" placeholder="用于接收审批通知" type="email" />
           <div class="form-hint">建议设置邮箱，方便接收审批结果通知</div>
         </a-form-item>
 
@@ -110,11 +100,7 @@
           />
         </a-form-item>
 
-        <a-form-item
-          v-if="profileForm.new_password"
-          label="确认密码"
-          name="confirm_password"
-        >
+        <a-form-item v-if="profileForm.new_password" label="确认密码" name="confirm_password">
           <a-input-password
             v-model:value="profileForm.confirm_password"
             placeholder="再次输入新密码"
@@ -139,118 +125,122 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
-import { ReloadOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons-vue'
-import { userAPI } from '@/api'
-import { useAuthStore } from '@/stores/auth'
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { message } from 'ant-design-vue';
+import { ReloadOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons-vue';
+import { userAPI } from '@/api';
+import { useAuthStore } from '@/stores/auth';
 
-const router = useRouter()
-const authStore = useAuthStore()
-const user = ref(null)
-const showProfileModal = ref(false)
-const profileLoading = ref(false)
+const router = useRouter();
+const authStore = useAuthStore();
+const user = ref(null);
+const showProfileModal = ref(false);
+const profileLoading = ref(false);
 
 const profileForm = ref({
   email: '',
   new_password: '',
   confirm_password: '',
   current_password: '',
-})
+});
 
 const checkStatus = async () => {
   try {
-    const response = await userAPI.getUserStatus()
-    user.value = response
+    const response = await userAPI.getUserStatus();
+    user.value = response;
 
     if (response.is_approved) {
-      message.success('恭喜！您的账户已通过审批')
-      router.push('/dashboard')
+      message.success('恭喜！您的账户已通过审批');
+      router.push('/dashboard');
     } else {
-      message.info('仍在等待审批中')
+      message.info('仍在等待审批中');
     }
   } catch (error) {
-    console.error('获取状态失败:', error)
-    message.error('获取状态失败：' + (error.message || '未知错误'))
+    console.error('获取状态失败:', error);
+    message.error('获取状态失败：' + (error.message || '未知错误'));
   }
-}
+};
 
 const loadUserInfo = async () => {
   try {
-    const response = await userAPI.getCurrentUser()
-    user.value = response
+    const response = await userAPI.getCurrentUser();
+    user.value = response;
     // 初始化表单
-    profileForm.value.email = response.email || ''
+    profileForm.value.email = response.email || '';
   } catch (error) {
-    console.error('加载用户信息失败:', error)
+    console.error('加载用户信息失败:', error);
   }
-}
+};
 
 const handleUpdateProfile = async () => {
   // 验证
   if (profileForm.value.new_password && profileForm.value.new_password.length < 6) {
-    message.error('密码至少需要 6 位字符')
-    return
+    message.error('密码至少需要 6 位字符');
+    return;
   }
 
   if (profileForm.value.new_password !== profileForm.value.confirm_password) {
-    message.error('两次输入的密码不一致')
-    return
+    message.error('两次输入的密码不一致');
+    return;
   }
 
-  if (user.value?.has_password && profileForm.value.new_password && !profileForm.value.current_password) {
-    message.error('修改密码时需要提供当前密码')
-    return
+  if (
+    user.value?.has_password &&
+    profileForm.value.new_password &&
+    !profileForm.value.current_password
+  ) {
+    message.error('修改密码时需要提供当前密码');
+    return;
   }
 
-  profileLoading.value = true
+  profileLoading.value = true;
 
   try {
-    const updateData = {}
+    const updateData = {};
 
     // 只提交有变化的字段
     if (profileForm.value.email !== (user.value?.email || '')) {
-      updateData.email = profileForm.value.email || null
+      updateData.email = profileForm.value.email || null;
     }
 
     if (profileForm.value.new_password) {
-      updateData.new_password = profileForm.value.new_password
+      updateData.new_password = profileForm.value.new_password;
       if (user.value?.has_password) {
-        updateData.current_password = profileForm.value.current_password
+        updateData.current_password = profileForm.value.current_password;
       }
     }
 
     // 如果没有要更新的字段
     if (Object.keys(updateData).length === 0) {
-      message.info('没有需要更新的信息')
-      showProfileModal.value = false
-      return
+      message.info('没有需要更新的信息');
+      showProfileModal.value = false;
+      return;
     }
 
-    await userAPI.updateProfile(updateData)
-    message.success('个人信息更新成功')
-    showProfileModal.value = false
-    resetProfileForm()
+    await userAPI.updateProfile(updateData);
+    message.success('个人信息更新成功');
+    showProfileModal.value = false;
+    resetProfileForm();
 
     // 重新加载用户信息
-    await loadUserInfo()
+    await loadUserInfo();
 
     // 如果设置了密码，更新本地存储的用户信息
     if (updateData.new_password) {
-      const currentUser = authStore.user
+      const currentUser = authStore.user;
       if (currentUser) {
-        currentUser.has_password = true
-        localStorage.setItem('user', JSON.stringify(currentUser))
+        currentUser.has_password = true;
+        localStorage.setItem('user', JSON.stringify(currentUser));
       }
     }
   } catch (error) {
-    console.error('更新个人信息失败:', error)
-    message.error(error.message || '更新失败，请重试')
+    console.error('更新个人信息失败:', error);
+    message.error(error.message || '更新失败，请重试');
   } finally {
-    profileLoading.value = false
+    profileLoading.value = false;
   }
-}
+};
 
 const resetProfileForm = () => {
   profileForm.value = {
@@ -258,24 +248,24 @@ const resetProfileForm = () => {
     new_password: '',
     confirm_password: '',
     current_password: '',
-  }
-}
+  };
+};
 
 const logout = () => {
-  authStore.logout()
-  router.push('/login')
-}
+  authStore.logout();
+  router.push('/login');
+};
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return '未知'
-  const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN')
-}
+const formatDate = dateStr => {
+  if (!dateStr) return '未知';
+  const date = new Date(dateStr);
+  return date.toLocaleString('zh-CN');
+};
 
 onMounted(() => {
-  loadUserInfo()
-  checkStatus()
-})
+  loadUserInfo();
+  checkStatus();
+});
 </script>
 
 <style scoped>

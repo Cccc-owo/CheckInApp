@@ -1,10 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class', // 启用 class 模式的暗色模式
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -60,11 +57,11 @@ export default {
       },
       borderRadius: {
         // Material Design 3 Shape System
-        'md3-xs': '4px',   // Extra Small - chips, small tags
-        'md3-sm': '8px',   // Small - text fields, small components
-        'md3': '12px',     // Medium - cards, buttons (default)
-        'md3-lg': '16px',  // Large - large cards, dialogs
-        'md3-xl': '28px',  // Extra Large - fully rounded buttons
+        'md3-xs': '4px', // Extra Small - chips, small tags
+        'md3-sm': '8px', // Small - text fields, small components
+        md3: '12px', // Medium - cards, buttons (default)
+        'md3-lg': '16px', // Large - large cards, dialogs
+        'md3-xl': '28px', // Extra Large - fully rounded buttons
         'md3-full': '9999px', // Full - pill shape
       },
       boxShadow: {
@@ -98,4 +95,4 @@ export default {
     },
   },
   plugins: [],
-}
+};

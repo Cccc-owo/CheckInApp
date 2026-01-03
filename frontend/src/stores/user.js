@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
-import { userAPI } from '@/api'
+import { defineStore } from 'pinia';
+import { userAPI } from '@/api';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -11,14 +11,14 @@ export const useUserStore = defineStore('user', {
   }),
 
   getters: {
-    isTokenExpiring: (state) => {
-      if (!state.tokenStatus) return false
-      return state.tokenStatus.expiring_soon || false
+    isTokenExpiring: state => {
+      if (!state.tokenStatus) return false;
+      return state.tokenStatus.expiring_soon || false;
     },
 
-    tokenExpireTime: (state) => {
-      if (!state.tokenStatus || !state.tokenStatus.expires_at) return null
-      return new Date(state.tokenStatus.expires_at * 1000)
+    tokenExpireTime: state => {
+      if (!state.tokenStatus || !state.tokenStatus.expires_at) return null;
+      return new Date(state.tokenStatus.expires_at * 1000);
     },
   },
 
@@ -26,35 +26,35 @@ export const useUserStore = defineStore('user', {
     // 获取 Token 状态
     async fetchTokenStatus() {
       try {
-        const status = await userAPI.getTokenStatus()
-        this.tokenStatus = status
-        return status
+        const status = await userAPI.getTokenStatus();
+        this.tokenStatus = status;
+        return status;
       } catch (error) {
-        throw new Error(error.message || '获取 Token 状态失败')
+        throw new Error(error.message || '获取 Token 状态失败');
       }
     },
 
     // 获取用户列表（管理员）
     async fetchUsers(params = {}) {
       try {
-        const data = await userAPI.getUsers(params)
-        this.users = data.users || data
-        this.total = data.total || this.users.length
-        return data
+        const data = await userAPI.getUsers(params);
+        this.users = data.users || data;
+        this.total = data.total || this.users.length;
+        return data;
       } catch (error) {
-        throw new Error(error.message || '获取用户列表失败')
+        throw new Error(error.message || '获取用户列表失败');
       }
     },
 
     // 创建用户（管理员）
     async createUser(userData) {
       try {
-        const newUser = await userAPI.createUser(userData)
+        const newUser = await userAPI.createUser(userData);
         // 刷新用户列表
-        await this.fetchUsers()
-        return newUser
+        await this.fetchUsers();
+        return newUser;
       } catch (error) {
-        throw new Error(error.message || '创建用户失败')
+        throw new Error(error.message || '创建用户失败');
       }
     },
 
@@ -62,29 +62,33 @@ export const useUserStore = defineStore('user', {
     async updateUser(userId, userData) {
       try {
         // 过滤空密码字段
-        const cleanedData = { ...userData }
-        if (cleanedData.password === '' || cleanedData.password === null || cleanedData.password === undefined) {
-          delete cleanedData.password
+        const cleanedData = { ...userData };
+        if (
+          cleanedData.password === '' ||
+          cleanedData.password === null ||
+          cleanedData.password === undefined
+        ) {
+          delete cleanedData.password;
         }
 
-        const updatedUser = await userAPI.updateUser(userId, cleanedData)
+        const updatedUser = await userAPI.updateUser(userId, cleanedData);
         // 刷新用户列表
-        await this.fetchUsers()
-        return updatedUser
+        await this.fetchUsers();
+        return updatedUser;
       } catch (error) {
-        throw new Error(error.message || '更新用户失败')
+        throw new Error(error.message || '更新用户失败');
       }
     },
 
     // 删除用户
     async deleteUser(userId) {
       try {
-        await userAPI.deleteUser(userId)
+        await userAPI.deleteUser(userId);
         // 刷新用户列表
-        await this.fetchUsers()
+        await this.fetchUsers();
       } catch (error) {
-        throw new Error(error.message || '删除用户失败')
+        throw new Error(error.message || '删除用户失败');
       }
     },
   },
-})
+});

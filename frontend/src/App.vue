@@ -5,37 +5,37 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue'
-import { ConfigProvider as AConfigProvider } from 'ant-design-vue'
-import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import { useAuthStore } from '@/stores/auth'
-import getAntdTheme from './antd-theme'
-import { useTheme, initTheme, watchSystemTheme } from '@/composables/useTheme'
+import { onMounted, computed } from 'vue';
+import { ConfigProvider as AConfigProvider } from 'ant-design-vue';
+import zhCN from 'ant-design-vue/es/locale/zh_CN';
+import { useAuthStore } from '@/stores/auth';
+import getAntdTheme from './antd-theme';
+import { useTheme, initTheme, watchSystemTheme } from '@/composables/useTheme';
 
-const authStore = useAuthStore()
+const authStore = useAuthStore();
 
 // 初始化主题（全局）
-initTheme()
-watchSystemTheme()
+initTheme();
+watchSystemTheme();
 
 // 使用主题
-const { isDark } = useTheme()
+const { isDark } = useTheme();
 
 // 动态生成 Ant Design 主题
-const antdTheme = computed(() => getAntdTheme(isDark.value))
+const antdTheme = computed(() => getAntdTheme(isDark.value));
 
 // 应用启动时验证 Token
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     try {
-      await authStore.fetchCurrentUser()
+      await authStore.fetchCurrentUser();
     } catch (error) {
-      console.error('验证用户信息失败:', error)
+      console.error('验证用户信息失败:', error);
       // Token 可能已过期，清除认证状态
-      authStore.clearAuth()
+      authStore.clearAuth();
     }
   }
-})
+});
 </script>
 
 <style>
@@ -58,7 +58,8 @@ body {
   width: 100%;
   height: 100%;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

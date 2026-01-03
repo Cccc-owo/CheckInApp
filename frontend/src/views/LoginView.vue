@@ -6,7 +6,9 @@
           <template #title>
             <div class="card-header">
               <h2>接龙自动打卡系统</h2>
-              <p class="subtitle">{{ loginMode === 'qrcode' ? 'QQ 扫码登录/注册' : '用户名密码登录' }}</p>
+              <p class="subtitle">
+                {{ loginMode === 'qrcode' ? 'QQ 扫码登录/注册' : '用户名密码登录' }}
+              </p>
             </div>
           </template>
 
@@ -18,9 +20,9 @@
           <!-- QR码登录表单 -->
           <a-form
             v-if="loginMode === 'qrcode'"
+            ref="qrcodeFormRef"
             :model="qrcodeForm"
             :rules="qrcodeRules"
-            ref="qrcodeFormRef"
             layout="vertical"
             @submit.prevent="handleQRCodeLogin"
           >
@@ -54,9 +56,9 @@
           <!-- 别名+密码登录表单 -->
           <a-form
             v-else
+            ref="passwordFormRef"
             :model="passwordForm"
             :rules="passwordRules"
-            ref="passwordFormRef"
             layout="vertical"
           >
             <a-form-item name="alias">
@@ -98,9 +100,7 @@
             </a-form-item>
 
             <div class="tips-link">
-              <a @click="loginMode = 'qrcode'" class="link-text">
-                没有密码？使用扫码登录
-              </a>
+              <a class="link-text" @click="loginMode = 'qrcode'"> 没有密码？使用扫码登录 </a>
             </div>
           </a-form>
 
@@ -142,59 +142,59 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { message } from 'ant-design-vue'
-import { UserOutlined, KeyOutlined } from '@ant-design/icons-vue'
-import { authAPI } from '@/api'
-import { useAuthStore } from '@/stores/auth'
-import QRCodeModal from '@/components/QRCodeModal.vue'
+import { ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { message } from 'ant-design-vue';
+import { UserOutlined, KeyOutlined } from '@ant-design/icons-vue';
+import { authAPI } from '@/api';
+import { useAuthStore } from '@/stores/auth';
+import QRCodeModal from '@/components/QRCodeModal.vue';
 
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
 
-const qrcodeFormRef = ref(null)
-const passwordFormRef = ref(null)
-const loading = ref(false)
-const qrcodeVisible = ref(false)
+const qrcodeFormRef = ref(null);
+const passwordFormRef = ref(null);
+const loading = ref(false);
+const qrcodeVisible = ref(false);
 
 // 登录模式
-const loginMode = ref('qrcode')
+const loginMode = ref('qrcode');
 const loginModeOptions = [
   { label: '扫码登录', value: 'qrcode' },
-  { label: '密码登录', value: 'password' }
-]
+  { label: '密码登录', value: 'password' },
+];
 
 // 监听登录模式切换，同步用户名
 watch(loginMode, () => {
   // 从密码登录切换到扫码登录
   if (loginMode.value === 'qrcode' && passwordForm.value.alias) {
-    qrcodeForm.value.alias = passwordForm.value.alias
+    qrcodeForm.value.alias = passwordForm.value.alias;
   }
   // 从扫码登录切换到密码登录
   else if (loginMode.value === 'password' && qrcodeForm.value.alias) {
-    passwordForm.value.alias = qrcodeForm.value.alias
+    passwordForm.value.alias = qrcodeForm.value.alias;
   }
-})
+});
 
 // QR码登录表单
 const qrcodeForm = ref({
   alias: '',
-})
+});
 
 const qrcodeRules = {
   alias: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' },
   ],
-}
+};
 
 // 密码登录表单
 const passwordForm = ref({
   alias: '',
   password: '',
-})
+});
 
 const passwordRules = {
   alias: [
@@ -205,34 +205,34 @@ const passwordRules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, message: '密码至少6个字符', trigger: 'blur' },
   ],
-}
+};
 
 // QR码登录
 const handleQRCodeLogin = async () => {
-  if (!qrcodeFormRef.value) return
+  if (!qrcodeFormRef.value) return;
 
   try {
-    await qrcodeFormRef.value.validate()
+    await qrcodeFormRef.value.validate();
     // 显示 QR 码弹窗
-    qrcodeVisible.value = true
-  } catch (error) {
+    qrcodeVisible.value = true;
+  } catch {
     // 表单验证失败，不需要打印错误（由 Ant Design 自动显示错误提示）
   }
-}
+};
 
 // 密码登录
 const handlePasswordLogin = async () => {
-  if (!passwordFormRef.value) return
+  if (!passwordFormRef.value) return;
 
   try {
-    await passwordFormRef.value.validate()
+    await passwordFormRef.value.validate();
 
-    loading.value = true
+    loading.value = true;
 
     const response = await authAPI.aliasLogin(
       passwordForm.value.alias,
       passwordForm.value.password
-    )
+    );
 
     if (response.success) {
       // 使用 authStore 保存认证信息
@@ -241,18 +241,18 @@ const handlePasswordLogin = async () => {
         alias: response.alias,
         role: response.role || 'user',
         is_approved: response.is_approved !== false,
-      }
+      };
 
       // 如果没有 authorization（测试账号），使用 user_id 作为认证凭据
-      const authToken = response.authorization || `user_id:${response.user_id}`
-      authStore.setAuth(authToken, user)
+      const authToken = response.authorization || `user_id:${response.user_id}`;
+      authStore.setAuth(authToken, user);
 
       // 只有当有真实 authorization 时才获取完整用户信息
       if (response.authorization) {
         try {
-          await authStore.fetchCurrentUser()
+          await authStore.fetchCurrentUser();
         } catch (err) {
-          console.warn('获取完整用户信息失败，使用基本信息:', err)
+          console.warn('获取完整用户信息失败，使用基本信息:', err);
           // 即使失败也继续登录流程
         }
       } else {
@@ -260,7 +260,7 @@ const handlePasswordLogin = async () => {
         message.info({
           content: '您正在使用密码登录模式。如需使用打卡功能，请先扫码绑定 QQ。',
           duration: 5,
-        })
+        });
       }
 
       // 如果有 Token 警告，显示提示
@@ -268,71 +268,71 @@ const handlePasswordLogin = async () => {
         message.warning({
           content: response.warning_message,
           duration: 5,
-        })
+        });
       } else if (response.authorization) {
         // 只有有 token 的用户才显示"欢迎回来"
-        message.success(`欢迎回来，${response.alias}！`)
+        message.success(`欢迎回来，${response.alias}！`);
       } else {
         // 测试账号登录成功提示
-        message.success(`登录成功，${response.alias}！`)
+        message.success(`登录成功，${response.alias}！`);
       }
 
       // 跳转到重定向页面或仪表盘
-      const redirect = route.query.redirect || '/dashboard'
-      router.push(redirect)
+      const redirect = route.query.redirect || '/dashboard';
+      router.push(redirect);
     } else {
       // 根据不同错误类型提供友好提示
-      handlePasswordLoginError(response.message)
+      handlePasswordLoginError(response.message);
     }
   } catch (error) {
-    console.error('密码登录失败:', error)
-    const errorMsg = error.response?.data?.detail || error.message || '登录失败，请稍后重试'
-    handlePasswordLoginError(errorMsg)
+    console.error('密码登录失败:', error);
+    const errorMsg = error.response?.data?.detail || error.message || '登录失败，请稍后重试';
+    handlePasswordLoginError(errorMsg);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 处理密码登录错误
-const handlePasswordLoginError = (msg) => {
+const handlePasswordLoginError = msg => {
   if (!msg) {
-    message.error('登录失败，请稍后重试')
-    return
+    message.error('登录失败，请稍后重试');
+    return;
   }
 
   // 用户不存在或密码错误
   if (msg.includes('用户名或密码错误')) {
-    message.error('用户名或密码错误')
-    return
+    message.error('用户名或密码错误');
+    return;
   }
 
   // 未设置密码
   if (msg.includes('未设置密码')) {
-    message.warning('该账户未设置密码，请使用扫码登录')
-    return
+    message.warning('该账户未设置密码，请使用扫码登录');
+    return;
   }
 
   // 用户不存在
   if (msg.includes('用户不存在')) {
-    message.error('用户不存在，请检查用户名或使用扫码登录注册')
-    return
+    message.error('用户不存在，请检查用户名或使用扫码登录注册');
+    return;
   }
 
   // 其他错误
-  message.error(msg || '登录失败，请稍后重试')
-}
+  message.error(msg || '登录失败，请稍后重试');
+};
 
-const handleLoginSuccess = (user) => {
-  message.success(`欢迎回来，${user.alias}！`)
+const handleLoginSuccess = user => {
+  message.success(`欢迎回来，${user.alias}！`);
 
   // 跳转到重定向页面或仪表盘
-  const redirect = route.query.redirect || '/dashboard'
-  router.push(redirect)
-}
+  const redirect = route.query.redirect || '/dashboard';
+  router.push(redirect);
+};
 
-const handleLoginError = (error) => {
-  message.error(error.message || '登录失败')
-}
+const handleLoginError = error => {
+  message.error(error.message || '登录失败');
+};
 </script>
 
 <style scoped>

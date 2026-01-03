@@ -4,9 +4,9 @@
     title="QQ 扫码登录"
     :width="isMobile ? '100%' : 400"
     :style="isMobile ? { top: 0, paddingBottom: 0, maxWidth: '100vw' } : {}"
-    :maskClosable="false"
-    @cancel="handleClose"
+    :mask-closable="false"
     :footer="null"
+    @cancel="handleClose"
   >
     <div class="qrcode-container">
       <!-- 加载中 -->
@@ -33,30 +33,26 @@
       <div v-else-if="status === 'expired'" class="status-container">
         <WarningFilled class="status-icon warning-icon" />
         <p class="status-text">二维码已过期</p>
-        <a-button type="primary" @click="refreshQRCode" class="mt-4">刷新二维码</a-button>
+        <a-button type="primary" class="mt-4" @click="refreshQRCode">刷新二维码</a-button>
       </div>
 
       <!-- 失败 -->
       <div v-else-if="status === 'failed'" class="status-container">
         <CloseCircleFilled class="status-icon error-icon" />
         <p class="status-text error">{{ errorMessage }}</p>
-        <a-button type="primary" @click="refreshQRCode" class="mt-4">重试</a-button>
+        <a-button type="primary" class="mt-4" @click="refreshQRCode">重试</a-button>
       </div>
     </div>
   </a-modal>
 </template>
 
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useBreakpoint } from '@/composables/useBreakpoint'
-import { usePollStatus } from '@/composables/usePollStatus'
-import { message } from 'ant-design-vue'
-import {
-  CheckCircleFilled,
-  WarningFilled,
-  CloseCircleFilled,
-} from '@ant-design/icons-vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { useBreakpoint } from '@/composables/useBreakpoint';
+import { usePollStatus } from '@/composables/usePollStatus';
+import { message } from 'ant-design-vue';
+import { CheckCircleFilled, WarningFilled, CloseCircleFilled } from '@ant-design/icons-vue';
 
 const props = defineProps({
   visible: {
@@ -67,161 +63,162 @@ const props = defineProps({
     type: String,
     required: true,
   },
-})
+});
 
-const emit = defineEmits(['update:visible', 'success', 'error'])
+const emit = defineEmits(['update:visible', 'success', 'error']);
 
-const authStore = useAuthStore()
-const { isMobile } = useBreakpoint()
+const authStore = useAuthStore();
+const { isMobile } = useBreakpoint();
 
 // 使用轮询 composable
 const { startPolling: startQRPolling, stopPolling } = usePollStatus({
   interval: 2000,
-  maxRetries: 90,  // 3分钟 = 180秒 / 2秒间隔 = 90次
-  backoff: false
-})
+  maxRetries: 90, // 3分钟 = 180秒 / 2秒间隔 = 90次
+  backoff: false,
+});
 
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (val) => emit('update:visible', val),
-})
+  set: val => emit('update:visible', val),
+});
 
-const status = ref('loading') // loading, pending, success, expired, failed
-const qrcodeUrl = ref('')
-const sessionId = ref('')
-const errorMessage = ref('')
-const countdown = ref(180) // 倒计时 3 分钟
-const progress = ref(100)
+const status = ref('loading'); // loading, pending, success, expired, failed
+const qrcodeUrl = ref('');
+const sessionId = ref('');
+const errorMessage = ref('');
+const countdown = ref(180); // 倒计时 3 分钟
+const progress = ref(100);
 
-let countdownTimer = null
+let countdownTimer = null;
 
 // 获取二维码
 const fetchQRCode = async () => {
-  status.value = 'loading'
+  status.value = 'loading';
   try {
-    const result = await authStore.loginWithQRCode(props.alias)
-    sessionId.value = result.session_id
-    qrcodeUrl.value = `data:image/png;base64,${result.qrcode_base64}`
-    status.value = 'pending'
+    const result = await authStore.loginWithQRCode(props.alias);
+    sessionId.value = result.session_id;
+    qrcodeUrl.value = `data:image/png;base64,${result.qrcode_base64}`;
+    status.value = 'pending';
 
     // 开始轮询扫码状态（使用 composable）
     startQRPolling(
       async () => {
-        const result = await authStore.checkQRCodeStatus(sessionId.value)
+        const result = await authStore.checkQRCodeStatus(sessionId.value);
 
         // 检查是否完成（成功、过期或失败）
-        const completed = result.status === 'expired' || result.status === 'failed' || result.success
+        const completed =
+          result.status === 'expired' || result.status === 'failed' || result.success;
 
         return {
           completed,
           success: result.success === true,
-          data: result
-        }
+          data: result,
+        };
       },
       {
-        onSuccess: (result) => {
-          status.value = 'success'
-          stopCountdown()
-          message.success('登录成功！')
+        onSuccess: result => {
+          status.value = 'success';
+          stopCountdown();
+          message.success('登录成功！');
 
           // 延迟关闭对话框
           setTimeout(() => {
-            emit('success', result.user)
-            handleClose()
-          }, 1500)
+            emit('success', result.user);
+            handleClose();
+          }, 1500);
         },
-        onFailure: (result) => {
+        onFailure: result => {
           if (result.status === 'expired') {
-            status.value = 'expired'
+            status.value = 'expired';
           } else {
-            status.value = 'failed'
-            errorMessage.value = result.message || '扫码失败'
+            status.value = 'failed';
+            errorMessage.value = result.message || '扫码失败';
           }
-          stopCountdown()
+          stopCountdown();
         },
         onTimeout: () => {
-          status.value = 'expired'
-          stopCountdown()
-        }
+          status.value = 'expired';
+          stopCountdown();
+        },
       }
-    )
+    );
 
-    startCountdown()
+    startCountdown();
   } catch (error) {
-    status.value = 'failed'
-    errorMessage.value = error.message || '获取二维码失败'
-    emit('error', error)
+    status.value = 'failed';
+    errorMessage.value = error.message || '获取二维码失败';
+    emit('error', error);
   }
-}
+};
 
 // 开始倒计时
 const startCountdown = () => {
-  countdown.value = 180
+  countdown.value = 180;
 
   if (countdownTimer) {
-    clearInterval(countdownTimer)
+    clearInterval(countdownTimer);
   }
 
   countdownTimer = setInterval(() => {
-    countdown.value--
-    progress.value = (countdown.value / 180) * 100
+    countdown.value--;
+    progress.value = (countdown.value / 180) * 100;
 
     if (countdown.value <= 0) {
-      status.value = 'expired'
-      stopPolling()  // 停止轮询
-      stopCountdown()
+      status.value = 'expired';
+      stopPolling(); // 停止轮询
+      stopCountdown();
     }
-  }, 1000)
-}
+  }, 1000);
+};
 
 // 停止倒计时
 const stopCountdown = () => {
   if (countdownTimer) {
-    clearInterval(countdownTimer)
-    countdownTimer = null
+    clearInterval(countdownTimer);
+    countdownTimer = null;
   }
-}
+};
 
 // 刷新二维码
 const refreshQRCode = () => {
-  fetchQRCode()
-}
+  fetchQRCode();
+};
 
 // 关闭对话框
 const handleClose = () => {
-  stopPolling()  // 停止轮询
-  stopCountdown()
+  stopPolling(); // 停止轮询
+  stopCountdown();
 
   // 如果有未完成的会话,取消它
   if (sessionId.value && status.value !== 'success') {
     try {
-      authStore.cancelQRCodeSession(sessionId.value)
+      authStore.cancelQRCodeSession(sessionId.value);
     } catch (error) {
-      console.error('取消会话失败:', error)
+      console.error('取消会话失败:', error);
     }
   }
 
-  dialogVisible.value = false
-}
+  dialogVisible.value = false;
+};
 
 // 监听对话框显示状态
 watch(
   () => props.visible,
-  (visible) => {
+  visible => {
     if (visible) {
-      fetchQRCode()
+      fetchQRCode();
     } else {
-      stopPolling()
-      stopCountdown()
+      stopPolling();
+      stopCountdown();
     }
   }
-)
+);
 
 // 组件卸载时清理定时器，防止内存泄漏
 onBeforeUnmount(() => {
-  stopPolling()
-  stopCountdown()
-})
+  stopPolling();
+  stopCountdown();
+});
 </script>
 
 <style scoped>

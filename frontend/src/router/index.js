@@ -1,6 +1,6 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { userAPI } from '@/api'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { userAPI } from '@/api';
 
 const routes = [
   {
@@ -91,72 +91,72 @@ const routes = [
     component: () => import('@/views/NotFoundView.vue'),
     meta: { requiresAuth: false, title: '页面未找到' },
   },
-]
+];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-})
+});
 
 // 全局前置守卫
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
+  const authStore = useAuthStore();
 
   // 设置页面标题
-  document.title = to.meta.title ? `${to.meta.title} - 接龙自动打卡系统` : '接龙自动打卡系统'
+  document.title = to.meta.title ? `${to.meta.title} - 接龙自动打卡系统` : '接龙自动打卡系统';
 
   // 检查是否需要认证
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
       // 未登录，重定向到登录页
-      next({ name: 'Login', query: { redirect: to.fullPath } })
-      return
+      next({ name: 'Login', query: { redirect: to.fullPath } });
+      return;
     }
 
     // 检查用户审批状态（除了待审批页面本身）
     if (to.name !== 'PendingApproval') {
       try {
-        const status = await userAPI.getUserStatus()
+        const status = await userAPI.getUserStatus();
 
         if (!status.is_approved) {
           // 未审批用户只能访问待审批页面
-          next({ name: 'PendingApproval' })
-          return
+          next({ name: 'PendingApproval' });
+          return;
         }
       } catch (error) {
-        console.error('检查审批状态失败:', error)
+        console.error('检查审批状态失败:', error);
         // 如果检查失败，允许继续访问（避免阻塞正常用户）
       }
     } else {
       // 访问待审批页面时，检查是否已审批
       try {
-        const status = await userAPI.getUserStatus()
+        const status = await userAPI.getUserStatus();
 
         if (status.is_approved) {
           // 已审批用户不能访问待审批页面
-          next({ name: 'Dashboard' })
-          return
+          next({ name: 'Dashboard' });
+          return;
         }
       } catch (error) {
-        console.error('检查审批状态失败:', error)
+        console.error('检查审批状态失败:', error);
       }
     }
 
     // 检查是否需要管理员权限
     if (to.meta.requiresAdmin && !authStore.isAdmin) {
       // 非管理员，重定向到仪表盘
-      next({ name: 'Dashboard' })
-      return
+      next({ name: 'Dashboard' });
+      return;
     }
   } else {
     // 不需要认证的页面，如果已登录则重定向到仪表盘
     if (to.name === 'Login' && authStore.isAuthenticated) {
-      next({ name: 'Dashboard' })
-      return
+      next({ name: 'Dashboard' });
+      return;
     }
   }
 
-  next()
-})
+  next();
+});
 
-export default router
+export default router;

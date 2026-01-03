@@ -5,7 +5,9 @@
         <!-- Logo and Brand -->
         <div class="flex items-center space-x-8">
           <router-link to="/" class="flex items-center space-x-3 group">
-            <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-md3 flex items-center justify-center transform group-hover:scale-110 transition-transform">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-md3 flex items-center justify-center transform group-hover:scale-110 transition-transform"
+            >
               <CheckCircleOutlined class="text-white text-xl" />
             </div>
             <span class="text-xl font-bold text-gradient">接龙自动打卡</span>
@@ -13,19 +15,15 @@
 
           <!-- Desktop Navigation Links -->
           <div v-if="!isMobile" class="hidden md:flex items-center space-x-2">
-            <router-link
-              to="/dashboard"
-              v-slot="{ isActive }"
-              custom
-            >
+            <router-link v-slot="{ isActive }" to="/dashboard" custom>
               <a
-                @click="router.push('/dashboard')"
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-on-surface hover:bg-surface-container'
+                    : 'text-on-surface hover:bg-surface-container',
                 ]"
+                @click="router.push('/dashboard')"
               >
                 <div class="flex items-center space-x-2">
                   <HomeOutlined />
@@ -34,19 +32,15 @@
               </a>
             </router-link>
 
-            <router-link
-              to="/tasks"
-              v-slot="{ isActive }"
-              custom
-            >
+            <router-link v-slot="{ isActive }" to="/tasks" custom>
               <a
-                @click="router.push('/tasks')"
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-on-surface hover:bg-surface-container'
+                    : 'text-on-surface hover:bg-surface-container',
                 ]"
+                @click="router.push('/tasks')"
               >
                 <div class="flex items-center space-x-2">
                   <FileTextOutlined />
@@ -55,19 +49,15 @@
               </a>
             </router-link>
 
-            <router-link
-              to="/records"
-              v-slot="{ isActive }"
-              custom
-            >
+            <router-link v-slot="{ isActive }" to="/records" custom>
               <a
-                @click="router.push('/records')"
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-on-surface hover:bg-surface-container'
+                    : 'text-on-surface hover:bg-surface-container',
                 ]"
+                @click="router.push('/records')"
               >
                 <div class="flex items-center space-x-2">
                   <UnorderedListOutlined />
@@ -81,7 +71,9 @@
               <a
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all flex items-center space-x-2 cursor-pointer',
-                  isAdminPath ? 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-400' : 'text-on-surface hover:bg-surface-container'
+                  isAdminPath
+                    ? 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-400'
+                    : 'text-on-surface hover:bg-surface-container',
                 ]"
               >
                 <SettingOutlined />
@@ -155,11 +147,15 @@
 
           <!-- Desktop User Menu -->
           <a-dropdown v-if="!isMobile" :trigger="['hover']">
-            <a class="flex items-center space-x-3 px-4 py-2 rounded-full hover:bg-surface-container transition-all cursor-pointer">
+            <a
+              class="flex items-center space-x-3 px-4 py-2 rounded-full hover:bg-surface-container transition-all cursor-pointer"
+            >
               <a-avatar :style="{ backgroundColor: '#f56a00' }">
                 {{ userInitial }}
               </a-avatar>
-              <span class="hidden md:block font-medium text-on-surface">{{ authStore.user?.alias || '用户' }}</span>
+              <span class="hidden md:block font-medium text-on-surface">{{
+                authStore.user?.alias || '用户'
+              }}</span>
               <DownOutlined class="text-xs text-on-surface-variant" />
             </a>
             <template #overlay>
@@ -167,7 +163,9 @@
                 <a-menu-item key="info" disabled>
                   <div class="px-2 py-1">
                     <p class="text-sm font-medium text-on-surface">{{ authStore.user?.alias }}</p>
-                    <p class="text-xs text-on-surface-variant mt-1">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
+                    <p class="text-xs text-on-surface-variant mt-1">
+                      {{ authStore.isAdmin ? '管理员' : '普通用户' }}
+                    </p>
                   </div>
                 </a-menu-item>
                 <a-menu-divider />
@@ -175,7 +173,7 @@
                   <SettingOutlined />
                   <span class="ml-2">个人设置</span>
                 </a-menu-item>
-                <a-menu-item key="logout" @click="handleLogout" danger>
+                <a-menu-item key="logout" danger @click="handleLogout">
                   <LogoutOutlined />
                   <span class="ml-2">退出登录</span>
                 </a-menu-item>
@@ -197,12 +195,7 @@
     </nav>
 
     <!-- Mobile Drawer -->
-    <a-drawer
-      v-model:open="drawerVisible"
-      placement="left"
-      :width="280"
-      title="菜单"
-    >
+    <a-drawer v-model:open="drawerVisible" placement="left" :width="280" title="菜单">
       <!-- User Info in Drawer -->
       <div class="mb-6 pb-4 border-b border-outline-variant">
         <div class="flex items-center space-x-3">
@@ -211,17 +204,15 @@
           </a-avatar>
           <div>
             <p class="font-medium text-on-surface">{{ authStore.user?.alias || '用户' }}</p>
-            <p class="text-xs text-on-surface-variant">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
+            <p class="text-xs text-on-surface-variant">
+              {{ authStore.isAdmin ? '管理员' : '普通用户' }}
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Mobile Navigation Menu -->
-      <a-menu
-        mode="inline"
-        :selected-keys="[currentMenuKey]"
-        @click="handleMenuClick"
-      >
+      <a-menu mode="inline" :selected-keys="[currentMenuKey]" @click="handleMenuClick">
         <a-menu-item key="dashboard">
           <template #icon><HomeOutlined /></template>
           仪表盘
@@ -285,15 +276,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { useUserStore } from '@/stores/user'
-import { useTokenMonitor } from '@/composables/useTokenMonitor'
-import { useBreakpoint } from '@/composables/useBreakpoint'
-import { useTheme } from '@/composables/useTheme'
-import { Modal, message } from 'ant-design-vue'
-import QRCodeModal from './QRCodeModal.vue'
+import { ref, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { useUserStore } from '@/stores/user';
+import { useTokenMonitor } from '@/composables/useTokenMonitor';
+import { useBreakpoint } from '@/composables/useBreakpoint';
+import { useTheme } from '@/composables/useTheme';
+import { Modal, message } from 'ant-design-vue';
+import QRCodeModal from './QRCodeModal.vue';
 import {
   MenuOutlined,
   HomeOutlined,
@@ -311,123 +302,123 @@ import {
   BulbOutlined,
   BulbFilled,
   ReloadOutlined,
-} from '@ant-design/icons-vue'
+} from '@ant-design/icons-vue';
 
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-const userStore = useUserStore()
-const { isMobile } = useBreakpoint()
-const { getRemainingMinutes, tokenStatus } = useTokenMonitor()
-const { isDark, toggleTheme } = useTheme()
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
+const userStore = useUserStore();
+const { isMobile } = useBreakpoint();
+const { getRemainingMinutes, tokenStatus } = useTokenMonitor();
+const { isDark, toggleTheme } = useTheme();
 
-const drawerVisible = ref(false)
-const qrcodeModalVisible = ref(false)
+const drawerVisible = ref(false);
+const qrcodeModalVisible = ref(false);
 
-const isAdminPath = computed(() => route.path.startsWith('/admin'))
+const isAdminPath = computed(() => route.path.startsWith('/admin'));
 
 const userInitial = computed(() => {
-  const name = authStore.user?.alias || 'U'
-  return name.charAt(0).toUpperCase()
-})
+  const name = authStore.user?.alias || 'U';
+  return name.charAt(0).toUpperCase();
+});
 
 // Token 状态计算
 const remainingMinutes = computed(() => {
-  return getRemainingMinutes()
-})
+  return getRemainingMinutes();
+});
 
 const showTokenStatus = computed(() => {
-  if (!authStore.isAuthenticated || !tokenStatus.value) return false
+  if (!authStore.isAuthenticated || !tokenStatus.value) return false;
 
-  const mins = remainingMinutes.value
+  const mins = remainingMinutes.value;
   // 显示条件：Token 即将过期（60分钟内）或已过期（5分钟内）
-  if (mins === null) return false
-  return mins <= 60 || (mins < 0 && Math.abs(mins) <= 5)
-})
+  if (mins === null) return false;
+  return mins <= 60 || (mins < 0 && Math.abs(mins) <= 5);
+});
 
 const tokenBadgeStatus = computed(() => {
-  const mins = remainingMinutes.value
-  if (mins === null) return 'default'
-  if (mins < 0) return 'error' // 已过期
-  if (mins <= 10) return 'error' // 10分钟内过期
-  if (mins <= 30) return 'warning' // 30分钟内过期
-  return 'processing' // 正常但快过期
-})
+  const mins = remainingMinutes.value;
+  if (mins === null) return 'default';
+  if (mins < 0) return 'error'; // 已过期
+  if (mins <= 10) return 'error'; // 10分钟内过期
+  if (mins <= 30) return 'warning'; // 30分钟内过期
+  return 'processing'; // 正常但快过期
+});
 
 const tokenBadgeText = computed(() => {
-  const mins = remainingMinutes.value
-  if (mins === null) return ''
-  if (mins < 0) return 'Token 已过期'
-  if (mins < 60) return `Token 剩余：${mins}分钟`
-  return ''
-})
+  const mins = remainingMinutes.value;
+  if (mins === null) return '';
+  if (mins < 0) return 'Token 已过期';
+  if (mins < 60) return `Token 剩余：${mins}分钟`;
+  return '';
+});
 
 const tokenIconClass = computed(() => {
-  const mins = remainingMinutes.value
-  if (mins === null) return 'text-on-surface-variant'
-  if (mins < 0) return 'text-red-500 dark:text-red-400' // 已过期
-  if (mins <= 10) return 'text-red-500 dark:text-red-400 animate-pulse' // 10分钟内，闪烁
-  if (mins <= 30) return 'text-orange-500 dark:text-orange-400' // 30分钟内
-  return 'text-blue-500 dark:text-blue-400' // 正常
-})
+  const mins = remainingMinutes.value;
+  if (mins === null) return 'text-on-surface-variant';
+  if (mins < 0) return 'text-red-500 dark:text-red-400'; // 已过期
+  if (mins <= 10) return 'text-red-500 dark:text-red-400 animate-pulse'; // 10分钟内，闪烁
+  if (mins <= 30) return 'text-orange-500 dark:text-orange-400'; // 30分钟内
+  return 'text-blue-500 dark:text-blue-400'; // 正常
+});
 
 const tokenStatusTooltip = computed(() => {
-  const mins = remainingMinutes.value
-  if (mins === null) return 'Token 状态未知'
+  const mins = remainingMinutes.value;
+  if (mins === null) return 'Token 状态未知';
   if (mins < 0) {
-    const expiredMins = Math.abs(mins)
-    return `登录凭证已过期 ${expiredMins} 分钟，点击右侧按钮刷新`
+    const expiredMins = Math.abs(mins);
+    return `登录凭证已过期 ${expiredMins} 分钟，点击右侧按钮刷新`;
   }
   if (mins < 60) {
-    return `Token 剩余时间：${mins} 分钟，过期后可刷新）`
+    return `Token 剩余时间：${mins} 分钟，过期后可刷新）`;
   }
-  return 'Token 状态正常'
-})
+  return 'Token 状态正常';
+});
 
 const handleTokenStatusClick = () => {
-  const mins = remainingMinutes.value
+  const mins = remainingMinutes.value;
 
   //  Token 已过期时提醒刷新
   if (mins !== null && mins < 0) {
-    message.info('Token 已过期，请进行刷新')
+    message.info('Token 已过期，请进行刷新');
   }
   // Token 未过期时，点击无效果
-}
+};
 
 const currentMenuKey = computed(() => {
-  const path = route.path
-  if (path.startsWith('/admin/users')) return 'admin-users'
-  if (path.startsWith('/admin/templates')) return 'admin-templates'
-  if (path.startsWith('/admin/records')) return 'admin-records'
-  if (path.startsWith('/admin/stats')) return 'admin-stats'
-  if (path.startsWith('/admin/logs')) return 'admin-logs'
-  if (path.startsWith('/dashboard')) return 'dashboard'
-  if (path.startsWith('/tasks')) return 'tasks'
-  if (path.startsWith('/records')) return 'records'
-  if (path.startsWith('/settings')) return 'settings'
-  return ''
-})
+  const path = route.path;
+  if (path.startsWith('/admin/users')) return 'admin-users';
+  if (path.startsWith('/admin/templates')) return 'admin-templates';
+  if (path.startsWith('/admin/records')) return 'admin-records';
+  if (path.startsWith('/admin/stats')) return 'admin-stats';
+  if (path.startsWith('/admin/logs')) return 'admin-logs';
+  if (path.startsWith('/dashboard')) return 'dashboard';
+  if (path.startsWith('/tasks')) return 'tasks';
+  if (path.startsWith('/records')) return 'records';
+  if (path.startsWith('/settings')) return 'settings';
+  return '';
+});
 
 const handleMenuClick = ({ key }) => {
   const routes = {
-    'dashboard': '/dashboard',
-    'tasks': '/tasks',
-    'records': '/records',
+    dashboard: '/dashboard',
+    tasks: '/tasks',
+    records: '/records',
     'admin-users': '/admin/users',
     'admin-templates': '/admin/templates',
     'admin-records': '/admin/records',
     'admin-stats': '/admin/stats',
     'admin-logs': '/admin/logs',
-    'settings': '/settings',
-  }
+    settings: '/settings',
+  };
 
   if (key === 'logout') {
-    handleLogout()
+    handleLogout();
   } else if (routes[key]) {
-    router.push(routes[key])
-    drawerVisible.value = false
+    router.push(routes[key]);
+    drawerVisible.value = false;
   }
-}
+};
 
 const handleLogout = () => {
   Modal.confirm({
@@ -436,36 +427,36 @@ const handleLogout = () => {
     okText: '确定',
     cancelText: '取消',
     onOk() {
-      authStore.logout()
-      router.push('/login')
-      drawerVisible.value = false
+      authStore.logout();
+      router.push('/login');
+      drawerVisible.value = false;
     },
-  })
-}
+  });
+};
 
 // 处理 Token 刷新
 const handleRefreshToken = () => {
-  qrcodeModalVisible.value = true
-}
+  qrcodeModalVisible.value = true;
+};
 
 // 处理 QR 码扫码成功
 const handleQRCodeSuccess = async () => {
-  message.success('Token 刷新成功')
-  qrcodeModalVisible.value = false
+  message.success('Token 刷新成功');
+  qrcodeModalVisible.value = false;
 
   // 刷新用户信息和 Token 状态
   try {
-    await authStore.fetchCurrentUser()
-    await userStore.fetchTokenStatus()
+    await authStore.fetchCurrentUser();
+    await userStore.fetchTokenStatus();
   } catch (error) {
-    console.error('刷新用户信息失败:', error)
+    console.error('刷新用户信息失败:', error);
   }
-}
+};
 
 // 处理 QR 码扫码失败
-const handleQRCodeError = (error) => {
-  message.error(error?.message || 'Token 刷新失败')
-}
+const handleQRCodeError = error => {
+  message.error(error?.message || 'Token 刷新失败');
+};
 </script>
 
 <style scoped>

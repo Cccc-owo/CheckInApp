@@ -22,10 +22,7 @@
             <div v-else-if="adminStore.stats" class="stats-content">
               <a-row :gutter="[20, 20]">
                 <a-col :xs="24" :sm="12" :md="6">
-                  <a-statistic
-                    title="总用户数"
-                    :value="adminStore.totalUsers"
-                  >
+                  <a-statistic title="总用户数" :value="adminStore.totalUsers">
                     <template #prefix>
                       <UserOutlined />
                     </template>
@@ -43,10 +40,7 @@
                   </a-statistic>
                 </a-col>
                 <a-col :xs="24" :sm="12" :md="6">
-                  <a-statistic
-                    title="总打卡次数"
-                    :value="adminStore.totalRecords"
-                  >
+                  <a-statistic title="总打卡次数" :value="adminStore.totalRecords">
                     <template #prefix>
                       <UnorderedListOutlined />
                     </template>
@@ -75,16 +69,24 @@
                   {{ adminStore.stats?.users?.regular || 0 }}
                 </a-descriptions-item>
                 <a-descriptions-item label="今日成功打卡">
-                  <a-tag color="success">{{ adminStore.stats?.check_in_records?.today_success || 0 }}</a-tag>
+                  <a-tag color="success">{{
+                    adminStore.stats?.check_in_records?.today_success || 0
+                  }}</a-tag>
                 </a-descriptions-item>
                 <a-descriptions-item label="今日失败打卡">
-                  <a-tag color="error">{{ adminStore.stats?.check_in_records?.today_failure || 0 }}</a-tag>
+                  <a-tag color="error">{{
+                    adminStore.stats?.check_in_records?.today_failure || 0
+                  }}</a-tag>
                 </a-descriptions-item>
                 <a-descriptions-item label="今日时间范围外">
-                  <a-tag color="default">{{ adminStore.stats?.check_in_records?.today_out_of_time || 0 }}</a-tag>
+                  <a-tag color="default">{{
+                    adminStore.stats?.check_in_records?.today_out_of_time || 0
+                  }}</a-tag>
                 </a-descriptions-item>
                 <a-descriptions-item label="今日异常打卡">
-                  <a-tag color="warning">{{ adminStore.stats?.check_in_records?.today_unknown || 0 }}</a-tag>
+                  <a-tag color="warning">{{
+                    adminStore.stats?.check_in_records?.today_unknown || 0
+                  }}</a-tag>
                 </a-descriptions-item>
                 <a-descriptions-item label="总成功率" :span="2">
                   <a-progress
@@ -102,8 +104,8 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import { message } from 'ant-design-vue'
+import { onMounted } from 'vue';
+import { message } from 'ant-design-vue';
 import {
   BarChartOutlined,
   ReloadOutlined,
@@ -111,45 +113,45 @@ import {
   CheckOutlined,
   UnorderedListOutlined,
   CalendarOutlined,
-} from '@ant-design/icons-vue'
-import Layout from '@/components/Layout.vue'
-import { useAdminStore } from '@/stores/admin'
+} from '@ant-design/icons-vue';
+import Layout from '@/components/Layout.vue';
+import { useAdminStore } from '@/stores/admin';
 
-const adminStore = useAdminStore()
+const adminStore = useAdminStore();
 
-const getProgressColor = (percentage) => {
-  if (percentage >= 90) return '#52c41a'
-  if (percentage >= 70) return '#faad14'
-  return '#ff4d4f'
-}
+const getProgressColor = percentage => {
+  if (percentage >= 90) return '#52c41a';
+  if (percentage >= 70) return '#faad14';
+  return '#ff4d4f';
+};
 
 const calculateSuccessRate = () => {
-  const total = adminStore.stats?.check_in_records?.total || 0
-  const todaySuccess = adminStore.stats?.check_in_records?.today_success || 0
+  const total = adminStore.stats?.check_in_records?.total || 0;
+  const todaySuccess = adminStore.stats?.check_in_records?.today_success || 0;
 
-  if (total === 0) return 0
+  if (total === 0) return 0;
 
   // Calculate success rate based on all records (not just today)
   // We need to get success count from backend or calculate differently
   // For now, use today's success rate as approximation
-  const todayTotal = adminStore.stats?.check_in_records?.today || 0
-  if (todayTotal === 0) return 0
+  const todayTotal = adminStore.stats?.check_in_records?.today || 0;
+  if (todayTotal === 0) return 0;
 
-  return Math.round((todaySuccess / todayTotal) * 100)
-}
+  return Math.round((todaySuccess / todayTotal) * 100);
+};
 
 const handleRefresh = async () => {
   try {
-    await adminStore.fetchStats()
-    message.success('刷新成功')
+    await adminStore.fetchStats();
+    message.success('刷新成功');
   } catch (error) {
-    message.error(error.message || '刷新失败')
+    message.error(error.message || '刷新失败');
   }
-}
+};
 
 onMounted(() => {
-  adminStore.fetchStats()
-})
+  adminStore.fetchStats();
+});
 </script>
 
 <style scoped>

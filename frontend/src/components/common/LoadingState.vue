@@ -2,61 +2,38 @@
   <div v-if="loading" class="loading-state">
     <!-- 卡片骨架屏 -->
     <div v-if="type === 'card'" class="grid grid-cols-1 gap-4">
-      <a-card
-        v-for="i in count"
-        :key="i"
-        class="md3-card"
-      >
-        <a-skeleton
-          :active="true"
-          :paragraph="{ rows: paragraphRows }"
-          :avatar="showAvatar"
-        />
+      <a-card v-for="i in count" :key="i" class="md3-card">
+        <a-skeleton :active="true" :paragraph="{ rows: paragraphRows }" :avatar="showAvatar" />
       </a-card>
     </div>
 
     <!-- 列表骨架屏 -->
     <div v-else-if="type === 'list'" class="space-y-4">
-      <a-card
-        v-for="i in count"
-        :key="i"
-        class="md3-card"
-      >
-        <a-skeleton
-          :active="true"
-          :paragraph="{ rows: 1 }"
-          :avatar="showAvatar"
-        />
+      <a-card v-for="i in count" :key="i" class="md3-card">
+        <a-skeleton :active="true" :paragraph="{ rows: 1 }" :avatar="showAvatar" />
       </a-card>
     </div>
 
     <!-- 表格骨架屏 -->
     <a-card v-else-if="type === 'table'" class="md3-card">
-      <a-skeleton
-        :active="true"
-        :paragraph="{ rows: count * 2 }"
-      />
+      <a-skeleton :active="true" :paragraph="{ rows: count * 2 }" />
     </a-card>
 
     <!-- 默认骨架屏 -->
     <a-card v-else class="md3-card">
-      <a-skeleton
-        :active="true"
-        :paragraph="{ rows: paragraphRows }"
-        :avatar="showAvatar"
-      />
+      <a-skeleton :active="true" :paragraph="{ rows: paragraphRows }" :avatar="showAvatar" />
     </a-card>
   </div>
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
   /**
    * 是否显示加载状态
    */
   loading: {
     type: Boolean,
-    default: true
+    default: true,
   },
 
   /**
@@ -65,7 +42,7 @@ const props = defineProps({
   type: {
     type: String,
     default: 'card',
-    validator: (v) => ['card', 'list', 'table', 'default'].includes(v)
+    validator: v => ['card', 'list', 'table', 'default'].includes(v),
   },
 
   /**
@@ -73,7 +50,7 @@ const props = defineProps({
    */
   count: {
     type: Number,
-    default: 3
+    default: 3,
   },
 
   /**
@@ -81,7 +58,7 @@ const props = defineProps({
    */
   paragraphRows: {
     type: Number,
-    default: 4
+    default: 4,
   },
 
   /**
@@ -89,9 +66,9 @@ const props = defineProps({
    */
   showAvatar: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 </script>
 
 <style scoped>
@@ -100,7 +77,11 @@ const props = defineProps({
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>

@@ -44,7 +44,7 @@
         <!-- 桌面端表格 -->
         <a-table
           v-if="!isMobile"
-          :dataSource="checkInStore.myRecords"
+          :data-source="checkInStore.myRecords"
           :columns="columns"
           :loading="checkInStore.loading"
           :pagination="false"
@@ -58,7 +58,9 @@
             </template>
             <template v-else-if="column.key === 'status'">
               <a-tag v-if="record.status === 'success'" color="success">✅ 打卡成功</a-tag>
-              <a-tag v-else-if="record.status === 'out_of_time'" color="default">🕐 时间范围外</a-tag>
+              <a-tag v-else-if="record.status === 'out_of_time'" color="default"
+                >🕐 时间范围外</a-tag
+              >
               <a-tag v-else-if="record.status === 'unknown'" color="warning">❗ 打卡异常</a-tag>
               <a-tag v-else color="error">❌ 打卡失败</a-tag>
             </template>
@@ -86,7 +88,9 @@
               </a-descriptions-item>
               <a-descriptions-item label="状态">
                 <a-tag v-if="record.status === 'success'" color="success">✅ 打卡成功</a-tag>
-                <a-tag v-else-if="record.status === 'out_of_time'" color="default">🕐 时间范围外</a-tag>
+                <a-tag v-else-if="record.status === 'out_of_time'" color="default"
+                  >🕐 时间范围外</a-tag
+                >
                 <a-tag v-else-if="record.status === 'unknown'" color="warning">❗ 打卡异常</a-tag>
                 <a-tag v-else color="error">❌ 打卡失败</a-tag>
               </a-descriptions-item>
@@ -107,14 +111,14 @@
         <div class="pagination-container">
           <a-pagination
             v-model:current="checkInStore.currentPage"
-            v-model:pageSize="checkInStore.pageSize"
+            v-model:page-size="checkInStore.pageSize"
             :total="total"
-            :pageSizeOptions="['10', '20', '50', '100']"
+            :page-size-options="['10', '20', '50', '100']"
             show-size-changer
             show-quick-jumper
             :show-total="total => `共 ${total} 条记录`"
             @change="handlePageChange"
-            @showSizeChange="handleSizeChange"
+            @show-size-change="handleSizeChange"
           />
         </div>
       </a-card>
@@ -123,22 +127,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
-import { UnorderedListOutlined, ReloadOutlined } from '@ant-design/icons-vue'
-import Layout from '@/components/Layout.vue'
-import { useBreakpoint } from '@/composables/useBreakpoint'
-import { useCheckInStore } from '@/stores/checkIn'
-import { formatDateTime } from '@/utils/helpers'
+import { computed, onMounted } from 'vue';
+import { message } from 'ant-design-vue';
+import { UnorderedListOutlined, ReloadOutlined } from '@ant-design/icons-vue';
+import Layout from '@/components/Layout.vue';
+import { useBreakpoint } from '@/composables/useBreakpoint';
+import { useCheckInStore } from '@/stores/checkIn';
+import { formatDateTime } from '@/utils/helpers';
 
-const checkInStore = useCheckInStore()
-const { isMobile } = useBreakpoint()
+const checkInStore = useCheckInStore();
+const { isMobile } = useBreakpoint();
 
-const total = computed(() => checkInStore.total)
+const total = computed(() => checkInStore.total);
 
 const successCount = computed(() => {
-  return checkInStore.myRecords.filter((r) => r.status === 'success').length
-})
+  return checkInStore.myRecords.filter(r => r.status === 'success').length;
+});
 
 // 表格列配置
 const columns = [
@@ -172,32 +176,32 @@ const columns = [
     key: 'response_text',
     ellipsis: true,
   },
-]
+];
 
 // 刷新数据
 const handleRefresh = async () => {
   try {
-    await checkInStore.fetchMyRecords()
-    message.success('刷新成功')
+    await checkInStore.fetchMyRecords();
+    message.success('刷新成功');
   } catch (error) {
-    message.error(error.message || '刷新失败')
+    message.error(error.message || '刷新失败');
   }
-}
+};
 
 // 页码改变
 const handlePageChange = () => {
-  checkInStore.fetchMyRecords()
-}
+  checkInStore.fetchMyRecords();
+};
 
 // 每页数量改变
 const handleSizeChange = () => {
-  checkInStore.currentPage = 1
-  checkInStore.fetchMyRecords()
-}
+  checkInStore.currentPage = 1;
+  checkInStore.fetchMyRecords();
+};
 
 onMounted(() => {
-  checkInStore.fetchMyRecords()
-})
+  checkInStore.fetchMyRecords();
+});
 </script>
 
 <style scoped>

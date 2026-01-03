@@ -26,19 +26,19 @@
  * )
  */
 
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue';
 
 export function usePollStatus(options = {}) {
   const {
-    interval = 2000,        // 初始轮询间隔（毫秒）
-    maxRetries = 15,        // 最大重试次数
-    backoff = false,        // 是否使用指数退避
-    maxBackoffInterval = 10000  // 最大退避间隔（毫秒）
-  } = options
+    interval = 2000, // 初始轮询间隔（毫秒）
+    maxRetries = 15, // 最大重试次数
+    backoff = false, // 是否使用指数退避
+    maxBackoffInterval = 10000, // 最大退避间隔（毫秒）
+  } = options;
 
-  const polling = ref(false)
-  let pollTimer = null
-  let retryCount = 0
+  const polling = ref(false);
+  let pollTimer = null;
+  let retryCount = 0;
 
   /**
    * 开始轮询
@@ -49,80 +49,76 @@ export function usePollStatus(options = {}) {
    * @param {Function} callbacks.onTimeout - 超时回调
    */
   const startPolling = async (checkFn, callbacks = {}) => {
-    const { onSuccess, onFailure, onTimeout } = callbacks
+    const { onSuccess, onFailure, onTimeout } = callbacks;
 
     // 重置状态
-    stopPolling()
-    polling.value = true
-    retryCount = 0
+    stopPolling();
+    polling.value = true;
+    retryCount = 0;
 
     const poll = async () => {
       try {
-        const result = await checkFn()
+        const result = await checkFn();
 
         // 检查是否完成
         if (result.completed) {
-          stopPolling()
+          stopPolling();
 
           if (result.success) {
-            onSuccess?.(result.data || result)
+            onSuccess?.(result.data || result);
           } else {
-            onFailure?.(result.data || result)
+            onFailure?.(result.data || result);
           }
-          return
+          return;
         }
 
         // 检查是否超时
-        retryCount++
+        retryCount++;
         if (retryCount >= maxRetries) {
-          stopPolling()
-          onTimeout?.()
-          return
+          stopPolling();
+          onTimeout?.();
+          return;
         }
 
         // 计算下次轮询间隔（支持指数退避）
-        let nextInterval = interval
+        let nextInterval = interval;
         if (backoff) {
           // 指数退避：2s -> 4s -> 8s -> 最大10s
-          nextInterval = Math.min(
-            interval * Math.pow(2, retryCount - 1),
-            maxBackoffInterval
-          )
+          nextInterval = Math.min(interval * Math.pow(2, retryCount - 1), maxBackoffInterval);
         }
 
         // 继续轮询
-        pollTimer = setTimeout(poll, nextInterval)
-
+        pollTimer = setTimeout(poll, nextInterval);
       } catch (error) {
-        stopPolling()
-        onFailure?.(error)
+        stopPolling();
+        onFailure?.(error);
       }
-    }
+    };
 
     // 立即执行第一次检查
-    poll()
-  }
+    poll();
+  };
 
   /**
    * 停止轮询
    */
   const stopPolling = () => {
     if (pollTimer) {
-      clearTimeout(pollTimer)
-      pollTimer = null
+      clearTimeout(pollTimer);
+      pollTimer = null;
     }
-    polling.value = false
-    retryCount = 0
-  }
+    polling.value = false;
+    retryCount = 0;
+  };
 
   // 组件卸载时自动清理
   onUnmounted(() => {
-    stopPolling()
-  })
+    stopPolling();
+  });
 
   return {
     polling,
     startPolling,
-    stopPolling
-  }
+    stopPolling,
+  };
 }

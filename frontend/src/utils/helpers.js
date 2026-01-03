@@ -5,24 +5,24 @@
  * @returns {string}
  */
 export function formatDateTime(date, includeTime = true) {
-  if (!date) return '-'
+  if (!date) return '-';
 
-  const d = new Date(date)
-  if (isNaN(d.getTime())) return '-'
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
 
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
 
   if (!includeTime) {
-    return `${year}-${month}-${day}`
+    return `${year}-${month}-${day}`;
   }
 
-  const hours = String(d.getHours()).padStart(2, '0')
-  const minutes = String(d.getMinutes()).padStart(2, '0')
-  const seconds = String(d.getSeconds()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
 
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -31,25 +31,25 @@ export function formatDateTime(date, includeTime = true) {
  * @returns {string}
  */
 export function formatRelativeTime(date) {
-  if (!date) return '-'
+  if (!date) return '-';
 
-  const d = new Date(date)
-  if (isNaN(d.getTime())) return '-'
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '-';
 
-  const now = new Date()
-  const diff = now - d // 毫秒差
+  const now = new Date();
+  const diff = now - d; // 毫秒差
 
-  const seconds = Math.floor(diff / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return '刚刚'
-  if (minutes < 60) return `${minutes} 分钟前`
-  if (hours < 24) return `${hours} 小时前`
-  if (days < 7) return `${days} 天前`
+  if (seconds < 60) return '刚刚';
+  if (minutes < 60) return `${minutes} 分钟前`;
+  if (hours < 24) return `${hours} 小时前`;
+  if (days < 7) return `${days} 天前`;
 
-  return formatDateTime(date, false)
+  return formatDateTime(date, false);
 }
 
 /**
@@ -58,13 +58,13 @@ export function formatRelativeTime(date) {
  * @returns {string}
  */
 export function formatFileSize(bytes) {
-  if (!bytes || bytes === 0) return '0 B'
+  if (!bytes || bytes === 0) return '0 B';
 
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`
+  return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
 /**
@@ -74,13 +74,13 @@ export function formatFileSize(bytes) {
  * @returns {Function}
  */
 export function debounce(fn, delay = 300) {
-  let timer = null
+  let timer = null;
   return function (...args) {
-    if (timer) clearTimeout(timer)
+    if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
-      fn.apply(this, args)
-    }, delay)
-  }
+      fn.apply(this, args);
+    }, delay);
+  };
 }
 
 /**
@@ -90,23 +90,23 @@ export function debounce(fn, delay = 300) {
  * @returns {Function}
  */
 export function throttle(fn, delay = 300) {
-  let timer = null
-  let lastTime = 0
+  let timer = null;
+  let lastTime = 0;
 
   return function (...args) {
-    const now = Date.now()
+    const now = Date.now();
 
     if (now - lastTime < delay) {
-      if (timer) clearTimeout(timer)
+      if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
-        lastTime = now
-        fn.apply(this, args)
-      }, delay)
+        lastTime = now;
+        fn.apply(this, args);
+      }, delay);
     } else {
-      lastTime = now
-      fn.apply(this, args)
+      lastTime = now;
+      fn.apply(this, args);
     }
-  }
+  };
 }
 
 /**
@@ -117,29 +117,29 @@ export function throttle(fn, delay = 300) {
 export async function copyToClipboard(text) {
   try {
     if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text)
-      return true
+      await navigator.clipboard.writeText(text);
+      return true;
     } else {
       // 降级方案
-      const textArea = document.createElement('textarea')
-      textArea.value = text
-      textArea.style.position = 'fixed'
-      textArea.style.left = '-999999px'
-      document.body.appendChild(textArea)
-      textArea.focus()
-      textArea.select()
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
       try {
-        document.execCommand('copy')
-        textArea.remove()
-        return true
+        document.execCommand('copy');
+        textArea.remove();
+        return true;
       } catch (error) {
-        console.error('复制失败', error)
-        textArea.remove()
-        return false
+        console.error('复制失败', error);
+        textArea.remove();
+        return false;
       }
     }
   } catch (error) {
-    console.error('复制失败', error)
-    return false
+    console.error('复制失败', error);
+    return false;
   }
 }

@@ -1,4 +1,4 @@
-import { theme } from 'ant-design-vue'
+import { theme } from 'ant-design-vue';
 
 /**
  * Ant Design Vue 主题配置
@@ -204,13 +204,13 @@ export default function getAntdTheme(isDark = false) {
 
       // === Tooltip 组件 ===
       Tooltip: {
-        colorBgSpotlight: isDark ? '#313033' : '#f5f5f5',  // Tooltip 背景色（跟随主题）
-        colorTextLightSolid: isDark ? '#ffffff' : '#1c1b1f',  // Tooltip 文本颜色（跟随主题）
+        colorBgSpotlight: isDark ? '#313033' : '#f5f5f5', // Tooltip 背景色（跟随主题）
+        colorTextLightSolid: isDark ? '#ffffff' : '#1c1b1f', // Tooltip 文本颜色（跟随主题）
         borderRadius: 8,
       },
     },
 
     // 算法配置 - 使用 Ant Design 内置的暗黑算法
     algorithm: isDark ? [theme.darkAlgorithm] : [],
-  }
+  };
 }

@@ -12,6 +12,7 @@ from backend.schemas.auth import (
     AliasLoginResponse,
 )
 from backend.services.auth_service import AuthService
+from backend.exceptions import BusinessLogicError
 
 router = APIRouter()
 
@@ -38,9 +39,10 @@ async def request_qrcode(
 
     if reg_cookie:
         if not registration_manager.check_registration_cookie(reg_cookie):
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="注册过于频繁，请 10 分钟后再试"
+            raise BusinessLogicError(
+                message="注册过于频繁，请 10 分钟后再试",
+                error_code="RATE_LIMIT_EXCEEDED",
+                status_code=429
             )
     else:
         # 生成新的 Cookie
