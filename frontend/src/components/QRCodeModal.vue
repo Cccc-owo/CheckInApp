@@ -119,7 +119,7 @@ const fetchQRCode = async () => {
         onSuccess: result => {
           status.value = 'success';
           stopCountdown();
-          message.success('登录成功！');
+          message.success({ content: '登录成功！', duration: 2 });
 
           // 延迟关闭对话框
           setTimeout(() => {

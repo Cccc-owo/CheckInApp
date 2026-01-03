@@ -74,12 +74,12 @@ const handleRefresh = async () => {
       // 确保是字符串
       logContent.value = typeof data.logs === 'string' ? data.logs : String(data.logs);
       lastUpdate.value = formatDateTime(new Date());
-      message.success('刷新成功');
+      message.success({ content: '刷新成功', duration: 2 });
     } else {
       logContent.value = '无日志内容';
     }
   } catch (error) {
-    message.error(error.message || '刷新失败');
+    message.error({ content: error.message || '刷新失败', duration: 4 });
   }
 };
 

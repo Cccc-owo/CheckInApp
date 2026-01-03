@@ -380,7 +380,7 @@ const handleTokenStatusClick = () => {
 
   //  Token 已过期时提醒刷新
   if (mins !== null && mins < 0) {
-    message.info('Token 已过期，请进行刷新');
+    message.info({ content: 'Token 已过期，请进行刷新', duration: 3 });
   }
   // Token 未过期时，点击无效果
 };
@@ -441,7 +441,7 @@ const handleRefreshToken = () => {
 
 // 处理 QR 码扫码成功
 const handleQRCodeSuccess = async () => {
-  message.success('Token 刷新成功');
+  message.success({ content: 'Token 刷新成功', duration: 3 });
   qrcodeModalVisible.value = false;
 
   // 刷新用户信息和 Token 状态
@@ -455,7 +455,7 @@ const handleQRCodeSuccess = async () => {
 
 // 处理 QR 码扫码失败
 const handleQRCodeError = error => {
-  message.error(error?.message || 'Token 刷新失败');
+  message.error({ content: error?.message || 'Token 刷新失败', duration: 4 });
 };
 </script>
 

@@ -533,7 +533,7 @@ const confirmAddField = () => {
       }
 
       addFieldDialogVisible.value = false;
-      message.success('数组元素添加成功');
+      message.success({ content: '数组元素添加成功', duration: 2 });
       return;
     } else {
       // 字段名不为空，添加为包含命名字段的对象
@@ -556,21 +556,21 @@ const confirmAddField = () => {
 
       localFieldConfig.value.push(newObject);
       addFieldDialogVisible.value = false;
-      message.success('带命名字段的对象添加成功');
+      message.success({ content: '带命名字段的对象添加成功', duration: 2 });
       return;
     }
   }
 
   // 其他情况需要字段名
   if (!newFieldName.value) {
-    message.warning('请输入字段名');
+    message.warning({ content: '请输入字段名', duration: 2 });
     return;
   }
 
   if (isAddingToObject.value) {
     // 添加到对象字段
     if (localFieldConfig.value[newFieldName.value]) {
-      message.warning('该字段已存在');
+      message.warning({ content: '该字段已存在', duration: 2 });
       return;
     }
 
@@ -593,7 +593,7 @@ const confirmAddField = () => {
     // 添加到数组元素
     const arrayItem = localFieldConfig.value[currentArrayIndex.value];
     if (arrayItem[newFieldName.value]) {
-      message.warning('该字段已存在');
+      message.warning({ content: '该字段已存在', duration: 2 });
       return;
     }
 
@@ -615,7 +615,7 @@ const confirmAddField = () => {
   }
 
   addFieldDialogVisible.value = false;
-  message.success('字段添加成功');
+  message.success({ content: '字段添加成功', duration: 2 });
 };
 </script>
 

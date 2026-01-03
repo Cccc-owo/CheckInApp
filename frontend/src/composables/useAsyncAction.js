@@ -45,7 +45,7 @@ export function useAsyncAction(options = {}) {
       const result = await asyncFn();
 
       if (!silent && successMsg) {
-        message.success(successMsg);
+        message.success({ content: successMsg, duration: 3 });
       }
 
       return result;
@@ -54,7 +54,7 @@ export function useAsyncAction(options = {}) {
 
       if (!silent) {
         const msg = err.message || err.detail || errorMsg || '操作失败';
-        message.error(msg);
+        message.error({ content: msg, duration: 4 });
       }
 
       if (throwOnError) {
