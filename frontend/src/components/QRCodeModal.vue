@@ -50,6 +50,7 @@
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBreakpoint } from '@/composables/useBreakpoint'
+import { usePollStatus } from '@/composables/usePollStatus'
 import { message } from 'ant-design-vue'
 import {
   CheckCircleFilled,
@@ -73,6 +74,13 @@ const emit = defineEmits(['update:visible', 'success', 'error'])
 const authStore = useAuthStore()
 const { isMobile } = useBreakpoint()
 
+// 使用轮询 composable
+const { startPolling: startQRPolling, stopPolling } = usePollStatus({
+  interval: 2000,
+  maxRetries: 90,  // 3分钟 = 180秒 / 2秒间隔 = 90次
+  backoff: false
+})
+
 const dialogVisible = computed({
   get: () => props.visible,
   set: (val) => emit('update:visible', val),
@@ -85,7 +93,6 @@ const errorMessage = ref('')
 const countdown = ref(180) // 倒计时 3 分钟
 const progress = ref(100)
 
-let pollingTimer = null
 let countdownTimer = null
 
 // 获取二维码
@@ -97,64 +104,53 @@ const fetchQRCode = async () => {
     qrcodeUrl.value = `data:image/png;base64,${result.qrcode_base64}`
     status.value = 'pending'
 
-    // 开始轮询扫码状态
-    startPolling()
+    // 开始轮询扫码状态（使用 composable）
+    startQRPolling(
+      async () => {
+        const result = await authStore.checkQRCodeStatus(sessionId.value)
+
+        // 检查是否完成（成功、过期或失败）
+        const completed = result.status === 'expired' || result.status === 'failed' || result.success
+
+        return {
+          completed,
+          success: result.success === true,
+          data: result
+        }
+      },
+      {
+        onSuccess: (result) => {
+          status.value = 'success'
+          stopCountdown()
+          message.success('登录成功！')
+
+          // 延迟关闭对话框
+          setTimeout(() => {
+            emit('success', result.user)
+            handleClose()
+          }, 1500)
+        },
+        onFailure: (result) => {
+          if (result.status === 'expired') {
+            status.value = 'expired'
+          } else {
+            status.value = 'failed'
+            errorMessage.value = result.message || '扫码失败'
+          }
+          stopCountdown()
+        },
+        onTimeout: () => {
+          status.value = 'expired'
+          stopCountdown()
+        }
+      }
+    )
+
     startCountdown()
   } catch (error) {
     status.value = 'failed'
     errorMessage.value = error.message || '获取二维码失败'
     emit('error', error)
-  }
-}
-
-// 开始轮询扫码状态
-const startPolling = () => {
-  if (pollingTimer) {
-    clearInterval(pollingTimer)
-  }
-
-  pollingTimer = setInterval(async () => {
-    try {
-      const result = await authStore.checkQRCodeStatus(sessionId.value)
-
-      if (result.success) {
-        // 扫码成功
-        status.value = 'success'
-        stopPolling()
-        stopCountdown()
-
-        message.success('登录成功！')
-
-        // 延迟关闭对话框
-        setTimeout(() => {
-          emit('success', result.user)
-          handleClose()
-        }, 1500)
-      } else if (result.status === 'expired') {
-        // 二维码过期
-        status.value = 'expired'
-        stopPolling()
-        stopCountdown()
-      } else if (result.status === 'failed') {
-        // 扫码失败
-        status.value = 'failed'
-        errorMessage.value = result.message || '扫码失败'
-        stopPolling()
-        stopCountdown()
-      }
-      // 否则继续轮询（pending 状态）
-    } catch (error) {
-      console.error('轮询扫码状态失败:', error)
-      // 继续轮询，不中断
-    }
-  }, 2000) // 每 2 秒轮询一次
-}
-
-// 停止轮询
-const stopPolling = () => {
-  if (pollingTimer) {
-    clearInterval(pollingTimer)
-    pollingTimer = null
   }
 }
 
@@ -172,7 +168,7 @@ const startCountdown = () => {
 
     if (countdown.value <= 0) {
       status.value = 'expired'
-      stopPolling()
+      stopPolling()  // 停止轮询
       stopCountdown()
     }
   }, 1000)
@@ -193,7 +189,7 @@ const refreshQRCode = () => {
 
 // 关闭对话框
 const handleClose = () => {
-  stopPolling()
+  stopPolling()  // 停止轮询
   stopCountdown()
 
   // 如果有未完成的会话,取消它
@@ -250,30 +246,50 @@ onBeforeUnmount(() => {
 }
 
 .success-icon {
-  color: #52c41a;
+  color: #4caf50;
+}
+
+.dark .success-icon {
+  color: #81c784;
 }
 
 .warning-icon {
-  color: #faad14;
+  color: #ff9800;
+}
+
+.dark .warning-icon {
+  color: #ffb74d;
 }
 
 .error-icon {
-  color: #ff4d4f;
+  color: #f44336;
+}
+
+.dark .error-icon {
+  color: #ef5350;
 }
 
 .status-text {
   margin-top: 20px;
   font-size: 16px;
-  color: #606266;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .status-text.success {
-  color: #52c41a;
+  color: #4caf50;
   font-weight: bold;
 }
 
+.dark .status-text.success {
+  color: #81c784;
+}
+
 .status-text.error {
-  color: #ff4d4f;
+  color: #f44336;
+}
+
+.dark .status-text.error {
+  color: #ef5350;
 }
 
 .qrcode-wrapper {
@@ -286,22 +302,22 @@ onBeforeUnmount(() => {
 .qrcode-image {
   width: 240px;
   height: 240px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
   padding: 10px;
-  background-color: #fff;
+  background-color: var(--md-sys-color-surface);
 }
 
 .hint-text {
   margin-top: 20px;
   font-size: 14px;
-  color: #8c8c8c;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .countdown-text {
   margin-top: 10px;
   font-size: 12px;
-  color: #8c8c8c;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .mt-4 {

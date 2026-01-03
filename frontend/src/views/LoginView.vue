@@ -216,7 +216,7 @@ const handleQRCodeLogin = async () => {
     // 显示 QR 码弹窗
     qrcodeVisible.value = true
   } catch (error) {
-    console.error('表单验证失败:', error)
+    // 表单验证失败，不需要打印错误（由 Ant Design 自动显示错误提示）
   }
 }
 

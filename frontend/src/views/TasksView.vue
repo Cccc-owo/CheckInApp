@@ -370,11 +370,19 @@ import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useTaskStore } from '@/stores/task'
 import { useTemplateStore } from '@/stores/template'
 import { copyToClipboard, formatDateTime } from '@/utils/helpers'
+import { usePollStatus } from '@/composables/usePollStatus'
 
 const router = useRouter()
 const taskStore = useTaskStore()
 const templateStore = useTemplateStore()
 const { isMobile } = useBreakpoint()
+
+// 使用轮询 composable
+const { startPolling } = usePollStatus({
+  interval: 2000,
+  maxRetries: 15,
+  backoff: false
+})
 
 const loading = ref(false)
 const showCreateDialog = ref(false)
@@ -675,48 +683,34 @@ const handleCheckIn = async (taskId) => {
     // 显示提示消息
     message.info('打卡任务已启动，正在后台处理...')
 
-    // 用于存储 interval ID，以便在超时时清理
-    let pollIntervalId = null
-
-    // 开始轮询检查打卡状态
-    pollIntervalId = setInterval(async () => {
-      try {
+    // 使用轮询 composable 检查打卡状态
+    startPolling(
+      async () => {
         const status = await taskStore.getCheckInRecordStatus(recordId)
-
-        // 只要状态不是 pending，说明打卡请求已经处理完成
-        if (status.status !== 'pending') {
-          clearInterval(pollIntervalId)
-          checkInLoading.value[taskId] = false
-
-          if (status.status === 'success') {
-            // 打卡成功
-            message.success('打卡成功！')
-            await fetchTasks()
-          } else {
-            // 打卡失败或其他状态 (failure, out_of_time, unknown 等)
-            const errorMsg = status.error_message || status.response_text || '打卡失败'
-            message.error(errorMsg)
-            await fetchTasks()
-          }
+        return {
+          completed: status.status !== 'pending',
+          success: status.status === 'success',
+          data: status
         }
-        // status === 'pending' 时继续轮询
-      } catch (error) {
-        // 查询状态失败，停止轮询
-        console.error('轮询状态失败:', error)
-        clearInterval(pollIntervalId)
-        checkInLoading.value[taskId] = false
-        message.error('查询打卡状态失败')
+      },
+      {
+        onSuccess: async () => {
+          checkInLoading.value[taskId] = false
+          message.success('打卡成功！')
+          await fetchTasks()
+        },
+        onFailure: async (statusData) => {
+          checkInLoading.value[taskId] = false
+          const errorMsg = statusData.error_message || statusData.response_text || '打卡失败'
+          message.error(errorMsg)
+          await fetchTasks()
+        },
+        onTimeout: () => {
+          checkInLoading.value[taskId] = false
+          message.warning('打卡处理时间较长，请稍后查看打卡记录')
+        }
       }
-    }, 2000) // 每 2 秒查询一次
-
-    // 设置超时保护（30 秒后停止轮询）
-    setTimeout(() => {
-      if (checkInLoading.value[taskId]) {
-        clearInterval(pollIntervalId)
-        checkInLoading.value[taskId] = false
-        message.warning('打卡处理时间较长，请稍后查看打卡记录')
-      }
-    }, 30000)
+    )
 
   } catch (error) {
     console.error('启动打卡失败:', error)
