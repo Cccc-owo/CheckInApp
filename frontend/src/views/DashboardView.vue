@@ -4,7 +4,7 @@
       <a-row :gutter="[20, 20]">
         <!-- Token 状态卡片 -->
         <a-col :xs="24" :sm="24" :md="24">
-          <a-card class="status-card">
+          <a-card class="status-card md3-card">
             <template #title>
               <div class="card-header">
                 <KeyOutlined />
@@ -60,7 +60,7 @@
 
         <!-- 手动打卡卡片 -->
         <a-col :xs="24" :sm="24" :md="24">
-          <a-card>
+          <a-card class="md3-card">
             <template #title>
               <div class="card-header">
                 <CalendarOutlined />
@@ -123,7 +123,7 @@
                       }}
                     </a-tag>
                   </a-descriptions-item>
-                  <a-descriptions-item label="打卡响应" :span="2">
+                  <a-descriptions-item label="打卡响应" :span="{ xs: 1, sm: 1, md: 2 }">
                     {{ lastCheckIn.response_text || lastCheckIn.error_message || '-' }}
                   </a-descriptions-item>
                 </a-descriptions>
@@ -134,7 +134,7 @@
 
         <!-- 用户信息卡片 -->
         <a-col :xs="24" :sm="24" :md="24">
-          <a-card>
+          <a-card class="md3-card">
             <template #title>
               <div class="card-header">
                 <UserOutlined />
@@ -151,10 +151,10 @@
                   {{ authStore.isAdmin ? '管理员' : '普通用户' }}
                 </a-tag>
               </a-descriptions-item>
-              <a-descriptions-item label="邮箱" :span="2">
+              <a-descriptions-item label="邮箱">
                 {{ authStore.user?.email || '未设置' }}
               </a-descriptions-item>
-              <a-descriptions-item label="注册时间" :span="2">
+              <a-descriptions-item label="注册时间">
                 {{ formatDateTime(authStore.user?.created_at, false) }}
               </a-descriptions-item>
             </a-descriptions>
@@ -335,23 +335,58 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
 .loading-container {
   padding: 20px;
 }
 
 .token-status {
-  padding: 10px 0;
+  padding: 0;
+}
+
+.token-status .ant-descriptions {
+  margin-bottom: 0;
 }
 
 .check-in-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+.check-in-container .hint {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
+  margin: 0 0 4px 0;
+  text-align: center;
 }
 
 .last-check-in {
   width: 100%;
   margin-top: 20px;
+}
+
+.last-check-in .label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 12px 0 8px 0;
+}
+
+.ant-alert {
+  margin-top: 16px;
+}
+
+.ant-select {
+  margin-bottom: 0;
 }
 </style>

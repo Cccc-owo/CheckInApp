@@ -2,11 +2,11 @@
   <Layout>
     <div class="settings-view">
       <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">个人设置</h1>
+        <h1 class="text-3xl font-bold text-on-surface mb-6">个人设置</h1>
 
         <!-- 基本信息卡片 -->
-        <div class="md3-card p-6 mb-6">
-          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+        <a-card class="md3-card mb-6">
+          <h2 class="text-xl font-bold text-on-surface mb-4 flex items-center">
             <UserOutlined class="mr-2" />
             基本信息
           </h2>
@@ -28,11 +28,11 @@
               {{ formatDate(user?.created_at) }}
             </a-descriptions-item>
           </a-descriptions>
-        </div>
+        </a-card>
 
         <!-- 修改邮箱 -->
-        <div class="md3-card p-6 mb-6">
-          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+        <a-card class="md3-card mb-6">
+          <h2 class="text-xl font-bold text-on-surface mb-4 flex items-center">
             <EditOutlined class="mr-2" />
             修改个人信息
           </h2>
@@ -73,11 +73,11 @@
               </a-space>
             </a-form-item>
           </a-form>
-        </div>
+        </a-card>
 
         <!-- 设置/修改密码 -->
-        <div class="md3-card p-6">
-          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+        <a-card class="md3-card">
+          <h2 class="text-xl font-bold text-on-surface mb-4 flex items-center">
             <KeyOutlined class="mr-2" />
             {{ hasPassword ? '修改密码' : '设置密码' }}
           </h2>
@@ -136,7 +136,7 @@
               </a-space>
             </a-form-item>
           </a-form>
-        </div>
+        </a-card>
       </div>
     </div>
   </Layout>

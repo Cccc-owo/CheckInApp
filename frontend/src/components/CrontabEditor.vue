@@ -325,191 +325,174 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* === Material Design 3 样式重写 === */
+
 .crontab-editor {
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  padding: 16px;
-  background: #f5f7fa;
-  transition: all 0.3s;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  padding: 20px;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark .crontab-editor {
-  border-color: #3a3a3c;
-  background: #2c2c2e;
+.crontab-editor:focus-within {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 1px var(--md-sys-color-primary);
 }
 
+/* 模式选择标签 */
 .mode-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
-  border-bottom: 2px solid #ebeef5;
-  transition: border-color 0.3s;
-}
-
-.dark .mode-tabs {
-  border-bottom-color: #3a3a3c;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding-bottom: 0;
 }
 
 .mode-tab {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background: none;
   border: none;
   cursor: pointer;
-  color: #909399;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 14px;
   font-weight: 500;
+  letter-spacing: 0.1px;
   border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: all 0.3s;
+  margin-bottom: -1px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
-.dark .mode-tab {
-  color: #a0a0a3;
+.mode-tab:hover {
+  color: var(--md-sys-color-on-surface);
+  background-color: rgba(76, 175, 80, 0.04);
 }
 
 .mode-tab.active {
-  color: #409eff;
-  border-bottom-color: #409eff;
+  color: var(--md-sys-color-primary);
+  border-bottom-color: var(--md-sys-color-primary);
+  font-weight: 600;
 }
 
-.dark .mode-tab.active {
-  color: #81c784;
-  border-bottom-color: #81c784;
-}
-
+/* 模式内容区域 */
 .mode-content {
-  margin: 16px 0;
+  margin: 20px 0;
 }
 
+/* 快速选项 */
 .quick-option {
-  padding: 12px;
-  background: white;
-  border-radius: 4px;
-  transition: background 0.3s;
+  padding: 16px;
+  background-color: var(--md-sys-color-surface);
+  border-radius: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark .quick-option {
-  background: #1c1c1e;
+.quick-option:hover {
+  border-color: var(--md-sys-color-outline);
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+              0px 1px 3px 1px rgba(0, 0, 0, 0.15);
 }
 
 .option-label {
-  font-weight: 600;
-  color: #1c1b1f;
-}
-
-.dark .option-label {
-  color: #e5e5e7;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.1px;
 }
 
 .option-desc {
   margin-left: 12px;
-  color: #909399;
+  color: var(--md-sys-color-on-surface-variant);
   font-size: 12px;
+  letter-spacing: 0.4px;
 }
 
-.dark .option-desc {
-  color: #a0a0a3;
-}
-
+/* 表达式输入 */
 .expression-input {
-  margin: 12px 0;
+  margin: 16px 0;
 }
 
 .help-text {
   margin-top: 8px;
-  color: #909399;
+  color: var(--md-sys-color-on-surface-variant);
   font-size: 12px;
-}
-
-.dark .help-text {
-  color: #a0a0a3;
+  line-height: 16px;
+  letter-spacing: 0.4px;
 }
 
 .help-text a {
-  color: #409eff;
+  color: var(--md-sys-color-secondary);
   text-decoration: none;
-}
-
-.dark .help-text a {
-  color: #81c784;
+  font-weight: 500;
+  transition: color 0.2s;
 }
 
 .help-text a:hover {
+  color: var(--md-sys-color-primary);
   text-decoration: underline;
 }
 
+/* 预览区域 */
 .preview-section {
   margin: 16px 0;
-  padding: 12px;
-  background: white;
-  border-radius: 4px;
-  transition: background 0.3s;
-}
-
-.dark .preview-section {
-  background: #1c1c1e;
+  padding: 16px;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .preview-section h4 {
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
   font-size: 14px;
-  color: #1c1b1f;
-}
-
-.dark .preview-section h4 {
-  color: #e5e5e7;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.1px;
 }
 
 .execution-list {
   margin: 0;
-  padding-left: 20px;
-  font-size: 12px;
-  color: #606266;
+  padding-left: 24px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
-.dark .execution-list {
-  color: #a0a0a3;
+.execution-list li {
+  margin-bottom: 4px;
 }
 
+/* 验证消息 */
 .validation-message {
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin-top: 12px;
-  font-size: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .validation-message.success {
-  background: #f0f9ff;
-  color: #67c23a;
-  border: 1px solid #c6e2ff;
-}
-
-.dark .validation-message.success {
-  background: rgba(129, 199, 132, 0.1);
-  color: #81c784;
-  border-color: rgba(129, 199, 132, 0.3);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: var(--md-sys-color-primary);
 }
 
 .validation-message.error {
-  background: #fef0f0;
-  color: #f56c6c;
-  border: 1px solid #fde7e7;
-}
-
-.dark .validation-message.error {
-  background: rgba(244, 67, 54, 0.1);
-  color: #ef5350;
-  border-color: rgba(244, 67, 54, 0.3);
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-color: var(--md-sys-color-error);
 }
 
 .validation-message.info {
-  background: #f4f4f5;
-  color: #909399;
-  border: 1px solid #ebeef5;
-}
-
-.dark .validation-message.info {
-  background: #2c2c2e;
-  color: #a0a0a3;
-  border-color: #3a3a3c;
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+  border-color: var(--md-sys-color-outline-variant);
 }
 </style>

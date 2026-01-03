@@ -59,16 +59,22 @@ export default {
         },
       },
       borderRadius: {
-        'md3': '12px',
-        'md3-lg': '16px',
-        'md3-xl': '28px',
+        // Material Design 3 Shape System
+        'md3-xs': '4px',   // Extra Small - chips, small tags
+        'md3-sm': '8px',   // Small - text fields, small components
+        'md3': '12px',     // Medium - cards, buttons (default)
+        'md3-lg': '16px',  // Large - large cards, dialogs
+        'md3-xl': '28px',  // Extra Large - fully rounded buttons
+        'md3-full': '9999px', // Full - pill shape
       },
       boxShadow: {
-        'md3-1': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        'md3-2': '0 1px 3px 1px rgba(0, 0, 0, 0.08)',
-        'md3-3': '0 4px 8px 3px rgba(0, 0, 0, 0.10)',
-        'md3-4': '0 6px 10px 4px rgba(0, 0, 0, 0.12)',
-        'md3-5': '0 8px 12px 6px rgba(0, 0, 0, 0.14)',
+        // Material Design 3 Elevation System (official spec)
+        'md3-0': 'none',
+        'md3-1': '0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15)',
+        'md3-2': '0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15)',
+        'md3-3': '0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15)',
+        'md3-4': '0px 2px 3px 0px rgba(0, 0, 0, 0.3), 0px 6px 10px 4px rgba(0, 0, 0, 0.15)',
+        'md3-5': '0px 4px 4px 0px rgba(0, 0, 0, 0.3), 0px 8px 12px 6px rgba(0, 0, 0, 0.15)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-in-out',

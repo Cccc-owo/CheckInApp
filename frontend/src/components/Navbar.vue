@@ -1,5 +1,5 @@
 <template>
-  <div class="sticky top-0 z-50 glass-effect border-b border-gray-200/50 dark:border-gray-700/50 shadow-md3-2">
+  <div class="sticky top-0 z-50 md3-surface elevation-2 border-b border-outline-variant">
     <nav class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo and Brand -->
@@ -24,7 +24,7 @@
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-on-surface hover:bg-surface-container'
                 ]"
               >
                 <div class="flex items-center space-x-2">
@@ -45,7 +45,7 @@
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-on-surface hover:bg-surface-container'
                 ]"
               >
                 <div class="flex items-center space-x-2">
@@ -66,7 +66,7 @@
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-on-surface hover:bg-surface-container'
                 ]"
               >
                 <div class="flex items-center space-x-2">
@@ -81,7 +81,7 @@
               <a
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all flex items-center space-x-2 cursor-pointer',
-                  isAdminPath ? 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  isAdminPath ? 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-400' : 'text-on-surface hover:bg-surface-container'
                 ]"
               >
                 <SettingOutlined />
@@ -121,7 +121,7 @@
           <!-- Token Status Indicator (Desktop & Mobile) -->
           <a-tooltip v-if="showTokenStatus" :title="tokenStatusTooltip">
             <div
-              class="px-2 md:px-3 py-1.5 rounded-full cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-1 md:space-x-2"
+              class="px-2 md:px-3 py-1.5 rounded-full cursor-pointer transition-all hover:bg-surface-container flex items-center space-x-1 md:space-x-2"
               @click="handleTokenStatusClick"
             >
               <a-badge :status="tokenBadgeStatus" />
@@ -142,32 +142,32 @@
           </a-tooltip>
 
           <!-- Theme Toggle Button -->
-          <a-tooltip :title="isDark ? '切换到亮色模式' : '切换到暗色模式'">
-            <a-button
-              type="text"
-              class="!p-2 !flex !items-center !justify-center hover:!bg-gray-100 dark:hover:!bg-gray-700 transition-all"
+          <a-tooltip :title="isDark ? '切换到亮色模式' : '切换到暗色模式'" placement="bottom">
+            <button
+              type="button"
+              class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container transition-all"
               @click="toggleTheme"
             >
-              <BulbFilled v-if="isDark" class="text-lg text-yellow-400" />
-              <BulbOutlined v-else class="text-lg text-gray-700 dark:text-gray-300" />
-            </a-button>
+              <BulbFilled v-if="isDark" class="text-xl text-yellow-400" />
+              <BulbOutlined v-else class="text-xl text-on-surface" />
+            </button>
           </a-tooltip>
 
           <!-- Desktop User Menu -->
           <a-dropdown v-if="!isMobile" :trigger="['hover']">
-            <a class="flex items-center space-x-3 px-4 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer">
+            <a class="flex items-center space-x-3 px-4 py-2 rounded-full hover:bg-surface-container transition-all cursor-pointer">
               <a-avatar :style="{ backgroundColor: '#f56a00' }">
                 {{ userInitial }}
               </a-avatar>
-              <span class="hidden md:block font-medium text-gray-700 dark:text-gray-200">{{ authStore.user?.alias || '用户' }}</span>
-              <DownOutlined class="text-xs text-gray-500 dark:text-gray-400" />
+              <span class="hidden md:block font-medium text-on-surface">{{ authStore.user?.alias || '用户' }}</span>
+              <DownOutlined class="text-xs text-on-surface-variant" />
             </a>
             <template #overlay>
               <a-menu>
                 <a-menu-item key="info" disabled>
                   <div class="px-2 py-1">
-                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ authStore.user?.alias }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
+                    <p class="text-sm font-medium text-on-surface">{{ authStore.user?.alias }}</p>
+                    <p class="text-xs text-on-surface-variant mt-1">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
                   </div>
                 </a-menu-item>
                 <a-menu-divider />
@@ -184,14 +184,14 @@
           </a-dropdown>
 
           <!-- Mobile Hamburger Button -->
-          <a-button
+          <button
             v-if="isMobile"
-            type="text"
+            type="button"
+            class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container transition-all"
             @click="drawerVisible = true"
-            class="!p-2"
           >
-            <MenuOutlined class="text-xl text-gray-700 dark:text-gray-300" />
-          </a-button>
+            <MenuOutlined class="text-xl text-on-surface" />
+          </button>
         </div>
       </div>
     </nav>
@@ -204,14 +204,14 @@
       title="菜单"
     >
       <!-- User Info in Drawer -->
-      <div class="mb-6 pb-4 border-b border-gray-200">
+      <div class="mb-6 pb-4 border-b border-outline-variant">
         <div class="flex items-center space-x-3">
           <a-avatar :size="48" :style="{ backgroundColor: '#f56a00' }">
             {{ userInitial }}
           </a-avatar>
           <div>
-            <p class="font-medium text-gray-900">{{ authStore.user?.alias || '用户' }}</p>
-            <p class="text-xs text-gray-500">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
+            <p class="font-medium text-on-surface">{{ authStore.user?.alias || '用户' }}</p>
+            <p class="text-xs text-on-surface-variant">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
           </div>
         </div>
       </div>
@@ -364,11 +364,11 @@ const tokenBadgeText = computed(() => {
 
 const tokenIconClass = computed(() => {
   const mins = remainingMinutes.value
-  if (mins === null) return 'text-gray-500'
-  if (mins < 0) return 'text-red-500' // 已过期
-  if (mins <= 10) return 'text-red-500 animate-pulse' // 10分钟内，闪烁
-  if (mins <= 30) return 'text-orange-500' // 30分钟内
-  return 'text-blue-500' // 正常
+  if (mins === null) return 'text-on-surface-variant'
+  if (mins < 0) return 'text-red-500 dark:text-red-400' // 已过期
+  if (mins <= 10) return 'text-red-500 dark:text-red-400 animate-pulse' // 10分钟内，闪烁
+  if (mins <= 30) return 'text-orange-500 dark:text-orange-400' // 30分钟内
+  return 'text-blue-500 dark:text-blue-400' // 正常
 })
 
 const tokenStatusTooltip = computed(() => {

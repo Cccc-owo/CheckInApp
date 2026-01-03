@@ -7,7 +7,7 @@
           <div class="flex items-center justify-between mb-6">
             <div>
               <h1 class="text-3xl font-bold text-gradient mb-2">任务模板管理</h1>
-              <p class="text-gray-600 dark:text-gray-400">JSON 映射架构 - 配置即结构，字段名保持原样</p>
+              <p class="text-on-surface-variant">JSON 映射架构 - 配置即结构</p>
             </div>
             <button @click="showCreateDialog" class="md3-button-filled">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,37 +20,38 @@
 
         <!-- Templates List -->
         <div v-if="loading && templates.length === 0" class="space-y-4">
-          <div v-for="i in 3" :key="i" class="fluent-card p-6">
+          <a-card v-for="i in 3" :key="i" class="md3-card">
             <a-skeleton :active="true" :paragraph="{ rows: 2 }" />
-          </div>
+          </a-card>
         </div>
 
-        <div v-else-if="templates.length === 0" class="fluent-card p-12 text-center">
-          <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a-card v-else-if="templates.length === 0" class="md3-card text-center" style="padding: 48px 20px;">
+          <svg class="w-20 h-20 mx-auto text-on-surface-variant opacity-30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">暂无模板</h3>
-          <p class="text-gray-500 dark:text-gray-400 mb-4">创建第一个模板，让用户更轻松地创建打卡任务</p>
+          <h3 class="text-xl font-semibold text-on-surface mb-2">暂无模板</h3>
+          <p class="text-on-surface-variant mb-4">创建第一个模板，让用户更轻松地创建打卡任务</p>
           <button @click="showCreateDialog" class="md3-button-filled">新建模板</button>
-        </div>
+        </a-card>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
+          <a-card
             v-for="template in templates"
             :key="template.id"
-            class="fluent-card p-7 hover:shadow-xl transition-all animate-slide-up"
+            class="md3-card hover:shadow-xl transition-all animate-slide-up"
           >
-            <div class="flex items-start justify-between mb-5">
+            <div class="flex items-start justify-between mb-3">
               <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">{{ template.name }}</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ template.description || '无描述' }}</p>
-                <span :class="template.is_active ? 'status-success' : 'status-info'">
+                <h3 class="text-lg font-semibold text-on-surface mb-2">{{ template.name }}</h3>
+                <a-divider style="margin: 8px 0;" />
+                <p class="text-sm text-on-surface-variant mb-2">{{ template.description || '无描述' }}</p>
+                <span :class="template.is_active ? 'md3-badge-success' : 'md3-badge-info'">
                   {{ template.is_active ? '已启用' : '已禁用' }}
                 </span>
               </div>
             </div>
 
-            <div class="mt-5 pt-4 border-t border-gray-100 space-y-2">
+            <div class="mt-3 pt-3 border-t border-outline-variant space-y-2">
               <!-- 第一行：预览在左半部分居中，编辑在右半部分居中 -->
               <div class="grid grid-cols-2 gap-2">
                 <div class="flex justify-center">
@@ -77,7 +78,7 @@
               <div class="grid grid-cols-2 gap-2">
                 <div></div>
                 <div class="flex justify-center">
-                  <button @click="deleteTemplate(template)" class="md3-button-text text-sm !text-red-600 dark:!text-red-500 flex-shrink-0">
+                  <button @click="deleteTemplate(template)" class="md3-button-outlined text-sm !text-red-600 dark:!text-red-500 !border-red-600 dark:!border-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20 flex-shrink-0">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -86,7 +87,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </a-card>
         </div>
 
         <!-- Create/Edit Dialog -->
@@ -156,7 +157,7 @@
             <!-- 字段配置编辑器 -->
             <div class="field-config-editor">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">字段配置</h3>
+                <h3 class="text-lg font-bold text-on-surface">字段配置</h3>
                 <a-dropdown>
                   <a-button type="primary">
                     添加字段
@@ -188,12 +189,12 @@
               </div>
 
               <!-- 递归渲染字段树 -->
-              <div v-if="Object.keys(formData.field_config).length === 0" class="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div v-if="Object.keys(formData.field_config).length === 0" class="text-center py-12 border-2 border-dashed border-outline-variant rounded-lg bg-surface-container">
+                <svg class="w-16 h-16 mx-auto text-on-surface-variant opacity-40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">暂无字段配置</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">点击上方"添加字段"开始配置模板</p>
+                <h3 class="text-lg font-semibold text-on-surface mb-2">暂无字段配置</h3>
+                <p class="text-sm text-on-surface-variant">点击上方"添加字段"开始配置模板</p>
               </div>
 
               <div v-else class="space-y-3">
@@ -215,7 +216,7 @@
               <span class="text-lg font-bold">JSON 预览</span>
             </a-divider>
 
-            <div class="bg-gray-900 dark:bg-black text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto max-h-96">
+            <div class="bg-surface-container text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto max-h-96">
               <pre>{{ JSON.stringify(formData.field_config, null, 2) }}</pre>
             </div>
           </a-form>
@@ -242,7 +243,7 @@
                 placeholder="例如: Id, Group1, DateTarget"
                 @keyup.enter="confirmAddField"
               />
-              <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
+              <span class="text-xs text-on-surface-variant mt-1 block">
                 💡 字段名将保持原样，不会进行大小写转换
               </span>
             </a-form-item>
@@ -262,14 +263,14 @@
           :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
         >
           <div v-if="previewData" class="space-y-4">
-            <div class="bg-gray-50 dark:bg-gray-800 rounded p-4">
-              <h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-100">生成的 Payload（使用默认值）：</h4>
-              <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded border dark:border-gray-700 overflow-auto max-h-96">{{ JSON.stringify(previewData.preview_payload, null, 2) }}</pre>
+            <div class="bg-surface-container rounded p-4">
+              <h4 class="font-semibold mb-2 text-on-surface">生成的 Payload（使用默认值）：</h4>
+              <pre class="text-xs bg-surface text-on-surface p-3 rounded border border-outline-variant overflow-auto max-h-96">{{ JSON.stringify(previewData.preview_payload, null, 2) }}</pre>
             </div>
 
-            <div class="bg-gray-50 dark:bg-gray-800 rounded p-4">
-              <h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-100">字段配置：</h4>
-              <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded border dark:border-gray-700 overflow-auto max-h-96">{{ JSON.stringify(previewData.field_config, null, 2) }}</pre>
+            <div class="bg-surface-container rounded p-4">
+              <h4 class="font-semibold mb-2 text-on-surface">字段配置：</h4>
+              <pre class="text-xs bg-surface text-on-surface p-3 rounded border border-outline-variant overflow-auto max-h-96">{{ JSON.stringify(previewData.field_config, null, 2) }}</pre>
             </div>
           </div>
 

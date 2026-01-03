@@ -13,11 +13,11 @@
             返回任务列表
           </a-button>
 
-          <div v-if="currentTask" class="fluent-card p-6">
+          <a-card v-if="currentTask" class="md3-card">
             <div class="flex items-start justify-between">
               <div class="flex-1">
                 <h1 class="text-3xl font-bold text-gradient mb-2">{{ currentTask.name || '未命名任务' }}</h1>
-                <div class="flex items-center gap-4 text-sm text-gray-600">
+                <div class="flex items-center gap-4 text-sm text-on-surface-variant">
                   <span class="flex items-center">
                     <NumberOutlined class="mr-1" />
                     接龙 ID: {{ getThreadId(currentTask) }}
@@ -35,54 +35,54 @@
                 {{ checkInLoading ? '打卡中...' : '立即打卡' }}
               </a-button>
             </div>
-          </div>
+          </a-card>
         </div>
 
         <!-- Stats Summary -->
         <a-row :gutter="[16, 16]" class="mb-6">
           <a-col :xs="12" :sm="8" :md="4">
-            <div class="fluent-card p-5 animate-slide-up">
-              <p class="text-sm text-gray-600 mb-1">总打卡次数</p>
-              <p class="text-2xl font-bold text-gray-800">{{ recordStats.total }}</p>
-            </div>
+            <a-card class="md3-card animate-slide-up">
+              <p class="text-sm text-on-surface-variant mb-1">总打卡次数</p>
+              <p class="text-2xl font-bold text-on-surface">{{ recordStats.total }}</p>
+            </a-card>
           </a-col>
           <a-col :xs="12" :sm="8" :md="4">
-            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.05s">
-              <p class="text-sm text-gray-600 mb-1">成功次数</p>
-              <p class="text-2xl font-bold text-green-600">{{ recordStats.success }}</p>
-            </div>
+            <a-card class="md3-card animate-slide-up" style="animation-delay: 0.05s">
+              <p class="text-sm text-on-surface-variant mb-1">成功次数</p>
+              <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ recordStats.success }}</p>
+            </a-card>
           </a-col>
           <a-col :xs="12" :sm="8" :md="4">
-            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.1s">
-              <p class="text-sm text-gray-600 mb-1">时间范围外</p>
-              <p class="text-2xl font-bold text-blue-600">{{ recordStats.outOfTime }}</p>
-            </div>
+            <a-card class="md3-card animate-slide-up" style="animation-delay: 0.1s">
+              <p class="text-sm text-on-surface-variant mb-1">时间范围外</p>
+              <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ recordStats.outOfTime }}</p>
+            </a-card>
           </a-col>
           <a-col :xs="12" :sm="8" :md="4">
-            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.15s">
-              <p class="text-sm text-gray-600 mb-1">失败次数</p>
-              <p class="text-2xl font-bold text-red-600">{{ recordStats.failure }}</p>
-            </div>
+            <a-card class="md3-card animate-slide-up" style="animation-delay: 0.15s">
+              <p class="text-sm text-on-surface-variant mb-1">失败次数</p>
+              <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ recordStats.failure }}</p>
+            </a-card>
           </a-col>
           <a-col :xs="12" :sm="8" :md="4">
-            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.2s">
-              <p class="text-sm text-gray-600 mb-1">异常次数</p>
-              <p class="text-2xl font-bold text-orange-600">{{ recordStats.unknown }}</p>
-            </div>
+            <a-card class="md3-card animate-slide-up" style="animation-delay: 0.2s">
+              <p class="text-sm text-on-surface-variant mb-1">异常次数</p>
+              <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ recordStats.unknown }}</p>
+            </a-card>
           </a-col>
           <a-col :xs="12" :sm="8" :md="4">
-            <div class="fluent-card p-5 animate-slide-up" style="animation-delay: 0.25s">
-              <p class="text-sm text-gray-600 mb-1">成功率</p>
-              <p class="text-2xl font-bold text-purple-600">{{ recordStats.successRate }}%</p>
-            </div>
+            <a-card class="md3-card animate-slide-up" style="animation-delay: 0.25s">
+              <p class="text-sm text-on-surface-variant mb-1">成功率</p>
+              <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ recordStats.successRate }}%</p>
+            </a-card>
           </a-col>
         </a-row>
 
         <!-- Filters -->
-        <div class="fluent-card p-4 mb-6">
+        <a-card class="md3-card mb-6">
           <a-space wrap :size="[16, 16]">
             <div class="flex items-center gap-2">
-              <span class="text-sm font-medium text-gray-700">状态筛选:</span>
+              <span class="text-sm font-medium text-on-surface">状态筛选:</span>
               <a-radio-group v-model:value="filterStatus" button-style="solid" size="small" @change="handleFilterChange">
                 <a-radio-button value="">全部</a-radio-button>
                 <a-radio-button value="success">成功</a-radio-button>
@@ -93,7 +93,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <span class="text-sm font-medium text-gray-700">触发方式:</span>
+              <span class="text-sm font-medium text-on-surface">触发方式:</span>
               <a-radio-group v-model:value="filterTrigger" button-style="solid" size="small" @change="handleFilterChange">
                 <a-radio-button value="">全部</a-radio-button>
                 <a-radio-button value="scheduler">自动</a-radio-button>
@@ -106,7 +106,7 @@
               刷新
             </a-button>
           </a-space>
-        </div>
+        </a-card>
 
         <!-- Records List -->
         <div v-if="loading" class="space-y-4">
@@ -115,22 +115,22 @@
           </a-card>
         </div>
 
-        <div v-else-if="records.length === 0" class="fluent-card p-12 text-center">
-          <FileTextOutlined class="text-8xl text-gray-300 mb-4" />
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">暂无打卡记录</h3>
-          <p class="text-gray-500">当前筛选条件下没有找到任何打卡记录</p>
-        </div>
+        <a-card v-else-if="records.length === 0" class="md3-card text-center" style="padding: 48px 20px;">
+          <FileTextOutlined class="text-8xl text-on-surface-variant opacity-30 mb-4" />
+          <h3 class="text-xl font-semibold text-on-surface mb-2">暂无打卡记录</h3>
+          <p class="text-on-surface-variant">当前筛选条件下没有找到任何打卡记录</p>
+        </a-card>
 
         <div v-else class="space-y-4">
-          <div
+          <a-card
             v-for="record in records"
             :key="record.id"
-            class="fluent-card p-6 hover:shadow-xl transition-all animate-slide-up"
+            class="md3-card hover:shadow-xl transition-all animate-slide-up"
           >
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
                 <div class="flex items-center gap-3 mb-2 flex-wrap">
-                  <h3 class="text-lg font-semibold text-gray-800">
+                  <h3 class="text-lg font-semibold text-on-surface">
                     打卡记录 #{{ record.id }}
                   </h3>
                   <a-tag
@@ -153,7 +153,7 @@
                     {{ record.trigger_type === 'scheduled' ? '自动触发' : '手动触发' }}
                   </a-tag>
                 </div>
-                <div class="flex items-center text-sm text-gray-600">
+                <div class="flex items-center text-sm text-on-surface-variant">
                   <ClockCircleOutlined class="mr-1" />
                   {{ formatDateTime(record.check_in_time) }}
                 </div>
@@ -161,18 +161,18 @@
             </div>
 
             <!-- Record Details -->
-            <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+            <div class="bg-surface-container-high dark:bg-surface-container rounded-lg p-4 space-y-2">
               <div v-if="record.response_text" class="flex items-start">
-                <span class="text-sm font-medium text-gray-700 w-20">响应:</span>
-                <span class="text-sm text-gray-900 flex-1">{{ record.response_text }}</span>
+                <span class="text-sm font-medium text-on-surface-variant w-20">响应:</span>
+                <span class="text-sm text-on-surface flex-1">{{ record.response_text }}</span>
               </div>
 
               <div v-if="record.error_message" class="flex items-start">
-                <span class="text-sm font-medium text-red-700 w-20">错误:</span>
-                <span class="text-sm text-red-600 flex-1">{{ record.error_message }}</span>
+                <span class="text-sm font-medium text-error w-20">错误:</span>
+                <span class="text-sm text-error flex-1">{{ record.error_message }}</span>
               </div>
             </div>
-          </div>
+          </a-card>
         </div>
 
         <!-- Pagination -->

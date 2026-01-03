@@ -1,16 +1,16 @@
 <template>
-  <div class="field-tree-node border-2 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+  <div class="field-tree-node border border-outline-variant rounded-md3 p-4 bg-surface shadow-md3-1 hover:shadow-md3-2 transition-shadow">
     <!-- 普通字段 -->
     <div v-if="isFieldConfig" class="field-config">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-outline-variant">
         <div class="flex items-center gap-3">
           <button
             type="button"
             @click="isCollapsed = !isCollapsed"
-            class="hover:bg-gray-100 rounded p-1 transition-colors"
+            class="hover:bg-surface-container rounded-md3 p-1 transition-colors"
           >
             <svg
-              class="w-4 h-4 text-gray-600 transition-transform"
+              class="w-4 h-4 text-on-surface-variant transition-transform"
               :class="{ 'rotate-180': !isCollapsed }"
               fill="none"
               stroke="currentColor"
@@ -19,10 +19,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
-          <span class="font-mono text-base font-bold text-blue-700">{{ fieldKey }}</span>
+          <span class="font-mono text-base font-bold text-primary">{{ fieldKey }}</span>
           <a-tag type="primary" size="small">普通字段</a-tag>
         </div>
         <div class="flex gap-2">
@@ -45,22 +45,22 @@
         </div>
       </div>
 
-      <div v-show="!isCollapsed" class="bg-gray-50 rounded-lg p-3">
+      <div v-show="!isCollapsed" class="bg-surface-container-low rounded-md3 p-3">
         <FieldConfigEditor v-model="localFieldConfig" :field-key="fieldKey" />
       </div>
     </div>
 
     <!-- 数组字段 -->
     <div v-else-if="isArray" class="array-field">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-purple-200">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-outline-variant">
         <div class="flex items-center gap-3">
           <button
             type="button"
             @click="isCollapsed = !isCollapsed"
-            class="hover:bg-gray-100 rounded p-1 transition-colors"
+            class="hover:bg-surface-container rounded-md3 p-1 transition-colors"
           >
             <svg
-              class="w-4 h-4 text-gray-600 transition-transform"
+              class="w-4 h-4 text-on-surface-variant transition-transform"
               :class="{ 'rotate-180': !isCollapsed }"
               fill="none"
               stroke="currentColor"
@@ -69,10 +69,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
           </svg>
-          <span class="font-mono text-base font-bold text-purple-700">{{ fieldKey }}</span>
+          <span class="font-mono text-base font-bold text-secondary">{{ fieldKey }}</span>
           <a-tag type="warning" size="small">数组字段</a-tag>
         </div>
         <div class="flex gap-2">
@@ -102,8 +102,8 @@
       </div>
 
       <div v-show="!isCollapsed">
-        <div v-if="localFieldConfig.length === 0" class="text-center py-6 bg-purple-50 rounded-lg border border-dashed border-purple-300">
-          <p class="text-sm text-gray-500 mb-2">数组为空</p>
+        <div v-if="localFieldConfig.length === 0" class="text-center py-6 bg-surface-container-low rounded-md3 border border-dashed border-outline">
+          <p class="text-sm text-on-surface-variant mb-2">数组为空</p>
           <a-button size="small" type="primary" @click="addArrayItem">添加第一个元素</a-button>
         </div>
 
@@ -111,17 +111,17 @@
           <div
             v-for="(item, index) in localFieldConfig"
             :key="index"
-            class="border-2 border-purple-200 rounded-lg p-3 bg-purple-50"
+            class="border border-outline-variant rounded-md3 p-3 bg-surface-container"
           >
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-semibold text-purple-700">元素 #{{ index + 1 }}</span>
+              <span class="text-sm font-semibold text-secondary">元素 #{{ index + 1 }}</span>
               <a-button size="small" type="danger" plain @click="removeArrayItem(index)">
                 删除元素
               </a-button>
             </div>
 
             <!-- 如果数组元素是字段配置对象，直接渲染为字段编辑器 -->
-            <div v-if="typeof item === 'object' && !Array.isArray(item) && 'display_name' in item" class="bg-white rounded-lg p-3">
+            <div v-if="typeof item === 'object' && !Array.isArray(item) && 'display_name' in item" class="bg-surface rounded-md3 p-3">
               <FieldConfigEditor :model-value="item" @update:model-value="updateArrayItemField(index, $event)" :field-key="`元素${index + 1}`" />
             </div>
 
@@ -164,15 +164,15 @@
 
     <!-- 对象字段 -->
     <div v-else-if="isObject" class="object-field">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-green-200">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-outline-variant">
         <div class="flex items-center gap-3">
           <button
             type="button"
             @click="isCollapsed = !isCollapsed"
-            class="hover:bg-gray-100 rounded p-1 transition-colors"
+            class="hover:bg-surface-container rounded-md3 p-1 transition-colors"
           >
             <svg
-              class="w-4 h-4 text-gray-600 transition-transform"
+              class="w-4 h-4 text-on-surface-variant transition-transform"
               :class="{ 'rotate-180': !isCollapsed }"
               fill="none"
               stroke="currentColor"
@@ -181,10 +181,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <span class="font-mono text-base font-bold text-green-700">{{ fieldKey }}</span>
+          <span class="font-mono text-base font-bold text-accent">{{ fieldKey }}</span>
           <a-tag type="success" size="small">对象字段</a-tag>
         </div>
         <div class="flex gap-2">
@@ -214,12 +214,12 @@
       </div>
 
       <div v-show="!isCollapsed">
-        <div v-if="Object.keys(localFieldConfig).length === 0" class="text-center py-6 bg-green-50 rounded-lg border border-dashed border-green-300">
-          <p class="text-sm text-gray-500 mb-2">对象为空</p>
+        <div v-if="Object.keys(localFieldConfig).length === 0" class="text-center py-6 bg-surface-container-low rounded-md3 border border-dashed border-outline">
+          <p class="text-sm text-on-surface-variant mb-2">对象为空</p>
           <a-button size="small" type="primary" @click="addFieldToObject">添加第一个子字段</a-button>
         </div>
 
-        <div v-else class="space-y-3 mt-3 pl-4 border-l-4 border-green-300">
+        <div v-else class="space-y-3 mt-3 pl-4 border-l-4 border-accent">
         <!-- 递归渲染对象中的字段 -->
         <FieldTreeNode
           v-for="(subConfig, subKey) in localFieldConfig"

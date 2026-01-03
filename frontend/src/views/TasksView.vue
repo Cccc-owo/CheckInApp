@@ -7,7 +7,7 @@
           <div class="flex items-center justify-between mb-4">
             <div>
               <h1 class="text-4xl font-bold text-gradient mb-2">任务管理</h1>
-              <p class="text-gray-600 dark:text-gray-400">管理您的自动打卡任务</p>
+              <p class="text-on-surface-variant">管理您的自动打卡任务</p>
             </div>
             <a-button
               type="primary"
@@ -25,45 +25,45 @@
           <!-- Stats Cards -->
           <a-row :gutter="[16, 16]" class="mb-6">
             <a-col :xs="24" :sm="8" :md="8">
-              <div class="fluent-card p-6 animate-slide-up">
+              <a-card class="md3-card animate-slide-up">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">总任务数</p>
-                    <p class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{ taskStore.taskStats.total }}</p>
+                    <p class="text-sm text-on-surface-variant mb-1">总任务数</p>
+                    <p class="text-3xl font-bold text-primary">{{ taskStore.taskStats.total }}</p>
                   </div>
                   <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-md3 flex items-center justify-center">
-                    <FileTextOutlined class="text-2xl text-primary-600 dark:text-primary-400" />
+                    <FileTextOutlined class="text-2xl text-primary" />
                   </div>
                 </div>
-              </div>
+              </a-card>
             </a-col>
 
             <a-col :xs="24" :sm="8" :md="8">
-              <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.1s">
+              <a-card class="md3-card animate-slide-up" style="animation-delay: 0.1s">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">启用中</p>
+                    <p class="text-sm text-on-surface-variant mb-1">启用中</p>
                     <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ taskStore.taskStats.active }}</p>
                   </div>
                   <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-md3 flex items-center justify-center">
                     <CheckCircleOutlined class="text-2xl text-green-600 dark:text-green-400" />
                   </div>
                 </div>
-              </div>
+              </a-card>
             </a-col>
 
             <a-col :xs="24" :sm="8" :md="8">
-              <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.2s">
+              <a-card class="md3-card animate-slide-up" style="animation-delay: 0.2s">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">已禁用</p>
-                    <p class="text-3xl font-bold text-gray-600 dark:text-gray-300">{{ taskStore.taskStats.inactive }}</p>
+                    <p class="text-sm text-on-surface-variant mb-1">已禁用</p>
+                    <p class="text-3xl font-bold text-on-surface-variant">{{ taskStore.taskStats.inactive }}</p>
                   </div>
-                  <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-md3 flex items-center justify-center">
-                    <StopOutlined class="text-2xl text-gray-600 dark:text-gray-300" />
+                  <div class="w-12 h-12 bg-surface-container-high rounded-md3 flex items-center justify-center">
+                    <StopOutlined class="text-2xl text-on-surface-variant" />
                   </div>
                 </div>
-              </div>
+              </a-card>
             </a-col>
           </a-row>
         </div>
@@ -79,14 +79,14 @@
           </a-row>
         </div>
 
-        <div v-else-if="taskStore.tasks.length === 0" class="fluent-card p-12 text-center">
-          <FileTextOutlined class="text-8xl text-gray-300 mb-4" />
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">暂无任务</h3>
-          <p class="text-gray-500 mb-6">点击右上角的"创建任务"按钮开始添加您的第一个打卡任务</p>
+        <a-card v-else-if="taskStore.tasks.length === 0" class="md3-card text-center" style="padding: 48px 20px;">
+          <FileTextOutlined class="text-8xl text-on-surface-variant opacity-30 mb-4" />
+          <h3 class="text-xl font-semibold text-on-surface mb-2">暂无任务</h3>
+          <p class="text-on-surface-variant mb-6">点击右上角的"创建任务"按钮开始添加您的第一个打卡任务</p>
           <a-button type="primary" @click="showCreateDialog = true">
             创建第一个任务
           </a-button>
-        </div>
+        </a-card>
 
         <a-row v-else :gutter="[16, 16]">
           <a-col
@@ -94,15 +94,16 @@
             v-for="task in taskStore.tasks"
             :key="task.id"
           >
-            <div
-              class="fluent-card p-6 hover:scale-105 transform transition-all cursor-pointer animate-slide-up"
+            <a-card
+              class="md3-card hover:scale-105 transform transition-all cursor-pointer animate-slide-up"
               @click="viewTask(task)"
             >
               <!-- Task Header -->
               <div class="flex items-start justify-between mb-4">
                 <div class="flex-1">
-                  <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ task.name || '未命名任务' }}</h3>
-                  <p class="text-sm text-gray-500">任务 ID: {{ task.id }}</p>
+                  <h3 class="text-lg font-semibold text-on-surface mb-1">{{ task.name || '未命名任务' }}</h3>
+                  <a-divider style="margin: 8px 0;" />
+                  <p class="text-sm text-on-surface-variant">任务 ID: {{ task.id }}</p>
                 </div>
                 <a-tag :color="task.is_active ? 'success' : 'default'">
                   {{ task.is_active ? '启用' : '禁用' }}
@@ -111,21 +112,21 @@
 
               <!-- Task Details -->
               <div class="space-y-2 mb-4">
-                <div class="flex items-center text-sm text-gray-600">
+                <div class="flex items-center text-sm text-on-surface-variant">
                   <TagOutlined class="mr-2" />
                   接龙ID: {{ getThreadId(task) }}
                 </div>
-                <div class="flex items-center text-sm text-gray-600">
+                <div class="flex items-center text-sm text-on-surface-variant">
                   <ClockCircleOutlined class="mr-2" />
                   最后打卡: {{ task.last_check_in_time ? formatDateTime(task.last_check_in_time) : '未打卡' }}
                 </div>
                 <div class="flex items-center text-sm">
-                  <CheckCircleOutlined class="mr-2 text-gray-600" />
+                  <CheckCircleOutlined class="mr-2 text-on-surface-variant" />
                   <span v-if="task.last_check_in_status" :class="{
-                    'text-green-600 font-medium': task.last_check_in_status === 'success',
-                    'text-blue-600 font-medium': task.last_check_in_status === 'out_of_time',
-                    'text-red-600 font-medium': task.last_check_in_status === 'failure',
-                    'text-yellow-600 font-medium': task.last_check_in_status === 'unknown'
+                    'text-green-600 dark:text-green-400 font-medium': task.last_check_in_status === 'success',
+                    'text-blue-600 dark:text-blue-400 font-medium': task.last_check_in_status === 'out_of_time',
+                    'text-red-600 dark:text-red-400 font-medium': task.last_check_in_status === 'failure',
+                    'text-yellow-600 dark:text-yellow-400 font-medium': task.last_check_in_status === 'unknown'
                   }">
                     {{
                       task.last_check_in_status === 'success' ? '✅ 打卡成功' :
@@ -134,12 +135,12 @@
                       '❗ 打卡异常'
                     }}
                   </span>
-                  <span v-else class="text-gray-500">暂无打卡记录</span>
+                  <span v-else class="text-on-surface-variant">暂无打卡记录</span>
                 </div>
               </div>
 
               <!-- Task Actions -->
-              <div class="flex gap-2 pt-4 border-t border-gray-100">
+              <div class="flex gap-2 pt-4 border-t border-outline-variant">
                 <a-button
                   type="primary"
                   size="small"
@@ -174,7 +175,7 @@
                   <template #icon><DeleteOutlined /></template>
                 </a-button>
               </div>
-            </div>
+            </a-card>
           </a-col>
         </a-row>
       </div>
@@ -192,12 +193,12 @@
       <div v-if="!editingTask">
         <div v-if="loadingTemplates" class="text-center py-8">
           <a-spin size="large" />
-          <p class="text-gray-500 mt-2">加载模板中...</p>
+          <p class="text-on-surface-variant mt-2">加载模板中...</p>
         </div>
 
         <div v-else-if="activeTemplates.length === 0" class="text-center py-8">
-          <p class="text-gray-500">暂无可用模板</p>
-          <p class="text-sm text-gray-400 mt-2">请联系管理员创建模板</p>
+          <p class="text-on-surface-variant">暂无可用模板</p>
+          <p class="text-sm text-on-surface-variant opacity-70 mt-2">请联系管理员创建模板</p>
         </div>
 
         <div v-else>
@@ -208,10 +209,10 @@
                 v-for="template in activeTemplates"
                 :key="template.id"
                 @click="selectTemplate(template)"
-                class="border rounded-lg p-4 cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-all"
+                class="border border-outline-variant rounded-lg p-4 cursor-pointer hover:border-primary hover:bg-primary-container/10 transition-all"
               >
-                <h4 class="font-semibold text-gray-800 mb-1">{{ template.name }}</h4>
-                <p class="text-sm text-gray-600">{{ template.description || '无描述' }}</p>
+                <h4 class="font-semibold text-on-surface mb-1">{{ template.name }}</h4>
+                <p class="text-sm text-on-surface-variant">{{ template.description || '无描述' }}</p>
               </div>
             </div>
           </a-form-item>
@@ -281,7 +282,7 @@
                   </a-select-option>
                 </a-select>
 
-                <span v-if="fieldConfig.default_value" class="text-xs text-gray-500 mt-1">
+                <span v-if="fieldConfig.default_value" class="text-xs text-on-surface-variant mt-1">
                   默认值: {{ fieldConfig.default_value }}
                 </span>
               </a-form-item>
@@ -298,7 +299,7 @@
 
         <a-form-item label="启用状态">
           <a-switch v-model:checked="taskForm.is_active" />
-          <span class="ml-2 text-sm text-gray-500">
+          <span class="ml-2 text-sm text-on-surface-variant">
             {{ taskForm.is_active ? '启用自动打卡' : '禁用自动打卡（仍可手动打卡）' }}
           </span>
         </a-form-item>
@@ -312,7 +313,7 @@
 
         <div class="mb-4">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-sm text-gray-600">完整的打卡请求配置</span>
+            <span class="text-sm text-on-surface-variant">完整的打卡请求配置</span>
             <a-button
               size="small"
               type="primary"
@@ -330,7 +331,7 @@
             class="font-mono text-xs"
             style="resize: vertical; min-height: 200px; max-height: 400px;"
           />
-          <p class="text-xs text-gray-500 mt-1">
+          <p class="text-xs text-on-surface-variant mt-1">
             💡 此配置由模板自动生成，如需修改请删除任务后从模板重新创建
           </p>
         </div>
