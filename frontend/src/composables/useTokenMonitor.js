@@ -11,10 +11,14 @@ import { useRouter } from 'vue-router'
  * 1. 定时检查 Token 状态
  * 2. Token 过期后 5 分钟内提醒用户
  * 3. 为有密码的用户提供友好的过期处理
+ *
+ * 注意：使用单例模式，确保全局只有一个监控实例
  */
 
+// 全局单例：确保整个应用只有一个监控实例
 let monitorTimer = null
 let warningShown = false
+let isMonitoring = false // 新增：防止重复启动
 
 export function useTokenMonitor() {
   const authStore = useAuthStore()
@@ -109,10 +113,12 @@ export function useTokenMonitor() {
 
   // 启动监控
   const startMonitoring = () => {
-    // 避免重复启动
-    if (monitorTimer) {
+    // 避免重复启动（单例模式）
+    if (isMonitoring || monitorTimer) {
       return
     }
+
+    isMonitoring = true
 
     // 立即检查一次
     checkTokenStatus()
@@ -129,6 +135,7 @@ export function useTokenMonitor() {
       clearInterval(monitorTimer)
       monitorTimer = null
     }
+    isMonitoring = false
     warningShown = false
   }
 
@@ -145,10 +152,8 @@ export function useTokenMonitor() {
     }
   })
 
-  // 组件卸载时停止监控
-  onUnmounted(() => {
-    stopMonitoring()
-  })
+  // 组件卸载时不停止监控（因为是全局单例）
+  // onUnmounted 中不调用 stopMonitoring()，让监控持续运行
 
   return {
     tokenStatus,
