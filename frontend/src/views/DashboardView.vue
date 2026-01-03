@@ -46,6 +46,23 @@
                 </a-descriptions-item>
               </a-descriptions>
 
+              <!-- 刷新 Token 按钮 -->
+              <div style="margin-top: 24px; text-align: center">
+                <!-- Token 未过期时：禁用按钮并显示提示 -->
+                <a-tooltip v-if="tokenStatus.is_valid" title="Token 过期后才可以扫码刷新 Token">
+                  <a-button type="primary" size="large" :disabled="true">
+                    <template #icon><ReloadOutlined /></template>
+                    刷新 Token
+                  </a-button>
+                </a-tooltip>
+
+                <!-- Token 已过期时：启用按钮且无提示 -->
+                <a-button v-else type="primary" size="large" @click="qrcodeModalVisible = true">
+                  <template #icon><ReloadOutlined /></template>
+                  刷新 Token
+                </a-button>
+              </div>
+
               <a-alert
                 v-if="tokenStatus.expiring_soon"
                 message="Token 即将过期"
@@ -169,14 +186,22 @@
         </a-col>
       </a-row>
     </div>
+
+    <!-- QR Code Modal for Token Refresh -->
+    <QRCodeModal
+      v-model:visible="qrcodeModalVisible"
+      @success="handleQRCodeSuccess"
+      @error="handleQRCodeError"
+    />
   </Layout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
-import { CalendarOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons-vue';
+import { CalendarOutlined, KeyOutlined, UserOutlined, ReloadOutlined } from '@ant-design/icons-vue';
 import Layout from '@/components/Layout.vue';
+import QRCodeModal from '@/components/QRCodeModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/user';
 import { useTaskStore } from '@/stores/task';
@@ -199,6 +224,7 @@ const { startPolling } = usePollStatus({
 const tokenStatusLoading = ref(false);
 const checkInLoading = ref(false);
 const selectedTaskId = ref(null);
+const qrcodeModalVisible = ref(false);
 
 const tokenStatus = computed(() => userStore.tokenStatus);
 const lastCheckIn = computed(() => {
@@ -308,6 +334,24 @@ const handleCheckIn = async () => {
     checkInLoading.value = false;
     message.error(error.message || '启动打卡任务失败');
   }
+};
+
+// 处理扫码成功（Token 刷新）
+const handleQRCodeSuccess = async () => {
+  try {
+    // 获取最新的用户信息和 Token 状态
+    await authStore.fetchCurrentUser();
+    await fetchTokenStatus();
+    message.success({ content: 'Token 刷新成功！', duration: 3 });
+  } catch (error) {
+    console.error('刷新用户信息失败:', error);
+    message.error({ content: '获取最新信息失败，请刷新页面', duration: 3 });
+  }
+};
+
+// 处理扫码失败
+const handleQRCodeError = errorMsg => {
+  message.error({ content: errorMsg || '扫码刷新 Token 失败', duration: 3 });
 };
 
 onMounted(async () => {

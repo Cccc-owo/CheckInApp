@@ -532,6 +532,35 @@
     padding: 16px;
   }
 
+  /* === Navbar === */
+  .navbar-wrapper {
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.12),
+      0px 2px 6px 2px rgba(0, 0, 0, 0.08) !important;
+    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .navbar-wrapper .text-on-surface {
+    color: #1c1b1f;
+  }
+
+  /* 导航按钮悬浮效果 */
+  /* 普通导航按钮（绿色） */
+  .navbar-wrapper .nav-button:not(.bg-primary-100):hover {
+    background-color: rgba(76, 175, 80, 0.08) !important;
+  }
+
+  /* 管理后台按钮（蓝色） */
+  .navbar-wrapper .admin-nav-button:not(.bg-secondary-100):hover {
+    background-color: rgba(33, 150, 243, 0.08) !important;
+  }
+
+  /* 其他 navbar 组件的通用悬浮效果（绿色） */
+  .navbar-wrapper .navbar-item:hover {
+    background-color: rgba(76, 175, 80, 0.08) !important;
+  }
+
   /* === Button === */
   .ant-btn {
     border-radius: 20px;
@@ -810,6 +839,31 @@
 /* ============================================
    暗色模式特定样式
    ============================================ */
+/* Navbar 暗色模式 */
+.dark .navbar-wrapper {
+  box-shadow:
+    0px 2px 4px 0px rgba(0, 0, 0, 0.4),
+    0px 4px 8px 4px rgba(0, 0, 0, 0.3) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark .navbar-wrapper .text-on-surface {
+  color: #e6e1e5;
+}
+
+.dark .navbar-wrapper .nav-button:not(.bg-primary-100):hover {
+  background-color: rgba(129, 199, 132, 0.12) !important;
+}
+
+.dark .navbar-wrapper .admin-nav-button:not(.bg-secondary-100):hover {
+  background-color: rgba(100, 181, 246, 0.12) !important;
+}
+
+.dark .navbar-wrapper .navbar-item:hover {
+  background-color: rgba(129, 199, 132, 0.12) !important;
+}
+
+/* Ant Design 组件暗色模式 */
 .dark .ant-card {
   background-color: var(--md-sys-color-surface-container-low);
   border-color: var(--md-sys-color-outline-variant);
@@ -1003,7 +1057,13 @@
   .elevation-2 {
     box-shadow:
       0px 1px 2px 0px rgba(0, 0, 0, 0.12),
-      0px 2px 6px 2px rgba(0, 0, 0, 0.08);
+      0px 2px 6px 2px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .dark .elevation-2 {
+    box-shadow:
+      0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+      0px 2px 6px 2px rgba(0, 0, 0, 0.2) !important;
   }
 
   .elevation-3 {

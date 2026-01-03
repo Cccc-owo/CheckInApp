@@ -64,4 +64,22 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* 修复按钮图标与文本的垂直对齐 */
+.ant-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ant-btn .anticon {
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+}
+
+.ant-btn > span {
+  display: inline-flex !important;
+  align-items: center !important;
+}
 </style>

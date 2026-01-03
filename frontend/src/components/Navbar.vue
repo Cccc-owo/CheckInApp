@@ -1,5 +1,14 @@
 <template>
-  <div class="sticky top-0 z-50 md3-surface elevation-2 border-b border-outline-variant">
+  <div
+    class="navbar-wrapper sticky top-0 z-50"
+    :style="{
+      backgroundColor: isDark ? '#1c1b1f' : '#ffffff',
+      boxShadow: isDark
+        ? '0 2px 8px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4)'
+        : '0 2px 8px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1)',
+      borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)',
+    }"
+  >
     <nav class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo and Brand -->
@@ -18,10 +27,10 @@
             <router-link v-slot="{ isActive }" to="/dashboard" custom>
               <a
                 :class="[
-                  'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
+                  'nav-button px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-on-surface hover:bg-surface-container',
+                    : 'text-on-surface',
                 ]"
                 @click="router.push('/dashboard')"
               >
@@ -35,10 +44,10 @@
             <router-link v-slot="{ isActive }" to="/tasks" custom>
               <a
                 :class="[
-                  'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
+                  'nav-button px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-on-surface hover:bg-surface-container',
+                    : 'text-on-surface',
                 ]"
                 @click="router.push('/tasks')"
               >
@@ -52,10 +61,10 @@
             <router-link v-slot="{ isActive }" to="/records" custom>
               <a
                 :class="[
-                  'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
+                  'nav-button px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                    : 'text-on-surface hover:bg-surface-container',
+                    : 'text-on-surface',
                 ]"
                 @click="router.push('/records')"
               >
@@ -70,10 +79,10 @@
             <a-dropdown v-if="authStore.isAdmin" :trigger="['hover']">
               <a
                 :class="[
-                  'px-4 py-2 rounded-full font-medium transition-all flex items-center space-x-2 cursor-pointer',
+                  'admin-nav-button px-4 py-2 rounded-full font-medium transition-all flex items-center space-x-2 cursor-pointer',
                   isAdminPath
                     ? 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-400'
-                    : 'text-on-surface hover:bg-surface-container',
+                    : 'text-on-surface',
                 ]"
               >
                 <SettingOutlined />
@@ -113,7 +122,7 @@
           <!-- Token Status Indicator (Desktop & Mobile) -->
           <a-tooltip v-if="showTokenStatus" :title="tokenStatusTooltip">
             <div
-              class="px-2 md:px-3 py-1.5 rounded-full cursor-pointer transition-all hover:bg-surface-container flex items-center space-x-1 md:space-x-2"
+              class="navbar-item px-2 md:px-3 py-1.5 rounded-full cursor-pointer transition-all flex items-center space-x-1 md:space-x-2"
               @click="handleTokenStatusClick"
             >
               <a-badge :status="tokenBadgeStatus" />
@@ -137,7 +146,7 @@
           <a-tooltip :title="isDark ? '切换到亮色模式' : '切换到暗色模式'" placement="bottom">
             <button
               type="button"
-              class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container transition-all"
+              class="navbar-item w-10 h-10 rounded-full flex items-center justify-center transition-all"
               @click="toggleTheme"
             >
               <BulbFilled v-if="isDark" class="text-xl text-yellow-400" />
@@ -148,7 +157,7 @@
           <!-- Desktop User Menu -->
           <a-dropdown v-if="!isMobile" :trigger="['hover']">
             <a
-              class="flex items-center space-x-3 px-4 py-2 rounded-full hover:bg-surface-container transition-all cursor-pointer"
+              class="navbar-item flex items-center space-x-3 px-4 py-2 rounded-full transition-all cursor-pointer"
             >
               <a-avatar :style="{ backgroundColor: '#f56a00' }">
                 {{ userInitial }}
@@ -185,7 +194,7 @@
           <button
             v-if="isMobile"
             type="button"
-            class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container transition-all"
+            class="navbar-item w-10 h-10 rounded-full flex items-center justify-center transition-all"
             @click="drawerVisible = true"
           >
             <MenuOutlined class="text-xl text-on-surface" />
@@ -458,7 +467,3 @@ const handleQRCodeError = error => {
   message.error({ content: error?.message || 'Token 刷新失败', duration: 4 });
 };
 </script>
-
-<style scoped>
-/* Additional component-specific styles if needed */
-</style>
