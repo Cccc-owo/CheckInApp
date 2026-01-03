@@ -281,15 +281,5 @@ const removeOption = (index) => {
 </script>
 
 <style scoped>
-.field-config-editor {
-  background-color: #fafafa;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-}
-
-:deep(.ant-form-item-label) {
-  font-weight: 500;
-  color: #374151;
-}
+/* 样式已移至全局 CSS (style.css) 以保持统一性 */
 </style>

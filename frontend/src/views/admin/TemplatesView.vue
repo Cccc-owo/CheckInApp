@@ -7,7 +7,7 @@
           <div class="flex items-center justify-between mb-6">
             <div>
               <h1 class="text-3xl font-bold text-gradient mb-2">任务模板管理</h1>
-              <p class="text-gray-600">JSON 映射架构 - 配置即结构，字段名保持原样</p>
+              <p class="text-gray-600 dark:text-gray-400">JSON 映射架构 - 配置即结构，字段名保持原样</p>
             </div>
             <button @click="showCreateDialog" class="md3-button-filled">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,8 +29,8 @@
           <svg class="w-20 h-20 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">暂无模板</h3>
-          <p class="text-gray-500 mb-4">创建第一个模板，让用户更轻松地创建打卡任务</p>
+          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">暂无模板</h3>
+          <p class="text-gray-500 dark:text-gray-400 mb-4">创建第一个模板，让用户更轻松地创建打卡任务</p>
           <button @click="showCreateDialog" class="md3-button-filled">新建模板</button>
         </div>
 
@@ -42,8 +42,8 @@
           >
             <div class="flex items-start justify-between mb-5">
               <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ template.name }}</h3>
-                <p class="text-sm text-gray-600 mb-3">{{ template.description || '无描述' }}</p>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">{{ template.name }}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ template.description || '无描述' }}</p>
                 <span :class="template.is_active ? 'status-success' : 'status-info'">
                   {{ template.is_active ? '已启用' : '已禁用' }}
                 </span>
@@ -77,7 +77,7 @@
               <div class="grid grid-cols-2 gap-2">
                 <div></div>
                 <div class="flex justify-center">
-                  <button @click="deleteTemplate(template)" class="md3-button-text text-sm text-red-600 flex-shrink-0">
+                  <button @click="deleteTemplate(template)" class="md3-button-text text-sm !text-red-600 dark:!text-red-500 flex-shrink-0">
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -156,7 +156,7 @@
             <!-- 字段配置编辑器 -->
             <div class="field-config-editor">
               <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">字段配置</h3>
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100">字段配置</h3>
                 <a-dropdown>
                   <a-button type="primary">
                     添加字段
@@ -188,12 +188,12 @@
               </div>
 
               <!-- 递归渲染字段树 -->
-              <div v-if="Object.keys(formData.field_config).length === 0" class="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                <svg class="w-16 h-16 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div v-if="Object.keys(formData.field_config).length === 0" class="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">暂无字段配置</h3>
-                <p class="text-sm text-gray-500">点击上方"添加字段"开始配置模板</p>
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">暂无字段配置</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">点击上方"添加字段"开始配置模板</p>
               </div>
 
               <div v-else class="space-y-3">
@@ -215,7 +215,7 @@
               <span class="text-lg font-bold">JSON 预览</span>
             </a-divider>
 
-            <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto max-h-96">
+            <div class="bg-gray-900 dark:bg-black text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto max-h-96">
               <pre>{{ JSON.stringify(formData.field_config, null, 2) }}</pre>
             </div>
           </a-form>
@@ -242,7 +242,7 @@
                 placeholder="例如: Id, Group1, DateTarget"
                 @keyup.enter="confirmAddField"
               />
-              <span class="text-xs text-gray-500 mt-1 block">
+              <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
                 💡 字段名将保持原样，不会进行大小写转换
               </span>
             </a-form-item>
@@ -262,14 +262,14 @@
           :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
         >
           <div v-if="previewData" class="space-y-4">
-            <div class="bg-gray-50 rounded p-4">
-              <h4 class="font-semibold mb-2">生成的 Payload（使用默认值）：</h4>
-              <pre class="text-xs bg-white p-3 rounded border overflow-auto max-h-96">{{ JSON.stringify(previewData.preview_payload, null, 2) }}</pre>
+            <div class="bg-gray-50 dark:bg-gray-800 rounded p-4">
+              <h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-100">生成的 Payload（使用默认值）：</h4>
+              <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded border dark:border-gray-700 overflow-auto max-h-96">{{ JSON.stringify(previewData.preview_payload, null, 2) }}</pre>
             </div>
 
-            <div class="bg-gray-50 rounded p-4">
-              <h4 class="font-semibold mb-2">字段配置：</h4>
-              <pre class="text-xs bg-white p-3 rounded border overflow-auto max-h-96">{{ JSON.stringify(previewData.field_config, null, 2) }}</pre>
+            <div class="bg-gray-50 dark:bg-gray-800 rounded p-4">
+              <h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-100">字段配置：</h4>
+              <pre class="text-xs bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-3 rounded border dark:border-gray-700 overflow-auto max-h-96">{{ JSON.stringify(previewData.field_config, null, 2) }}</pre>
             </div>
           </div>
 

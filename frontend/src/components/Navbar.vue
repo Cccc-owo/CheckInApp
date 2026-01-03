@@ -142,7 +142,7 @@
           </a-tooltip>
 
           <!-- Theme Toggle Button -->
-          <a-tooltip :title="isDark ? '切换到亮色模式' : '切换到暗黑模式'">
+          <a-tooltip :title="isDark ? '切换到亮色模式' : '切换到暗色模式'">
             <a-button
               type="text"
               class="!p-2 !flex !items-center !justify-center hover:!bg-gray-100 dark:hover:!bg-gray-700 transition-all"

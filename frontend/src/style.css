@@ -440,7 +440,7 @@
   border-color: #3a3a3c;
 }
 
-/* Dropdown 暗黑模式 */
+/* Dropdown 暗色模式 */
 .dark .ant-dropdown-menu {
   background: #2c2c2e;
 }
@@ -453,7 +453,7 @@
   background: #3a3a3c;
 }
 
-/* 通用文本颜色 - 暗黑模式 */
+/* 通用文本颜色 - 暗色模式 */
 .dark p,
 .dark span,
 .dark div {
@@ -465,7 +465,7 @@
   color: #e5e5e7;
 }
 
-/* Select dropdown 暗黑模式 */
+/* Select dropdown 暗色模式 */
 .dark .ant-select-dropdown {
   background: #2c2c2e;
 }
@@ -483,7 +483,7 @@
   color: #81c784;
 }
 
-/* Drawer 暗黑模式 */
+/* Drawer 暗色模式 */
 .dark .ant-drawer-content {
   background: #1c1c1e;
 }
@@ -606,7 +606,211 @@
   color: #606266;
 }
 
-/* Material Design 3 卡片 - 暗黑模式统一样式 */
+/* Material Design 3 卡片 - 暗色模式统一样式 */
+
+/* 字段树节点组件样式 */
+.field-tree-node {
+  border: 2px solid #e5e7eb;
+  background: white;
+  transition: all 0.3s;
+}
+
+.dark .field-tree-node {
+  border-color: #3a3a3c;
+  background: #1c1c1e;
+}
+
+.field-tree-node .border-b {
+  transition: border-color 0.3s;
+}
+
+.dark .field-tree-node .border-b {
+  border-color: #3a3a3c !important;
+}
+
+.field-tree-node button:hover {
+  background: #f3f4f6;
+}
+
+.dark .field-tree-node button:hover {
+  background: #2c2c2e;
+}
+
+.field-tree-node svg.text-gray-600 {
+  color: #4b5563;
+}
+
+.dark .field-tree-node svg.text-gray-600 {
+  color: #9ca3af;
+}
+
+.field-tree-node .text-blue-600 {
+  color: #2563eb;
+}
+
+.dark .field-tree-node .text-blue-600 {
+  color: #60a5fa;
+}
+
+.field-tree-node .text-blue-700 {
+  color: #1d4ed8;
+}
+
+.dark .field-tree-node .text-blue-700 {
+  color: #93c5fd;
+}
+
+.field-tree-node .text-purple-600 {
+  color: #9333ea;
+}
+
+.dark .field-tree-node .text-purple-600 {
+  color: #c084fc;
+}
+
+.field-tree-node .text-purple-700 {
+  color: #7e22ce;
+}
+
+.dark .field-tree-node .text-purple-700 {
+  color: #d8b4fe;
+}
+
+.field-tree-node .text-green-600 {
+  color: #16a34a;
+}
+
+.dark .field-tree-node .text-green-600 {
+  color: #4ade80;
+}
+
+.field-tree-node .text-green-700 {
+  color: #15803d;
+}
+
+.dark .field-tree-node .text-green-700 {
+  color: #86efac;
+}
+
+.field-tree-node .bg-gray-50 {
+  background: #f9fafb;
+}
+
+.dark .field-tree-node .bg-gray-50 {
+  background: #2c2c2e;
+}
+
+.field-tree-node .bg-purple-50 {
+  background: #faf5ff;
+}
+
+.dark .field-tree-node .bg-purple-50 {
+  background: rgba(147, 51, 234, 0.1);
+}
+
+.field-tree-node .bg-green-50 {
+  background: #f0fdf4;
+}
+
+.dark .field-tree-node .bg-green-50 {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.field-tree-node .border-purple-200 {
+  border-color: #e9d5ff;
+}
+
+.dark .field-tree-node .border-purple-200 {
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+.field-tree-node .border-purple-300 {
+  border-color: #d8b4fe;
+}
+
+.dark .field-tree-node .border-purple-300 {
+  border-color: rgba(147, 51, 234, 0.4);
+}
+
+.field-tree-node .border-green-200 {
+  border-color: #bbf7d0;
+}
+
+.dark .field-tree-node .border-green-200 {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.field-tree-node .border-green-300 {
+  border-color: #86efac;
+}
+
+.dark .field-tree-node .border-green-300 {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.field-tree-node .text-gray-500 {
+  color: #6b7280;
+}
+
+.dark .field-tree-node .text-gray-500 {
+  color: #9ca3af;
+}
+
+.field-tree-node .bg-white {
+  background: white;
+}
+
+.dark .field-tree-node .bg-white {
+  background: #1c1c1e;
+}
+
+/* 字段配置编辑器样式 */
+.field-config-editor {
+  background-color: #fafafa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s;
+}
+
+.dark .field-config-editor {
+  background-color: #2c2c2e;
+  border-color: #3a3a3c;
+}
+
+.field-config-editor .text-gray-500 {
+  color: #6b7280;
+}
+
+.dark .field-config-editor .text-gray-500 {
+  color: #9ca3af;
+}
+
+.field-config-editor .text-gray-700 {
+  color: #374151;
+}
+
+.dark .field-config-editor .text-gray-700 {
+  color: #d1d5db;
+}
+
+.field-config-editor .bg-blue-50 {
+  background: #eff6ff;
+}
+
+.dark .field-config-editor .bg-blue-50 {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.field-config-editor .bg-gray-50 {
+  background: #f9fafb;
+}
+
+.dark .field-config-editor .bg-gray-50 {
+  background: #1c1c1e;
+}
+
+/* Material Design 3 卡片继续 */
 .dark .md3-card,
 .dark .md3-card-elevated {
   background: #1c1c1e;
@@ -614,7 +818,7 @@
   color: #e5e5e7;
 }
 
-/* Fluent Design 卡片 - 暗黑模式 */
+/* Fluent Design 卡片 - 暗色模式 */
 .dark .fluent-card {
   background: rgba(28, 28, 30, 0.8);
   border-color: rgba(58, 58, 60, 0.5);

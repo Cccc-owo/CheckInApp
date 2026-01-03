@@ -330,6 +330,12 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   padding: 16px;
   background: #f5f7fa;
+  transition: all 0.3s;
+}
+
+.dark .crontab-editor {
+  border-color: #3a3a3c;
+  background: #2c2c2e;
 }
 
 .mode-tabs {
@@ -337,6 +343,11 @@ onBeforeUnmount(() => {
   gap: 8px;
   margin-bottom: 16px;
   border-bottom: 2px solid #ebeef5;
+  transition: border-color 0.3s;
+}
+
+.dark .mode-tabs {
+  border-bottom-color: #3a3a3c;
 }
 
 .mode-tab {
@@ -351,9 +362,18 @@ onBeforeUnmount(() => {
   transition: all 0.3s;
 }
 
+.dark .mode-tab {
+  color: #a0a0a3;
+}
+
 .mode-tab.active {
   color: #409eff;
   border-bottom-color: #409eff;
+}
+
+.dark .mode-tab.active {
+  color: #81c784;
+  border-bottom-color: #81c784;
 }
 
 .mode-content {
@@ -364,16 +384,30 @@ onBeforeUnmount(() => {
   padding: 12px;
   background: white;
   border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.dark .quick-option {
+  background: #1c1c1e;
 }
 
 .option-label {
   font-weight: 600;
+  color: #1c1b1f;
+}
+
+.dark .option-label {
+  color: #e5e5e7;
 }
 
 .option-desc {
   margin-left: 12px;
   color: #909399;
   font-size: 12px;
+}
+
+.dark .option-desc {
+  color: #a0a0a3;
 }
 
 .expression-input {
@@ -386,9 +420,17 @@ onBeforeUnmount(() => {
   font-size: 12px;
 }
 
+.dark .help-text {
+  color: #a0a0a3;
+}
+
 .help-text a {
   color: #409eff;
   text-decoration: none;
+}
+
+.dark .help-text a {
+  color: #81c784;
 }
 
 .help-text a:hover {
@@ -400,11 +442,21 @@ onBeforeUnmount(() => {
   padding: 12px;
   background: white;
   border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.dark .preview-section {
+  background: #1c1c1e;
 }
 
 .preview-section h4 {
   margin: 0 0 8px 0;
   font-size: 14px;
+  color: #1c1b1f;
+}
+
+.dark .preview-section h4 {
+  color: #e5e5e7;
 }
 
 .execution-list {
@@ -412,6 +464,10 @@ onBeforeUnmount(() => {
   padding-left: 20px;
   font-size: 12px;
   color: #606266;
+}
+
+.dark .execution-list {
+  color: #a0a0a3;
 }
 
 .validation-message {
@@ -427,15 +483,33 @@ onBeforeUnmount(() => {
   border: 1px solid #c6e2ff;
 }
 
+.dark .validation-message.success {
+  background: rgba(129, 199, 132, 0.1);
+  color: #81c784;
+  border-color: rgba(129, 199, 132, 0.3);
+}
+
 .validation-message.error {
   background: #fef0f0;
   color: #f56c6c;
   border: 1px solid #fde7e7;
 }
 
+.dark .validation-message.error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #ef5350;
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
 .validation-message.info {
   background: #f4f4f5;
   color: #909399;
   border: 1px solid #ebeef5;
+}
+
+.dark .validation-message.info {
+  background: #2c2c2e;
+  color: #a0a0a3;
+  border-color: #3a3a3c;
 }
 </style>

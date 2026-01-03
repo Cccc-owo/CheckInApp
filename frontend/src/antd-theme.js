@@ -3,7 +3,7 @@ import { theme } from 'ant-design-vue'
 /**
  * Ant Design Vue 主题配置
  * 匹配现有 Material Design 3 色彩系统
- * @param {boolean} isDark - 是否为暗黑模式
+ * @param {boolean} isDark - 是否为暗色模式
  */
 export default function getAntdTheme(isDark = false) {
   return {
