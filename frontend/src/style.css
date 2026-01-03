@@ -14,7 +14,7 @@
     font-weight: 400;
     color-scheme: light;
 
-    /* Material Design 3 color tokens */
+    /* Material Design 3 color tokens - Light Mode */
     --md-sys-color-primary: #4caf50;
     --md-sys-color-on-primary: #ffffff;
     --md-sys-color-secondary: #2196f3;
@@ -23,6 +23,21 @@
     --md-sys-color-on-surface: #1c1b1f;
     --md-sys-color-background: #ffffff;
     --md-sys-color-on-background: #1c1b1f;
+  }
+
+  /* Dark Mode Colors */
+  .dark {
+    color-scheme: dark;
+
+    /* Material Design 3 color tokens - Dark Mode */
+    --md-sys-color-primary: #81c784;
+    --md-sys-color-on-primary: #1b5e20;
+    --md-sys-color-secondary: #64b5f6;
+    --md-sys-color-on-secondary: #0d47a1;
+    --md-sys-color-surface: #1c1c1e;
+    --md-sys-color-on-surface: #e5e5e7;
+    --md-sys-color-background: #121212;
+    --md-sys-color-on-background: #e5e5e7;
   }
 
   * {
@@ -41,6 +56,11 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
   }
 
   #app {
@@ -53,7 +73,7 @@
 @layer components {
   /* Material Design 3 Card */
   .md3-card {
-    @apply bg-white rounded-md3 shadow-md3-2 overflow-hidden transition-all duration-300;
+    @apply bg-white dark:bg-gray-800 rounded-md3 shadow-md3-2 overflow-hidden transition-all duration-300;
   }
 
   .md3-card:hover {
@@ -61,7 +81,7 @@
   }
 
   .md3-card-elevated {
-    @apply bg-white rounded-md3-lg shadow-md3-3;
+    @apply bg-white dark:bg-gray-800 rounded-md3-lg shadow-md3-3;
   }
 
   /* Material Design 3 Button */
@@ -71,25 +91,25 @@
   }
 
   .md3-button-filled {
-    @apply md3-button bg-primary-600 text-white hover:bg-primary-700 hover:shadow-md3-2;
+    @apply md3-button bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 hover:shadow-md3-2;
   }
 
   .md3-button-outlined {
-    @apply md3-button border-2 border-primary-600 text-primary-600 hover:bg-primary-50;
+    @apply md3-button border-2 border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700;
   }
 
   .md3-button-text {
-    @apply md3-button text-primary-600 hover:bg-primary-50;
+    @apply md3-button text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700;
   }
 
   /* Fluent Design elements */
   .fluent-card {
-    @apply bg-white/80 backdrop-blur-xl rounded-lg border border-gray-200/50 shadow-lg;
-    @apply transition-all duration-300 hover:shadow-xl hover:border-gray-300/50;
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-lg;
+    @apply transition-all duration-300 hover:shadow-xl hover:border-gray-300/50 dark:hover:border-gray-600/50;
   }
 
   .fluent-acrylic {
-    @apply bg-white/70 backdrop-blur-2xl backdrop-saturate-150;
+    @apply bg-white/70 dark:bg-gray-800/70 backdrop-blur-2xl backdrop-saturate-150;
   }
 
   /* Status badges */
@@ -98,24 +118,24 @@
   }
 
   .status-success {
-    @apply status-badge bg-green-100 text-green-800;
+    @apply status-badge bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
   }
 
   .status-warning {
-    @apply status-badge bg-yellow-100 text-yellow-800;
+    @apply status-badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300;
   }
 
   .status-error {
-    @apply status-badge bg-red-100 text-red-800;
+    @apply status-badge bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
   }
 
   .status-info {
-    @apply status-badge bg-blue-100 text-blue-800;
+    @apply status-badge bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300;
   }
 
   /* Loading skeleton */
   .skeleton {
-    @apply animate-pulse bg-gray-200 rounded;
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
   }
 }
 
@@ -126,11 +146,11 @@
   }
 
   .glass-effect {
-    @apply bg-white/60 backdrop-blur-md backdrop-saturate-150;
+    @apply bg-white/60 dark:bg-gray-800/60 backdrop-blur-md backdrop-saturate-150;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-600 to-secondary-600 dark:from-primary-400 dark:to-secondary-400 bg-clip-text text-transparent;
   }
 }
 
@@ -234,6 +254,12 @@
   font-weight: 600;
 }
 
+.dark .ant-table-thead > tr > th {
+  background: #2c2c2e;
+  color: #e5e5e7;
+  border-color: #3a3a3c;
+}
+
 /* Ant Design Tabs */
 .ant-tabs {
   color: var(--md-sys-color-on-surface);
@@ -264,13 +290,32 @@
   background: #f5f7fa;
 }
 
+.dark .ant-descriptions-bordered .ant-descriptions-item-label {
+  background: #2c2c2e;
+  color: #e5e5e7;
+}
+
+.dark .ant-descriptions-item-label,
+.dark .ant-descriptions-item-content {
+  color: #e5e5e7;
+  border-color: #3a3a3c;
+}
+
 /* Ant Design Statistic */
 .ant-statistic-title {
   color: #64748b;
 }
 
+.dark .ant-statistic-title {
+  color: #a0a0a3;
+}
+
 .ant-statistic-content {
   color: var(--md-sys-color-on-surface);
+}
+
+.dark .ant-statistic-content {
+  color: #e5e5e7;
 }
 
 /* Ant Design Drawer */
@@ -285,6 +330,308 @@
 /* Ant Design Alert - Match current style */
 .ant-alert {
   border-radius: 12px;
+}
+
+/* Dark mode support for common elements */
+.dark .ant-card {
+  background: #1c1c1e;
+  border-color: #3a3a3c;
+  color: #e5e5e7;
+}
+
+.dark .ant-card-head {
+  color: #e5e5e7;
+  border-color: #3a3a3c;
+}
+
+.dark .ant-card-body {
+  color: #e5e5e7;
+}
+
+.dark .ant-select-selector {
+  background: #2c2c2e !important;
+  border-color: #3a3a3c !important;
+  color: #e5e5e7 !important;
+}
+
+.dark .ant-select-selection-item {
+  color: #e5e5e7;
+}
+
+.dark .ant-select-arrow {
+  color: #a0a0a3;
+}
+
+.dark .ant-input {
+  background: #2c2c2e;
+  border-color: #3a3a3c;
+  color: #e5e5e7;
+}
+
+.dark .ant-input::placeholder {
+  color: #808083;
+}
+
+.dark .ant-modal-content {
+  background: #1c1c1e;
+}
+
+.dark .ant-modal-header {
+  background: #1c1c1e;
+  border-color: #3a3a3c;
+}
+
+.dark .ant-modal-title {
+  color: #e5e5e7;
+}
+
+.dark .ant-modal-body {
+  color: #e5e5e7;
+}
+
+.dark .ant-table {
+  background: #1c1c1e;
+  color: #e5e5e7;
+}
+
+.dark .ant-table-tbody > tr > td {
+  border-color: #3a3a3c;
+  color: #e5e5e7;
+}
+
+.dark .ant-table-tbody > tr:hover > td {
+  background: #2c2c2e;
+}
+
+.dark .ant-pagination-item {
+  background: #2c2c2e;
+  border-color: #3a3a3c;
+}
+
+.dark .ant-pagination-item a {
+  color: #e5e5e7;
+}
+
+.dark .ant-pagination-item:hover {
+  border-color: #81c784;
+}
+
+.dark .ant-pagination-item:hover a {
+  color: #81c784;
+}
+
+.dark .ant-empty-description {
+  color: #a0a0a3;
+}
+
+.dark .ant-form-item-label > label {
+  color: #e5e5e7;
+}
+
+.dark .ant-checkbox-wrapper {
+  color: #e5e5e7;
+}
+
+.dark .ant-radio-wrapper {
+  color: #e5e5e7;
+}
+
+.dark .ant-divider {
+  border-color: #3a3a3c;
+}
+
+/* Dropdown 暗黑模式 */
+.dark .ant-dropdown-menu {
+  background: #2c2c2e;
+}
+
+.dark .ant-dropdown-menu-item {
+  color: #e5e5e7;
+}
+
+.dark .ant-dropdown-menu-item:hover {
+  background: #3a3a3c;
+}
+
+/* 通用文本颜色 - 暗黑模式 */
+.dark p,
+.dark span,
+.dark div {
+  color: inherit;
+}
+
+.dark .hint,
+.dark .card-header {
+  color: #e5e5e7;
+}
+
+/* Select dropdown 暗黑模式 */
+.dark .ant-select-dropdown {
+  background: #2c2c2e;
+}
+
+.dark .ant-select-item {
+  color: #e5e5e7;
+}
+
+.dark .ant-select-item:hover {
+  background: #3a3a3c;
+}
+
+.dark .ant-select-item-option-selected {
+  background: #2c2c2e;
+  color: #81c784;
+}
+
+/* Drawer 暗黑模式 */
+.dark .ant-drawer-content {
+  background: #1c1c1e;
+}
+
+.dark .ant-drawer-header {
+  background: #1c1c1e;
+  border-color: #3a3a3c;
+}
+
+.dark .ant-drawer-title {
+  color: #e5e5e7;
+}
+
+.dark .ant-drawer-body {
+  background: #1c1c1e;
+  color: #e5e5e7;
+}
+
+/* 通用文本和标签颜色 */
+.dark .ant-tag {
+  border-color: #3a3a3c;
+}
+
+.dark .ant-btn-text {
+  color: #e5e5e7;
+}
+
+.dark .ant-btn-text:hover {
+  background: #2c2c2e;
+}
+
+.dark .ant-skeleton-content .ant-skeleton-title {
+  background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 37%, #2c2c2e 63%);
+}
+
+.dark .ant-skeleton-content .ant-skeleton-paragraph > li {
+  background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 37%, #2c2c2e 63%);
+}
+
+/* Message 和 Notification */
+.dark .ant-message-notice-content {
+  background: #2c2c2e;
+  color: #e5e5e7;
+}
+
+.dark .ant-notification-notice {
+  background: #2c2c2e;
+  color: #e5e5e7;
+}
+
+/* Spin loading */
+.dark .ant-spin-dot-item {
+  background: #81c784;
+}
+
+/* Tooltip */
+.ant-tooltip-inner {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #1c1b1f !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 32px !important;
+}
+
+.dark .ant-tooltip-inner {
+  background: rgba(50, 50, 50, 0.95) !important;
+  color: #e5e5e7 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+.ant-tooltip-arrow-content {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.dark .ant-tooltip-arrow-content {
+  background: rgba(50, 50, 50, 0.95) !important;
+}
+
+/* 通用标题和文本颜色 */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #e5e5e7;
+}
+
+/* 通用容器和组件类 */
+.dark .card-header,
+.dark .hint,
+.dark .label {
+  color: #e5e5e7;
+}
+
+.dark .hint {
+  color: #a0a0a3;
+}
+
+/* 亮色模式下的通用样式 */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  color: #1c1b1f;
+}
+
+.hint {
+  margin-bottom: 20px;
+  color: #909399;
+  font-size: 14px;
+}
+
+.label {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #606266;
+}
+
+/* Material Design 3 卡片 - 暗黑模式统一样式 */
+.dark .md3-card,
+.dark .md3-card-elevated {
+  background: #1c1c1e;
+  border-color: #3a3a3c;
+  color: #e5e5e7;
+}
+
+/* Fluent Design 卡片 - 暗黑模式 */
+.dark .fluent-card {
+  background: rgba(28, 28, 30, 0.8);
+  border-color: rgba(58, 58, 60, 0.5);
+}
+
+/* 通用按钮对齐 */
+.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ant-btn .anticon {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 /* Ant Design Pagination */

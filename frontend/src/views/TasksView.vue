@@ -7,7 +7,7 @@
           <div class="flex items-center justify-between mb-4">
             <div>
               <h1 class="text-4xl font-bold text-gradient mb-2">任务管理</h1>
-              <p class="text-gray-600">管理您的自动打卡任务</p>
+              <p class="text-gray-600 dark:text-gray-400">管理您的自动打卡任务</p>
             </div>
             <a-button
               type="primary"
@@ -28,11 +28,11 @@
               <div class="fluent-card p-6 animate-slide-up">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-sm text-gray-600 mb-1">总任务数</p>
-                    <p class="text-3xl font-bold text-primary-600">{{ taskStore.taskStats.total }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">总任务数</p>
+                    <p class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{ taskStore.taskStats.total }}</p>
                   </div>
-                  <div class="w-12 h-12 bg-primary-100 rounded-md3 flex items-center justify-center">
-                    <FileTextOutlined class="text-2xl text-primary-600" />
+                  <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-md3 flex items-center justify-center">
+                    <FileTextOutlined class="text-2xl text-primary-600 dark:text-primary-400" />
                   </div>
                 </div>
               </div>
@@ -42,11 +42,11 @@
               <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.1s">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-sm text-gray-600 mb-1">启用中</p>
-                    <p class="text-3xl font-bold text-green-600">{{ taskStore.taskStats.active }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">启用中</p>
+                    <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ taskStore.taskStats.active }}</p>
                   </div>
-                  <div class="w-12 h-12 bg-green-100 rounded-md3 flex items-center justify-center">
-                    <CheckCircleOutlined class="text-2xl text-green-600" />
+                  <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-md3 flex items-center justify-center">
+                    <CheckCircleOutlined class="text-2xl text-green-600 dark:text-green-400" />
                   </div>
                 </div>
               </div>
@@ -56,11 +56,11 @@
               <div class="fluent-card p-6 animate-slide-up" style="animation-delay: 0.2s">
                 <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-sm text-gray-600 mb-1">已禁用</p>
-                    <p class="text-3xl font-bold text-gray-600">{{ taskStore.taskStats.inactive }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">已禁用</p>
+                    <p class="text-3xl font-bold text-gray-600 dark:text-gray-300">{{ taskStore.taskStats.inactive }}</p>
                   </div>
-                  <div class="w-12 h-12 bg-gray-100 rounded-md3 flex items-center justify-center">
-                    <StopOutlined class="text-2xl text-gray-600" />
+                  <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-md3 flex items-center justify-center">
+                    <StopOutlined class="text-2xl text-gray-600 dark:text-gray-300" />
                   </div>
                 </div>
               </div>

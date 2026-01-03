@@ -1,5 +1,5 @@
 <template>
-  <div class="sticky top-0 z-50 glass-effect border-b border-gray-200/50 shadow-md3-2">
+  <div class="sticky top-0 z-50 glass-effect border-b border-gray-200/50 dark:border-gray-700/50 shadow-md3-2">
     <nav class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <!-- Logo and Brand -->
@@ -23,8 +23,8 @@
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 ]"
               >
                 <div class="flex items-center space-x-2">
@@ -44,8 +44,8 @@
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 ]"
               >
                 <div class="flex items-center space-x-2">
@@ -65,8 +65,8 @@
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all cursor-pointer',
                   isActive
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 ]"
               >
                 <div class="flex items-center space-x-2">
@@ -81,7 +81,7 @@
               <a
                 :class="[
                   'px-4 py-2 rounded-full font-medium transition-all flex items-center space-x-2 cursor-pointer',
-                  isAdminPath ? 'bg-secondary-100 text-secondary-700' : 'text-gray-700 hover:bg-gray-100'
+                  isAdminPath ? 'bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 ]"
               >
                 <SettingOutlined />
@@ -117,43 +117,57 @@
         </div>
 
         <!-- User Menu & Mobile Hamburger -->
-        <div class="flex items-center space-x-4">
-          <!-- Token Status Indicator (Desktop) -->
-          <a-tooltip v-if="!isMobile && showTokenStatus" :title="tokenStatusTooltip">
+        <div class="flex items-center space-x-2 md:space-x-4">
+          <!-- Token Status Indicator (Desktop & Mobile) -->
+          <a-tooltip v-if="showTokenStatus" :title="tokenStatusTooltip">
             <div
-              class="px-3 py-1.5 rounded-full cursor-pointer transition-all hover:bg-gray-100 flex items-center space-x-2"
+              class="px-2 md:px-3 py-1.5 rounded-full cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-1 md:space-x-2"
               @click="handleTokenStatusClick"
             >
               <a-badge :status="tokenBadgeStatus" />
-              <ClockCircleOutlined :class="tokenIconClass" />
-              <span class="text-sm">{{ tokenBadgeText }}</span>
-              <!-- 过期时显示刷新按钮 -->
+              <ClockCircleOutlined :class="[tokenIconClass, 'text-sm md:text-base']" />
+              <span class="text-xs md:text-sm hidden sm:inline">{{ tokenBadgeText }}</span>
+              <!-- 过期时显示刷新按钮（响应式设计） -->
               <a-button
                 v-if="remainingMinutes !== null && remainingMinutes < 0"
                 type="primary"
                 size="small"
+                class="!text-xs !px-2 md:!px-3"
                 @click.stop="handleRefreshToken"
               >
-                刷新
+                <span class="hidden sm:inline">刷新</span>
+                <ReloadOutlined class="sm:hidden" />
               </a-button>
             </div>
           </a-tooltip>
 
+          <!-- Theme Toggle Button -->
+          <a-tooltip :title="isDark ? '切换到亮色模式' : '切换到暗黑模式'">
+            <a-button
+              type="text"
+              class="!p-2 !flex !items-center !justify-center hover:!bg-gray-100 dark:hover:!bg-gray-700 transition-all"
+              @click="toggleTheme"
+            >
+              <BulbFilled v-if="isDark" class="text-lg text-yellow-400" />
+              <BulbOutlined v-else class="text-lg text-gray-700 dark:text-gray-300" />
+            </a-button>
+          </a-tooltip>
+
           <!-- Desktop User Menu -->
           <a-dropdown v-if="!isMobile" :trigger="['hover']">
-            <a class="flex items-center space-x-3 px-4 py-2 rounded-full hover:bg-gray-100 transition-all cursor-pointer">
+            <a class="flex items-center space-x-3 px-4 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer">
               <a-avatar :style="{ backgroundColor: '#f56a00' }">
                 {{ userInitial }}
               </a-avatar>
-              <span class="hidden md:block font-medium text-gray-700">{{ authStore.user?.alias || '用户' }}</span>
-              <DownOutlined class="text-xs text-gray-500" />
+              <span class="hidden md:block font-medium text-gray-700 dark:text-gray-200">{{ authStore.user?.alias || '用户' }}</span>
+              <DownOutlined class="text-xs text-gray-500 dark:text-gray-400" />
             </a>
             <template #overlay>
               <a-menu>
                 <a-menu-item key="info" disabled>
                   <div class="px-2 py-1">
-                    <p class="text-sm font-medium text-gray-900">{{ authStore.user?.alias }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ authStore.user?.alias }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ authStore.isAdmin ? '管理员' : '普通用户' }}</p>
                   </div>
                 </a-menu-item>
                 <a-menu-divider />
@@ -176,7 +190,7 @@
             @click="drawerVisible = true"
             class="!p-2"
           >
-            <MenuOutlined class="text-xl" />
+            <MenuOutlined class="text-xl text-gray-700 dark:text-gray-300" />
           </a-button>
         </div>
       </div>
@@ -277,6 +291,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useUserStore } from '@/stores/user'
 import { useTokenMonitor } from '@/composables/useTokenMonitor'
 import { useBreakpoint } from '@/composables/useBreakpoint'
+import { useTheme } from '@/composables/useTheme'
 import { Modal, message } from 'ant-design-vue'
 import QRCodeModal from './QRCodeModal.vue'
 import {
@@ -293,6 +308,9 @@ import {
   DownOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  BulbOutlined,
+  BulbFilled,
+  ReloadOutlined,
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -301,6 +319,7 @@ const authStore = useAuthStore()
 const userStore = useUserStore()
 const { isMobile } = useBreakpoint()
 const { getRemainingMinutes, tokenStatus } = useTokenMonitor()
+const { isDark, toggleTheme } = useTheme()
 
 const drawerVisible = ref(false)
 const qrcodeModalVisible = ref(false)

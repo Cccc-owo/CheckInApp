@@ -5,13 +5,24 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { ConfigProvider as AConfigProvider } from 'ant-design-vue'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { useAuthStore } from '@/stores/auth'
-import antdTheme from './antd-theme'
+import getAntdTheme from './antd-theme'
+import { useTheme, initTheme, watchSystemTheme } from '@/composables/useTheme'
 
 const authStore = useAuthStore()
+
+// 初始化主题（全局）
+initTheme()
+watchSystemTheme()
+
+// 使用主题
+const { isDark } = useTheme()
+
+// 动态生成 Ant Design 主题
+const antdTheme = computed(() => getAntdTheme(isDark.value))
 
 // 应用启动时验证 Token
 onMounted(async () => {

@@ -335,13 +335,6 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: bold;
-}
-
 .loading-container {
   padding: 20px;
 }
@@ -357,37 +350,8 @@ onMounted(async () => {
   padding: 20px;
 }
 
-.hint {
-  margin-bottom: 20px;
-  color: #909399;
-  font-size: 14px;
-}
-
 .last-check-in {
   width: 100%;
   margin-top: 20px;
-}
-
-.label {
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #606266;
-}
-
-.status-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-/* 修复按钮图标对齐 */
-:deep(.ant-btn) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.ant-btn .anticon) {
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
 }
 </style>

@@ -29,6 +29,10 @@ onMounted(() => {
   background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
 }
 
+.dark .layout-container {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+}
+
 .main-content {
   flex: 1;
   overflow-y: auto;

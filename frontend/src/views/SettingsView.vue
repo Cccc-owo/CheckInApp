@@ -2,11 +2,11 @@
   <Layout>
     <div class="settings-view">
       <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">个人设置</h1>
+        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6">个人设置</h1>
 
         <!-- 基本信息卡片 -->
         <div class="md3-card p-6 mb-6">
-          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <UserOutlined class="mr-2" />
             基本信息
           </h2>
@@ -32,7 +32,7 @@
 
         <!-- 修改邮箱 -->
         <div class="md3-card p-6 mb-6">
-          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <EditOutlined class="mr-2" />
             修改个人信息
           </h2>
@@ -77,7 +77,7 @@
 
         <!-- 设置/修改密码 -->
         <div class="md3-card p-6">
-          <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <KeyOutlined class="mr-2" />
             {{ hasPassword ? '修改密码' : '设置密码' }}
           </h2>
@@ -296,14 +296,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.md3-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-}
-
-.md3-card:hover {
-  box-shadow: 0 4px 8px 3px rgba(0, 0, 0, 0.10);
+.settings-view {
+  min-height: 100%;
 }
 </style>
