@@ -1147,9 +1147,20 @@
   }
 
   /* Ant Design Tooltip 文本居中 */
-  .ant-tooltip .ant-tooltip-inner,
-  div.ant-tooltip-inner {
-    text-align: center !important;
+
+  /* 针对 Ant Design Vue 4.x 的 tooltip */
+  .ant-tooltip .ant-tooltip-inner {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 更高优先级的选择器 */
+  div[class*="ant-tooltip"] .ant-tooltip-inner,
+  div[class^="ant-tooltip"] div[class*="tooltip-inner"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 }
 
