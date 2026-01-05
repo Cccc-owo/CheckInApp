@@ -308,7 +308,23 @@ const lastCheckIn = computed(() => {
 });
 
 const formatExpireTime = computed(() => {
-  if (!tokenStatus.value || !tokenStatus.value.expires_at) return '-';
+  if (!tokenStatus.value) return '-';
+
+  // Token 无效时，尝试从 user.jwt_exp 获取过期时间
+  if (!tokenStatus.value.expires_at) {
+    // 如果后端没有返回 expires_at，说明 Token 可能无效或未设置
+    const jwtExp = authStore.user?.jwt_exp;
+    if (jwtExp && jwtExp !== '0') {
+      try {
+        const timestamp = parseInt(jwtExp);
+        return formatDateTime(timestamp * 1000);
+      } catch {
+        return '-';
+      }
+    }
+    return '-';
+  }
+
   return formatDateTime(tokenStatus.value.expires_at * 1000);
 });
 
