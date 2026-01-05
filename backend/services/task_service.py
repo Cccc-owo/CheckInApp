@@ -43,14 +43,17 @@ class TaskService:
             raise ValueError("payload_config 格式错误，必须是有效的 JSON")
 
         # 3. 验证唯一性：同一用户在同一个接龙中不能有重复的任务
-        # 查询用户的所有任务，检查是否已经有同一个 ThreadId
-        existing_tasks = db.query(CheckInTask).filter(
+        # 优化：只查询必要的字段（id 和 payload_config），避免加载完整对象
+        existing_tasks = db.query(
+            CheckInTask.id,
+            CheckInTask.payload_config
+        ).filter(
             CheckInTask.user_id == user_id
         ).all()
 
-        for task in existing_tasks:
+        for task_id, payload_config in existing_tasks:
             try:
-                existing_payload = json.loads(task.payload_config)
+                existing_payload = json.loads(payload_config)
                 if existing_payload.get('ThreadId') == thread_id:
                     logger.warning(f"⚠️ 任务创建冲突 - User: {user.alias}({user_id}), ThreadId: {thread_id}")
                     raise ValueError(
@@ -58,7 +61,7 @@ class TaskService:
                     )
             except (json.JSONDecodeError, AttributeError, TypeError):
                 # 跳过无法解析的 payload_config
-                logger.debug(f"跳过无法解析的任务配置 - Task ID: {task.id}")
+                logger.debug(f"跳过无法解析的任务配置 - Task ID: {task_id}")
                 continue
 
         # 4. 记录日志
