@@ -149,12 +149,12 @@ def cleanup_expired_pending_users():
 
 def check_token_expiration():
     """
-    检查 Token 是否即将过期，并发送邮件提醒
+    检查打卡 Token 是否即将过期，并发送邮件提醒
 
-    检查所有用户的 Token，如果在 30 分钟内过期，发送提醒邮件
-    注意：现在需要检查用户的任务，因为邮箱地址在任务中
+    检查所有用户的打卡 authorization token，如果在 30 分钟内过期，发送提醒邮件
+    注意：检查的是打卡业务 token，不是网站登录 JWT token
     """
-    logger.info("Scheduler: 正在执行 Token 过期检查...")
+    logger.info("Scheduler: 正在执行打卡 Token 过期检查...")
 
     try:
         # 创建数据库会话
@@ -162,70 +162,69 @@ def check_token_expiration():
 
         try:
             # 获取所有用户
+            from backend.services.auth_service import AuthService
+
             users = db.query(User).all()
             current_timestamp = int(datetime.now().timestamp())
 
             notified_count = 0
 
             for user in users:
-                if not user.jwt_exp or user.jwt_exp == "0":
+                # 使用统一的验证方法
+                result = AuthService.verify_checkin_authorization(user)
+
+                # 获取过期时间戳和剩余时间
+                exp_timestamp = result.get("expires_at")
+                if not exp_timestamp:
                     continue
 
-                try:
-                    exp_timestamp = int(user.jwt_exp)
+                time_until_expiry = exp_timestamp - current_timestamp
 
-                    # 检查 Token 状态并发送对应的提醒
-                    time_until_expiry = exp_timestamp - current_timestamp
+                # 情况1：Token 即将过期（过期前 30 分钟内，且还未过期）
+                if 0 < time_until_expiry < 1800:  # 30分钟 = 1800秒
+                    if user.email and not user.token_expiring_notified:
+                        logger.info(f"用户 {user.alias} 的打卡 Token 即将过期，发送邮件提醒到 {user.email}...")
+                        from backend.services.email_service import EmailService
+                        jwt_exp_value = user.jwt_exp
+                        jwt_exp_str = str(jwt_exp_value) if jwt_exp_value is not None else "0"
 
-                    # 情况1：Token 即将过期（过期前 30 分钟内，且还未过期）
-                    if 0 < time_until_expiry < 1800:  # 30分钟 = 1800秒
-                        if user.email and not user.token_expiring_notified:
-                            logger.info(f"用户 {user.alias} 的 Token 即将过期，发送邮件提醒到 {user.email}...")
-                            from backend.services.email_service import EmailService
-                            jwt_exp_value = user.jwt_exp
-                            jwt_exp_str = str(jwt_exp_value) if jwt_exp_value is not None else "0"
+                        # 发送"即将过期"邮件
+                        success = EmailService.notify_token_expiring(user, jwt_exp_str)
 
-                            # 发送"即将过期"邮件
-                            success = EmailService.notify_token_expiring(user, jwt_exp_str)
-
-                            if success:
-                                user.token_expiring_notified = True
-                                db.commit()
-                                notified_count += 1
-                                logger.info(f"用户 {user.alias} 的 Token 即将过期邮件已发送并标记")
-                            else:
-                                logger.warning(f"用户 {user.alias} 的 Token 即将过期邮件发送失败")
-
-                    # 情况2：Token 已过期（过期后 30 分钟内）
-                    elif -1800 < time_until_expiry <= 0:  # 过期后 30 分钟内
-                        if user.email and not user.token_expired_notified:
-                            logger.info(f"用户 {user.alias} 的 Token 已过期，发送邮件提醒到 {user.email}...")
-                            from backend.services.email_service import EmailService
-
-                            # 发送"已过期"邮件（可以使用不同的邮件模板或内容）
-                            success = EmailService.notify_token_expired(user)
-
-                            if success:
-                                user.token_expired_notified = True
-                                db.commit()
-                                notified_count += 1
-                                logger.info(f"用户 {user.alias} 的 Token 已过期邮件已发送并标记")
-                            else:
-                                logger.warning(f"用户 {user.alias} 的 Token 已过期邮件发送失败")
-
-                    # 情况3：Token 正常（剩余时间 > 30 分钟），重置提醒标志
-                    elif time_until_expiry >= 1800:
-                        if user.token_expiring_notified or user.token_expired_notified:
-                            user.token_expiring_notified = False
-                            user.token_expired_notified = False
+                        if success:
+                            user.token_expiring_notified = True
                             db.commit()
-                            logger.info(f"用户 {user.alias} 的 Token 已刷新，重置所有提醒标志")
+                            notified_count += 1
+                            logger.info(f"用户 {user.alias} 的打卡 Token 即将过期邮件已发送并标记")
+                        else:
+                            logger.warning(f"用户 {user.alias} 的打卡 Token 即将过期邮件发送失败")
 
-                except ValueError:
-                    logger.warning(f"用户 {user.alias} 的 jwt_exp 格式不正确: {user.jwt_exp}")
-                    continue
+                # 情况2：Token 已过期（过期后 30 分钟内）
+                elif -1800 < time_until_expiry <= 0:  # 过期后 30 分钟内
+                    if user.email and not user.token_expired_notified:
+                        logger.info(f"用户 {user.alias} 的打卡 Token 已过期，发送邮件提醒到 {user.email}...")
+                        from backend.services.email_service import EmailService
 
-            logger.info(f"Scheduler: Token 过期检查完成，共发送 {notified_count} 封提醒邮件")
+                        # 发送"已过期"邮件
+                        success = EmailService.notify_token_expired(user)
+
+                        if success:
+                            user.token_expired_notified = True
+                            db.commit()
+                            notified_count += 1
+                            logger.info(f"用户 {user.alias} 的打卡 Token 已过期邮件已发送并标记")
+                        else:
+                            logger.warning(f"用户 {user.alias} 的打卡 Token 已过期邮件发送失败")
+
+                # 情况3：Token 正常（剩余时间 > 30 分钟），重置提醒标志
+                elif time_until_expiry >= 1800:
+                    if user.token_expiring_notified or user.token_expired_notified:
+                        user.token_expiring_notified = False
+                        user.token_expired_notified = False
+                        db.commit()
+                        logger.info(f"用户 {user.alias} 的打卡 Token 已刷新，重置所有提醒标志")
+
+            logger.info(f"Scheduler: 打卡 Token 过期检查完成，共发送 {notified_count} 封提醒邮件")
 
         finally:
             db.close()

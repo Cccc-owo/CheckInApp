@@ -188,20 +188,20 @@ async def get_system_stats(
         ).count()
 
         # Token 即将过期的用户数（7天内）
+        from backend.services.auth_service import AuthService
+
         current_timestamp = int(datetime.now().timestamp())
         expiring_soon_timestamp = current_timestamp + (7 * 24 * 60 * 60)  # 7天后
 
         expiring_users = 0
         for user in db.query(User).all():
-            if user.jwt_exp and user.jwt_exp != "0":
-                try:
-                    exp_timestamp = int(user.jwt_exp)
-                    if current_timestamp < exp_timestamp < expiring_soon_timestamp:
-                        expiring_users += 1
-                except ValueError:
-                    # jwt_exp 格式不正确，跳过此用户
-                    logger.debug(f"用户 {user.id} 的 jwt_exp 格式不正确: {user.jwt_exp}")
-                    continue
+            # 使用统一的验证方法
+            result = AuthService.verify_checkin_authorization(user)
+
+            if result["is_valid"]:
+                exp_timestamp = result.get("expires_at")
+                if exp_timestamp and current_timestamp < exp_timestamp < expiring_soon_timestamp:
+                    expiring_users += 1
 
         return {
             "users": {

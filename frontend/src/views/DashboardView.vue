@@ -190,6 +190,7 @@
     <!-- QR Code Modal for Token Refresh -->
     <QRCodeModal
       v-model:visible="qrcodeModalVisible"
+      :alias="authStore.user?.alias || ''"
       @success="handleQRCodeSuccess"
       @error="handleQRCodeError"
     />

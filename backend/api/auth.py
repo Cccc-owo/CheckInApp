@@ -89,8 +89,13 @@ async def get_qrcode_status(
     状态说明:
     - pending: 正在初始化
     - waiting_scan: 等待扫描（包含二维码图片 Base64）
-    - success: 扫描成功（包含 user_id 和 authorization）
+    - success: 扫描成功（包含 JWT token 和 user 信息）
     - error: 发生错误
+
+    认证架构说明:
+    - 扫码成功后返回 JWT token（用于网站登录，21天有效期）
+    - 同时更新数据库中的 authorization token（用于打卡业务）
+    - 两种 token 分别管理，互不影响
     """
     try:
         result = AuthService.get_qrcode_status(session_id, db)
@@ -123,17 +128,22 @@ async def cancel_qrcode_session(
         )
 
 
-@router.post("/verify_token", response_model=dict, summary="验证 Token 有效性")
+@router.post("/verify_token", response_model=dict, summary="验证 JWT Token 有效性")
 async def verify_token(
     request: TokenVerifyRequest,
     db: Session = Depends(get_db)
 ):
     """
-    验证 Token 有效性
+    验证 JWT Token 有效性（网站登录认证）
 
-    - **authorization**: Token（可带或不带 "Bearer " 前缀）
+    - **authorization**: JWT Token（可带或不带 "Bearer " 前缀）
 
-    返回 Token 是否有效以及相关信息
+    返回 Token 是否有效以及用户信息
+
+    注意：
+    - 此接口验证的是 JWT token（用于网站登录，21天有效期）
+    - 不验证打卡业务的 authorization token（存储在数据库中）
+    - JWT token 过期需要重新登录，但打卡 token 过期不影响网站使用
     """
     try:
         result = AuthService.verify_token(request.authorization, db)
@@ -156,12 +166,17 @@ async def alias_login(
     - **alias**: 用户别名
     - **password**: 密码
 
-    返回登录结果，成功时包含 user_id 和 authorization
+    返回登录结果，成功时包含 JWT token 和 user 信息
+
+    认证架构说明:
+    - 登录成功后返回 JWT token（用于网站登录，21天有效期）
+    - 如果数据库中的打卡 authorization token 过期，会返回警告信息
+    - 打卡 token 过期不影响网站登录，但无法自动打卡，建议扫码更新
 
     注意：
     - 用户必须已设置密码才能使用此方式登录
-    - Token 必须仍然有效（未过期）
-    - 如果 Token 已过期，请使用扫码登录重新获取
+    - 即使打卡 token 已过期，仍然可以使用密码登录网站
+    - 如需更新打卡 token，请使用扫码登录
     """
     try:
         result = AuthService.alias_login(request.alias, request.password, db)

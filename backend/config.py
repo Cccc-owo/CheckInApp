@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     VERSION: str = "2.0.0"
     API_PREFIX: str = "/api"
 
+    # 安全配置（登录）
+    SECRET_KEY: str = "CheckInSecretKey"
+
     # 数据库配置
     DATABASE_URL: str = f"sqlite:///{BASE_DIR}/data/checkin.db"
 

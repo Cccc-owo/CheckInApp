@@ -104,46 +104,26 @@ async def update_current_user_profile(
         )
 
 
-@router.get("/me/token_status", response_model=TokenStatus, summary="获取当前用户 Token 状态")
+@router.get("/me/token_status", response_model=TokenStatus, summary="获取当前用户打卡 Token 状态")
 async def get_current_user_token_status(
     current_user: User = Depends(get_current_user)
 ):
     """
-    获取当前用户的 Token 状态
+    获取当前用户的打卡 Token 状态（authorization token，非 JWT）
+
+    注意：此接口检查的是打卡业务 token，不是网站登录 JWT token
     """
-    from datetime import datetime
+    from backend.services.auth_service import AuthService
 
-    is_valid = True
-    days_until_expiry = None
-    expires_at = None
-    expiring_soon = False
-
-    if current_user.jwt_exp and current_user.jwt_exp != "0":
-        try:
-            exp_timestamp = int(current_user.jwt_exp)
-            current_timestamp = int(datetime.now().timestamp())
-            expires_at = exp_timestamp
-
-            if current_timestamp > exp_timestamp:
-                is_valid = False
-            else:
-                days_until_expiry = (exp_timestamp - current_timestamp) // 86400
-                # 检查是否在30分钟内过期
-                minutes_until_expiry = (exp_timestamp - current_timestamp) // 60
-                expiring_soon = minutes_until_expiry <= 30
-
-        except ValueError as e:
-            # jwt_exp 格式不正确，记录警告
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"用户 {current_user.id} ({current_user.alias}) 的 jwt_exp 格式不正确: {current_user.jwt_exp}, 错误: {e}")
+    # 使用统一的验证方法
+    result = AuthService.verify_checkin_authorization(current_user)
 
     return {
-        "is_valid": is_valid,
+        "is_valid": result["is_valid"],
         "jwt_exp": current_user.jwt_exp,
-        "expires_at": expires_at,
-        "days_until_expiry": days_until_expiry,
-        "expiring_soon": expiring_soon
+        "expires_at": result.get("expires_at"),
+        "days_until_expiry": result.get("days_remaining"),
+        "expiring_soon": result.get("expiring_soon", False)
     }
 
 

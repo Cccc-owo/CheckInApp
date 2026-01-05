@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from backend.models import User
 from backend.workers.token_refresher import get_token_headless, get_session_data
 from backend.config import settings
+from backend.utils.jwt import JWTManager
 
 logger = logging.getLogger(__name__)
 
@@ -208,10 +209,13 @@ class AuthService:
 
                 logger.info(f"更新老用户 {user.alias} 的 Token")
 
+                # 生成 JWT access token（用于网站登录）
+                access_token = JWTManager.create_access_token(user.id, user.alias)
+
                 return {
                     "status": "success",
                     "message": "登录成功",
-                    "token": pure_token,  # 返回清理后的 token
+                    "token": access_token,  # 返回 JWT token（用于网站登录）
                     "user": {
                         "id": user.id,
                         "alias": user.alias,
@@ -270,10 +274,13 @@ class AuthService:
                 except Exception as e:
                     logger.error(f"发送注册通知邮件失败: {e}")
 
+                # 生成 JWT access token（用于网站登录）
+                access_token = JWTManager.create_access_token(new_user.id, new_user.alias)
+
                 return {
                     "status": "success",
                     "message": "注册成功，请等待管理员审批（24小时内）",
-                    "token": pure_token,  # 返回清理后的 token
+                    "token": access_token,  # 返回 JWT token（用于网站登录）
                     "user": {
                         "id": new_user.id,
                         "alias": new_user.alias,
@@ -299,58 +306,134 @@ class AuthService:
     @staticmethod
     def verify_token(authorization: str, db: Session) -> Dict[str, Any]:
         """
-        验证 Token 有效性
+        验证 JWT Token 有效性
 
         Args:
-            authorization: Token
+            authorization: JWT Token（可带或不带 "Bearer " 前缀）
             db: 数据库会话
 
         Returns:
             包含验证结果的字典
         """
+        from backend.utils.jwt import JWTManager
+
         # 移除 "Bearer " 前缀
         token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
 
-        # 从数据库查询用户
-        user = db.query(User).filter(User.authorization == token).first()
+        try:
+            # 验证 JWT token
+            payload = JWTManager.verify_token(token)
+            user_id = payload.get("user_id")
 
-        if not user:
+            if not user_id:
+                return {
+                    "is_valid": False,
+                    "message": "Token 格式错误"
+                }
+
+            # 从数据库获取用户
+            user = db.query(User).filter(User.id == user_id).first()
+
+            if not user:
+                return {
+                    "is_valid": False,
+                    "message": "用户不存在"
+                }
+
+            return {
+                "is_valid": True,
+                "message": "Token 有效",
+                "user_id": user.id,
+                "alias": user.alias,
+                "role": user.role,
+                "is_approved": user.is_approved
+            }
+
+        except pyjwt.ExpiredSignatureError:
             return {
                 "is_valid": False,
-                "message": "Token 无效"
+                "message": "JWT Token 已过期"
+            }
+        except pyjwt.InvalidTokenError:
+            return {
+                "is_valid": False,
+                "message": "JWT Token 无效"
+            }
+        except Exception as e:
+            logger.error(f"验证 JWT Token 失败: {str(e)}")
+            return {
+                "is_valid": False,
+                "message": "Token 验证失败"
+            }
+
+    @staticmethod
+    def verify_checkin_authorization(user: User) -> Dict[str, Any]:
+        """
+        验证打卡业务 authorization token 的有效性
+
+        注意：这与 JWT token 验证不同
+        - JWT token 用于网站登录认证
+        - authorization token 用于打卡业务操作（存储在 User.authorization）
+
+        Args:
+            user: 用户对象
+
+        Returns:
+            包含打卡 token 验证结果的字典
+        """
+        # 检查是否有 authorization token
+        if not user.authorization or user.authorization == "":
+            return {
+                "is_valid": False,
+                "message": "未设置打卡凭证",
+                "reason": "no_token"
             }
 
         # 检查 Token 是否过期
-        if user.jwt_exp and user.jwt_exp != "0":
-            try:
-                exp_timestamp = int(user.jwt_exp)
-                current_timestamp = int(datetime.now().timestamp())
+        if not user.jwt_exp or user.jwt_exp == "0":
+            return {
+                "is_valid": False,
+                "message": "打卡凭证无效",
+                "reason": "invalid_expiry"
+            }
 
-                if current_timestamp > exp_timestamp:
-                    return {
-                        "is_valid": False,
-                        "message": "Token 已过期",
-                        "user_id": user.id
-                    }
+        try:
+            exp_timestamp = int(user.jwt_exp)
+            current_timestamp = int(datetime.now().timestamp())
 
-                # 计算剩余天数
-                days_until_expiry = (exp_timestamp - current_timestamp) // 86400
-
+            if current_timestamp > exp_timestamp:
+                days_expired = (current_timestamp - exp_timestamp) // 86400
                 return {
-                    "is_valid": True,
-                    "message": "Token 有效",
-                    "user_id": user.id,
-                    "days_until_expiry": days_until_expiry
+                    "is_valid": False,
+                    "message": f"打卡凭证已过期 {days_expired} 天",
+                    "reason": "expired",
+                    "days_expired": days_expired
                 }
 
-            except ValueError:
-                logger.error(f"用户 {user.id} 的 jwt_exp 格式不正确: {user.jwt_exp}")
+            # 计算剩余时间
+            seconds_remaining = exp_timestamp - current_timestamp
+            days_remaining = seconds_remaining // 86400
+            minutes_remaining = seconds_remaining // 60
 
-        return {
-            "is_valid": True,
-            "message": "Token 有效",
-            "user_id": user.id
-        }
+            # 判断是否即将过期（30分钟内）
+            expiring_soon = minutes_remaining <= 30
+
+            return {
+                "is_valid": True,
+                "message": "打卡凭证有效",
+                "days_remaining": days_remaining,
+                "minutes_remaining": minutes_remaining,
+                "expiring_soon": expiring_soon,
+                "expires_at": exp_timestamp
+            }
+
+        except ValueError:
+            logger.error(f"用户 {user.id} 的 jwt_exp 格式不正确: {user.jwt_exp}")
+            return {
+                "is_valid": False,
+                "message": "打卡凭证格式错误",
+                "reason": "invalid_format"
+            }
 
     @staticmethod
     def alias_login(alias: str, password: str, db: Session) -> Dict[str, Any]:
@@ -422,23 +505,28 @@ class AuthService:
         # 登录成功
         logger.info(f"✅ 用户 {alias} (ID: {user.id}) 别名登录成功")
 
+        # 生成 JWT access token（用于网站登录）
+        access_token = JWTManager.create_access_token(user.id, user.alias)
+
         result = {
             "success": True,
             "message": "登录成功",
-            "user_id": user.id,
-            "authorization": user.authorization,
-            "alias": user.alias,
-            "role": user.role,
-            "is_approved": user.is_approved
+            "token": access_token,  # 返回 JWT token（用于网站登录）
+            "user": {
+                "id": user.id,
+                "alias": user.alias,
+                "role": user.role,
+                "is_approved": user.is_approved
+            }
         }
 
-        # 如果 Token 有问题，添加警告信息
+        # 如果打卡 Token 有问题，添加警告信息（不影响网站使用）
         if token_warning:
             result["token_warning"] = token_warning
             if token_warning == "token_invalid":
-                result["warning_message"] = "登录成功，但检测到登录凭证无效，部分功能可能受限，建议扫码更新"
+                result["warning_message"] = "登录成功，但检测到打卡凭证无效，无法自动打卡，建议扫码更新"
             elif token_warning == "token_expired":
-                result["warning_message"] = "登录成功，但检测到登录凭证已过期，部分功能可能受限，建议扫码更新"
+                result["warning_message"] = "登录成功，但检测到打卡凭证已过期，无法自动打卡，建议扫码更新"
 
         return result
 

@@ -34,49 +34,17 @@ client.interceptors.response.use(
       const { status, data } = error.response;
 
       if (status === 401) {
-        const errorDetail = data.detail || data.message || '';
+        // JWT token 过期或无效：需要重新登录
+        // 注意：打卡业务的 authorization token 过期不会影响网站登录状态
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
 
-        // 检查用户是否设置了密码
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const hasPassword = user.has_password || false;
-
-        // Token 过期的情况
-        if (errorDetail.includes('过期')) {
-          if (hasPassword) {
-            // 有密码的用户：不强制退出，只显示警告
-            // 不清除 localStorage，让用户继续使用
-            console.warn('Token 已过期，但用户设置了密码，允许继续使用');
-
-            // 返回错误但不跳转登录页
-            return Promise.reject({
-              status,
-              message: '登录凭证已过期，部分功能可能受限，建议刷新凭证',
-              data,
-              tokenExpired: true,
-            });
-          } else {
-            // 没有密码的用户：必须重新登录
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-
-            // 延迟跳转，避免阻塞当前异步请求的错误处理
-            setTimeout(() => {
-              if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-              }
-            }, 100);
+        // 延迟跳转到登录页
+        setTimeout(() => {
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
           }
-        } else {
-          // 其他 401 错误（无效 Token 等）：清除登录状态
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-
-          setTimeout(() => {
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
-            }
-          }, 100);
-        }
+        }, 100);
       }
 
       // 返回统一的错误对象

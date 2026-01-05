@@ -122,10 +122,10 @@ class CheckInService:
         """
         logger.info(f"🚀 启动异步打卡 - 任务: {task.name or f'Task-{task.id}'} (ID: {task.id})")
 
-        # 获取用户的 Token
+        # 获取用户的打卡 Token
         user = task.user
         if not user or not user.authorization:
-            error_msg = f"用户没有有效的 Token"
+            error_msg = f"用户没有有效的打卡 Token"
             logger.error(f"❌ {error_msg} - Task ID: {task.id}")
 
             # 创建失败记录
@@ -147,35 +147,31 @@ class CheckInService:
                 "message": error_msg
             }
 
-        # 检查 Token 是否过期
-        if user.jwt_exp and user.jwt_exp != "0":
-            try:
-                exp_timestamp = int(user.jwt_exp)
-                current_timestamp = int(datetime.now().timestamp())
-                if current_timestamp > exp_timestamp:
-                    error_msg = f"Token 已过期"
-                    logger.warning(f"⏰ {error_msg} - Task ID: {task.id}")
+        # 使用统一的打卡 Token 验证方法
+        from backend.services.auth_service import AuthService
+        token_result = AuthService.verify_checkin_authorization(user)
 
-                    record = CheckInRecord(
-                        task_id=task.id,
-                        status="failure",
-                        response_text="",
-                        error_message=f"{error_msg}，请重新扫码登录",
-                        location="{}",
-                        trigger_type=trigger_type
-                    )
-                    db.add(record)
-                    db.commit()
-                    db.refresh(record)
+        if not token_result["is_valid"]:
+            error_msg = token_result["message"]
+            logger.warning(f"⏰ {error_msg} - Task ID: {task.id}")
 
-                    return {
-                        "record_id": record.id,
-                        "status": "failure",
-                        "message": f"{error_msg}，请重新扫码登录"
-                    }
-            except ValueError as e:
-                # jwt_exp 格式不正确，记录警告后跳过 Token 过期验证
-                logger.warning(f"任务 {task.id} 的用户 jwt_exp 格式不正确: {user.jwt_exp}, 错误: {e}")
+            record = CheckInRecord(
+                task_id=task.id,
+                status="failure",
+                response_text="",
+                error_message=f"{error_msg}，请重新扫码登录",
+                location="{}",
+                trigger_type=trigger_type
+            )
+            db.add(record)
+            db.commit()
+            db.refresh(record)
+
+            return {
+                "record_id": record.id,
+                "status": "failure",
+                "message": f"{error_msg}，请重新扫码登录"
+            }
 
         # 创建待处理记录
         record_id = CheckInService.create_pending_check_in_record(task, trigger_type, db)
@@ -212,10 +208,10 @@ class CheckInService:
         """
         logger.info(f"🎯 开始打卡 - 任务: {task.name or f'Task-{task.id}'} (ID: {task.id}), 触发: {trigger_type}")
 
-        # 获取用户的 Token
+        # 获取用户的打卡 Token
         user = task.user
         if not user or not user.authorization:
-            error_msg = f"用户没有有效的 Token"
+            error_msg = f"用户没有有效的打卡 Token"
             logger.error(f"❌ {error_msg} - Task ID: {task.id}, User ID: {user.id if user else 'None'}")
 
             # 记录失败
@@ -237,37 +233,32 @@ class CheckInService:
                 "record_id": record.id
             }
 
-        # 检查 Token 是否过期
-        if user.jwt_exp and user.jwt_exp != "0":
-            try:
-                exp_timestamp = int(user.jwt_exp)
-                current_timestamp = int(datetime.now().timestamp())
-                if current_timestamp > exp_timestamp:
-                    error_msg = f"Token 已过期"
-                    expires_at = datetime.fromtimestamp(exp_timestamp)
-                    logger.warning(f"⏰ {error_msg} - 过期时间: {expires_at}, 用户: {user.alias}, Task ID: {task.id}")
+        # 使用统一的打卡 Token 验证方法
+        from backend.services.auth_service import AuthService
+        token_result = AuthService.verify_checkin_authorization(user)
 
-                    # 记录失败
-                    record = CheckInRecord(
-                        task_id=task.id,
-                        status="failure",
-                        response_text="",
-                        error_message=error_msg,
-                        location="{}",
-                        trigger_type=trigger_type
-                    )
-                    db.add(record)
-                    db.commit()
-                    db.refresh(record)
+        if not token_result["is_valid"]:
+            error_msg = token_result["message"]
+            logger.warning(f"⏰ {error_msg} - 用户: {user.alias}, Task ID: {task.id}")
 
-                    return {
-                        "success": False,
-                        "message": f"{error_msg}，请重新扫码登录",
-                        "record_id": record.id
-                    }
-            except ValueError as e:
-                # jwt_exp 格式不正确，记录警告后跳过 Token 过期验证
-                logger.warning(f"任务 {task.id} 的用户 jwt_exp 格式不正确: {user.jwt_exp}, 错误: {e}")
+            # 记录失败
+            record = CheckInRecord(
+                task_id=task.id,
+                status="failure",
+                response_text="",
+                error_message=error_msg,
+                location="{}",
+                trigger_type=trigger_type
+            )
+            db.add(record)
+            db.commit()
+            db.refresh(record)
+
+            return {
+                "success": False,
+                "message": f"{error_msg}，请重新扫码登录",
+                "record_id": record.id
+            }
 
         # 执行打卡（传递 task 对象和用户 token）
         logger.info(f"🤖 调用 Selenium Worker 执行打卡...")

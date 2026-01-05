@@ -31,6 +31,7 @@
                 v-model:value="qrcodeForm.alias"
                 placeholder="请输入您的用户名"
                 size="large"
+                autocomplete="username"
                 allow-clear
                 @keyup.enter="handleQRCodeLogin"
               >
@@ -66,6 +67,7 @@
                 v-model:value="passwordForm.alias"
                 placeholder="请输入您的用户名"
                 size="large"
+                autocomplete="username"
                 allow-clear
               >
                 <template #prefix>
@@ -79,6 +81,7 @@
                 v-model:value="passwordForm.password"
                 placeholder="请输入密码"
                 size="large"
+                autocomplete="current-password"
                 @keyup.enter="handlePasswordLogin"
               >
                 <template #prefix>
@@ -235,46 +238,17 @@ const handlePasswordLogin = async () => {
     );
 
     if (response.success) {
-      // 使用 authStore 保存认证信息
-      const user = {
-        id: response.user_id,
-        alias: response.alias,
-        role: response.role || 'user',
-        is_approved: response.is_approved !== false,
-      };
+      // 保存 JWT token 和用户信息
+      authStore.setAuth(response.token, response.user);
 
-      // 如果没有 authorization（测试账号），使用 user_id 作为认证凭据
-      const authToken = response.authorization || `user_id:${response.user_id}`;
-      authStore.setAuth(authToken, user);
-
-      // 只有当有真实 authorization 时才获取完整用户信息
-      if (response.authorization) {
-        try {
-          await authStore.fetchCurrentUser();
-        } catch (err) {
-          console.warn('获取完整用户信息失败，使用基本信息:', err);
-          // 即使失败也继续登录流程
-        }
-      } else {
-        // 没有 authorization 的测试账号，提示用户需要扫码绑定
-        message.info({
-          content: '您正在使用密码登录模式。如需使用打卡功能，请先扫码绑定 QQ。',
-          duration: 5,
-        });
-      }
-
-      // 如果有 Token 警告，显示提示
+      // 如果有打卡 Token 警告，显示提示（不影响网站登录）
       if (response.token_warning && response.warning_message) {
         message.warning({
           content: response.warning_message,
           duration: 5,
         });
-      } else if (response.authorization) {
-        // 只有有 token 的用户才显示"欢迎回来"
-        message.success(`欢迎回来，${response.alias}！`);
       } else {
-        // 测试账号登录成功提示
-        message.success(`登录成功，${response.alias}！`);
+        message.success(`欢迎回来，${response.user.alias}！`);
       }
 
       // 跳转到重定向页面或仪表盘
