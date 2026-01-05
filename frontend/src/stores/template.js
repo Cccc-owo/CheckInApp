@@ -132,7 +132,13 @@ export const useTemplateStore = defineStore('template', {
       }
     },
 
-    async createTaskFromTemplate(templateId, threadId, fieldValues, taskName = null, cronExpression = '0 20 * * *') {
+    async createTaskFromTemplate(
+      templateId,
+      threadId,
+      fieldValues,
+      taskName = null,
+      cronExpression = '0 20 * * *'
+    ) {
       this.loading = true;
       this.error = null;
       try {

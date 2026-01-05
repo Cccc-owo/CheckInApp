@@ -9,12 +9,7 @@
               <h1 class="text-4xl font-bold text-gradient mb-2">任务管理</h1>
               <p class="text-on-surface-variant">管理您的自动打卡任务</p>
             </div>
-            <a-button
-              type="primary"
-              size="large"
-              class="shadow-md3-3"
-              @click="openCreateDialog"
-            >
+            <a-button type="primary" size="large" class="shadow-md3-3" @click="openCreateDialog">
               <template #icon>
                 <PlusOutlined />
               </template>
