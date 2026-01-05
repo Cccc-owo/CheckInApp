@@ -245,7 +245,7 @@ const handlePasswordLogin = async () => {
       if (response.token_warning && response.warning_message) {
         message.warning({
           content: response.warning_message,
-          duration: 5,
+          duration: 2,
         });
       } else {
         message.success(`欢迎回来，${response.user.alias}！`);

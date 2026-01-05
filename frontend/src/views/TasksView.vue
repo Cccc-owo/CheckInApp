@@ -255,7 +255,10 @@
             </a-form-item>
 
             <a-form-item label="接龙 ID" name="thread_id" required>
-              <a-input v-model:value="templateTaskForm.thread_id" placeholder="请输入接龙项目 ID" />
+              <a-input
+                v-model:value="templateTaskForm.thread_id"
+                placeholder="请输入接龙项目 ID(ThreadID) | 如果你不知道这是什么，请询问管理员"
+              />
             </a-form-item>
 
             <a-form-item label="打卡时间表">

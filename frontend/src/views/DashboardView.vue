@@ -1,6 +1,76 @@
 <template>
   <Layout>
     <div class="dashboard-container">
+      <!-- 邮箱未设置提醒 -->
+      <a-alert
+        v-if="!authStore.user?.email"
+        message="您还未设置邮箱地址"
+        type="info"
+        :closable="true"
+        show-icon
+        style="margin-bottom: 20px"
+      >
+        <template #description>
+          <div>
+            设置邮箱后可以接收打卡任务的通知和提醒。
+            <a style="margin-left: 8px; cursor: pointer" @click="goToSettings"> 立即前往设置 → </a>
+          </div>
+        </template>
+      </a-alert>
+
+      <!-- 密码未设置提醒 -->
+      <a-alert
+        v-if="!authStore.user?.has_password"
+        message="您还未设置登录密码"
+        type="info"
+        :closable="true"
+        show-icon
+        style="margin-bottom: 20px"
+      >
+        <template #description>
+          <div>
+            设置密码后可以使用用户名+密码快速登录。
+            <a style="margin-left: 8px; cursor: pointer" @click="goToSettings"> 立即前往设置 → </a>
+          </div>
+        </template>
+      </a-alert>
+
+      <!-- Token 已过期提醒 -->
+      <a-alert
+        v-if="tokenStatus && !tokenStatus.is_valid"
+        message="打卡凭证已过期"
+        type="warning"
+        :closable="true"
+        show-icon
+        style="margin-bottom: 20px"
+      >
+        <template #description>
+          <div>
+            打卡凭证已过期，无法自动打卡。请扫码刷新 Token。
+            <a style="margin-left: 8px; cursor: pointer" @click="qrcodeModalVisible = true">
+              立即刷新 →
+            </a>
+          </div>
+        </template>
+      </a-alert>
+
+      <!-- 没有打卡任务提醒 -->
+      <a-alert
+        v-if="!taskStore.loading && taskStore.tasks.length === 0"
+        message="您还没有打卡任务"
+        type="info"
+        :closable="true"
+        show-icon
+        style="margin-bottom: 20px"
+      >
+        <template #description>
+          <div>
+            创建您的第一个打卡任务，开启自动打卡之旅。
+            <a style="margin-left: 8px; cursor: pointer" @click="goToTasks"> 立即创建 → </a>
+          </div>
+        </template>
+      </a-alert>
+
       <a-row :gutter="[20, 20]">
         <!-- Token 状态卡片 -->
         <a-col :xs="24" :sm="24" :md="24">
@@ -199,6 +269,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { CalendarOutlined, KeyOutlined, UserOutlined, ReloadOutlined } from '@ant-design/icons-vue';
 import Layout from '@/components/Layout.vue';
@@ -210,6 +281,7 @@ import { useCheckInStore } from '@/stores/checkIn';
 import { formatDateTime } from '@/utils/helpers';
 import { usePollStatus } from '@/composables/usePollStatus';
 
+const router = useRouter();
 const authStore = useAuthStore();
 const userStore = useUserStore();
 const taskStore = useTaskStore();
@@ -257,6 +329,16 @@ const formatRemainTime = computed(() => {
   if (hours > 0) return `${hours} 小时 ${minutes} 分钟`;
   return `${minutes} 分钟`;
 });
+
+// 跳转到设置页面
+const goToSettings = () => {
+  router.push('/settings');
+};
+
+// 跳转到任务页面
+const goToTasks = () => {
+  router.push('/tasks');
+};
 
 // 获取 Token 状态
 const fetchTokenStatus = async () => {
@@ -356,6 +438,14 @@ const handleQRCodeError = errorMsg => {
 };
 
 onMounted(async () => {
+  // 刷新用户信息，确保 email 和 has_password 是最新的
+  try {
+    await authStore.fetchCurrentUser();
+  } catch (error) {
+    console.error('刷新用户信息失败:', error);
+  }
+
+  // 获取 Token 状态
   fetchTokenStatus();
   checkInStore.fetchMyRecords({ limit: 1 });
 
