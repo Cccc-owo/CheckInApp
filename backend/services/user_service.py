@@ -32,7 +32,7 @@ class UserService:
         创建用户（管理员手动创建）
 
         Args:
-            user_data: 用户创建数据（只需要 alias 和 role）
+            user_data: 用户创建数据（包括 alias, role, email, password 等）
             db: 数据库会话
 
         Returns:
@@ -47,17 +47,24 @@ class UserService:
         user = User(
             jwt_sub=None,  # NULL 表示未绑定 QQ
             alias=user_data.alias,
+            email=user_data.email,
             role=user_data.role or "user",
             is_approved=user_data.is_approved if user_data.is_approved is not None else True,  # 使用请求中的值，默认已审批
             jwt_exp="0",
             authorization=None,
         )
 
+        # 如果提供了密码，则设置密码
+        if user_data.password:
+            import bcrypt
+            password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt())
+            setattr(user, 'password_hash', password_hash.decode('utf-8'))
+
         db.add(user)
         db.commit()
         db.refresh(user)
 
-        logger.info(f"管理员创建用户成功: {user.alias} (ID: {user.id}, 角色: {user.role})")
+        logger.info(f"管理员创建用户成功: {user.alias} (ID: {user.id}, 角色: {user.role}, 密码: {'已设置' if user_data.password else '未设置'})")
         return user
 
     @staticmethod

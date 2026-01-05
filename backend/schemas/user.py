@@ -12,6 +12,7 @@ class UserCreate(UserBase):
     """创建用户 Schema（管理员手动创建，只需要别名）"""
     role: Optional[str] = Field("user", description="角色: user/admin")
     email: Optional[EmailStr] = Field(None, description="邮箱地址")
+    password: Optional[str] = Field(None, min_length=6, description="初始密码（可选）")
     is_approved: Optional[bool] = Field(True, description="是否已审批（默认已审批）")
 
 

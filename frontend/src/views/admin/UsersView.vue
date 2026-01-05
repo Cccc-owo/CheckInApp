@@ -442,10 +442,36 @@ const handleSubmit = async () => {
     }
 
     if (dialogMode.value === 'create') {
-      await userStore.createUser(formData.value);
+      // 创建用户时，只发送后端 UserCreate schema 接受的字段
+      const createData = {
+        alias: formData.value.alias,
+        role: formData.value.role,
+        is_approved: formData.value.is_approved,
+      };
+      // 如果有邮箱，添加邮箱字段（空字符串转为 null）
+      if (formData.value.email && formData.value.email.trim()) {
+        createData.email = formData.value.email.trim();
+      }
+      // 如果有密码，添加密码字段
+      if (formData.value.password && formData.value.password.trim()) {
+        createData.password = formData.value.password.trim();
+      }
+      await userStore.createUser(createData);
       message.success('创建成功');
     } else {
-      await userStore.updateUser(formData.value.id, formData.value);
+      // 编辑用户时，处理空字符串字段
+      const updateData = {
+        ...formData.value,
+        // 将空字符串的邮箱转为 null
+        email:
+          formData.value.email && formData.value.email.trim() ? formData.value.email.trim() : null,
+        // 将空字符串的密码转为 null
+        password:
+          formData.value.password && formData.value.password.trim()
+            ? formData.value.password.trim()
+            : null,
+      };
+      await userStore.updateUser(formData.value.id, updateData);
       message.success('更新成功');
     }
 
