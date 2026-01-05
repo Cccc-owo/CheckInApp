@@ -186,7 +186,7 @@ class AuthService:
             user = db.query(User).filter(User.jwt_sub == jwt_sub).first()
 
             if user:
-                # 老用户：更新 Token（存储清理后的 token）
+                # 已注册用户：更新 Token（存储清理后的 token）
                 # 注意：如果通过别名登录，需要验证 jwt_sub 是否匹配
                 if alias and alias == user.alias:
                     # 用户使用别名登录，验证 jwt_sub 是否一致
@@ -207,7 +207,7 @@ class AuthService:
                 db.commit()
                 db.refresh(user)
 
-                logger.info(f"更新老用户 {user.alias} 的 Token")
+                logger.info(f"更新已注册用户 {user.alias} 的 Token")
 
                 # 生成 JWT access token（用于网站登录）
                 access_token = JWTManager.create_access_token(user.id, user.alias)
