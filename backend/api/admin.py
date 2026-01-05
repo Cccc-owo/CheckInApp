@@ -188,20 +188,24 @@ async def get_system_stats(
         ).count()
 
         # Token 即将过期的用户数（7天内）
-        from backend.services.auth_service import AuthService
-
+        # 使用 SQL 直接查询，避免 N+1 问题
         current_timestamp = int(datetime.now().timestamp())
         expiring_soon_timestamp = current_timestamp + (7 * 24 * 60 * 60)  # 7天后
 
-        expiring_users = 0
-        for user in db.query(User).all():
-            # 使用统一的验证方法
-            result = AuthService.verify_checkin_authorization(user)
+        # 直接在数据库层面筛选即将过期的用户
+        # 条件：authorization 不为空、jwt_exp 不为 "0"、且在未来 7 天内过期
+        from sqlalchemy import cast, Integer, and_
 
-            if result["is_valid"]:
-                exp_timestamp = result.get("expires_at")
-                if exp_timestamp and current_timestamp < exp_timestamp < expiring_soon_timestamp:
-                    expiring_users += 1
+        expiring_users = db.query(User).filter(
+            and_(
+                User.authorization.isnot(None),
+                User.authorization != "",
+                User.jwt_exp.isnot(None),
+                User.jwt_exp != "0",
+                cast(User.jwt_exp, Integer) > current_timestamp,  # 未过期
+                cast(User.jwt_exp, Integer) < expiring_soon_timestamp  # 7天内过期
+            )
+        ).count()
 
         return {
             "users": {
