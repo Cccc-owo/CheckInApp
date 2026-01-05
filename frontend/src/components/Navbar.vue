@@ -379,7 +379,7 @@ const tokenStatusTooltip = computed(() => {
     return `登录凭证已过期 ${expiredMins} 分钟，点击右侧按钮刷新`;
   }
   if (mins < 60) {
-    return `Token 剩余时间：${mins} 分钟，过期后可刷新）`;
+    return `Token 剩余时间：${mins} 分钟，过期后可刷新`;
   }
   return 'Token 状态正常';
 });
