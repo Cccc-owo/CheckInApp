@@ -66,8 +66,8 @@ export function useTokenMonitor() {
             // 有密码的用户：友好提示
             if (!warningShown) {
               message.warning({
-                content: `您的登录凭证已过期 ${expiredMinutes} 分钟，部分功能可能受限。建议您扫码刷新凭证。`,
-                duration: 8,
+                content: `您的 Token 已过期 ${expiredMinutes} 分钟，部分功能可能受限。建议您扫码刷新凭证。`,
+                duration: 3,
                 key: 'token-expired-warning',
               });
               warningShown = true;
@@ -75,7 +75,7 @@ export function useTokenMonitor() {
           } else {
             // 没有密码的用户：必须重新登录
             message.error({
-              content: '您的登录凭证已过期，请重新扫码登录',
+              content: '您的 Token 已过期，请重新扫码登录',
               duration: 5,
               key: 'token-expired-error',
             });
@@ -98,7 +98,7 @@ export function useTokenMonitor() {
         if (!warningShown) {
           message.warning({
             content: `您的 Token 将在 ${remainingMinutes} 分钟后过期，建议您及时刷新`,
-            duration: 6,
+            duration: 3,
             key: 'token-expiring-warning',
           });
           warningShown = true;
