@@ -318,7 +318,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 const userStore = useUserStore();
 const { isMobile } = useBreakpoint();
-const { getRemainingMinutes, tokenStatus } = useTokenMonitor();
+const { getRemainingMinutes, tokenStatus, stopMonitoring } = useTokenMonitor();
 const { isDark, toggleTheme } = useTheme();
 
 const drawerVisible = ref(false);
@@ -436,6 +436,10 @@ const handleLogout = () => {
     okText: '确定',
     cancelText: '取消',
     onOk() {
+      // 停止 token 监控
+      stopMonitoring();
+
+      // 清除登录状态
       authStore.logout();
       router.push('/login');
       drawerVisible.value = false;
