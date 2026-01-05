@@ -97,7 +97,7 @@ export function useTokenMonitor() {
       else if (remainingMinutes !== null && remainingMinutes > 0 && remainingMinutes <= 60) {
         if (!warningShown) {
           message.warning({
-            content: `您的登录凭证将在 ${remainingMinutes} 分钟后过期，建议您提前刷新`,
+            content: `您的 Token 将在 ${remainingMinutes} 分钟后过期，建议您及时刷新`,
             duration: 6,
             key: 'token-expiring-warning',
           });
