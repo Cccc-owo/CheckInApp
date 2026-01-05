@@ -13,7 +13,7 @@
               type="primary"
               size="large"
               class="shadow-md3-3"
-              @click="showCreateDialog = true"
+              @click="openCreateDialog"
             >
               <template #icon>
                 <PlusOutlined />
@@ -99,7 +99,7 @@
           <p class="text-on-surface-variant mb-6">
             点击右上角的"创建任务"按钮开始添加您的第一个打卡任务
           </p>
-          <a-button type="primary" @click="showCreateDialog = true"> 创建第一个任务 </a-button>
+          <a-button type="primary" @click="openCreateDialog"> 创建第一个任务 </a-button>
         </a-card>
 
         <a-row v-else :gutter="[16, 16]">
@@ -263,6 +263,10 @@
               <a-input v-model:value="templateTaskForm.thread_id" placeholder="请输入接龙项目 ID" />
             </a-form-item>
 
+            <a-form-item label="打卡时间表">
+              <CrontabEditor v-model="templateTaskForm.cron_expression" />
+            </a-form-item>
+
             <a-divider orientation="left">填写字段信息</a-divider>
 
             <!-- Dynamic Fields -->
@@ -419,19 +423,18 @@ const templateFormRef = ref(null);
 const checkInLoading = ref({});
 
 // Template mode
-const createMode = ref('template'); // 'template' or 'manual'
 const loadingTemplates = ref(false);
 const activeTemplates = ref([]);
 const selectedTemplate = ref(null);
 const templatePreview = ref(null); // 存储从 preview 接口获取的合并后配置
 
-// Manual create form
+// Edit task form (仅用于编辑任务)
 const taskForm = reactive({
   name: '',
   thread_id: '',
   is_active: true,
   payload_config: '',
-  cron_expression: '0 20 * * *', // 新增：Crontab 表达式，默认每天 20:00
+  cron_expression: '0 20 * * *',
 });
 
 // Template create form
@@ -439,6 +442,7 @@ const templateTaskForm = reactive({
   task_name: '',
   thread_id: '',
   field_values: {},
+  cron_expression: '0 20 * * *',
 });
 
 const taskRules = {
@@ -750,7 +754,7 @@ const handleSubmit = async () => {
       message.success('任务更新成功');
     }
     // Create from template
-    else if (createMode.value === 'template') {
+    else {
       if (!selectedTemplate.value) {
         message.warning('请选择一个模板');
         return;
@@ -765,17 +769,10 @@ const handleSubmit = async () => {
         selectedTemplate.value.id,
         templateTaskForm.thread_id,
         templateTaskForm.field_values,
-        templateTaskForm.task_name || null
+        templateTaskForm.task_name || null,
+        templateTaskForm.cron_expression || '0 20 * * *'
       );
 
-      message.success('任务创建成功');
-    }
-    // Create manually
-    else {
-      if (!taskFormRef.value) return;
-      await taskFormRef.value.validate();
-
-      await taskStore.createTask(taskForm);
       message.success('任务创建成功');
     }
 
@@ -793,20 +790,27 @@ const handleSubmit = async () => {
 const resetForm = () => {
   editingTask.value = null;
   selectedTemplate.value = null;
-  createMode.value = 'template';
 
   Object.assign(taskForm, {
     name: '',
     thread_id: '',
     is_active: true,
     payload_config: '',
+    cron_expression: '0 20 * * *',
   });
 
   templateTaskForm.task_name = '';
   templateTaskForm.thread_id = '';
   templateTaskForm.field_values = {};
+  templateTaskForm.cron_expression = '0 20 * * *';
 
   taskFormRef.value?.resetFields();
+};
+
+// 打开创建任务对话框
+const openCreateDialog = () => {
+  resetForm(); // 重置表单状态，确保不会显示编辑界面
+  showCreateDialog.value = true;
 };
 
 // Watch dialog open to load templates

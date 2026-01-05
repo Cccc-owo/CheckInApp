@@ -46,25 +46,6 @@ export const useTaskStore = defineStore('task', {
       }
     },
 
-    // 创建新任务
-    async createTask(taskData) {
-      this.loading = true;
-      this.error = null;
-      try {
-        const newTask = await api.task.createTask(taskData);
-        this.tasks.unshift(newTask); // 添加到列表开头
-        return newTask;
-      } catch (error) {
-        // 解析后端错误信息
-        let errorMsg = error.message || '创建任务失败';
-
-        this.error = errorMsg;
-        throw new Error(errorMsg);
-      } finally {
-        this.loading = false;
-      }
-    },
-
     // 更新任务
     async updateTask(taskId, taskData) {
       this.loading = true;

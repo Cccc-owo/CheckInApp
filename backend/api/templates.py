@@ -200,6 +200,7 @@ async def create_task_from_template(
     - **thread_id**: 接龙项目 ID
     - **field_values**: 用户填写的字段值
     - **task_name**: 任务名称（可选）
+    - **cron_expression**: Cron 表达式（可选，默认每天 20:00）
     """
     task = TemplateService.create_task_from_template(
         template_id=request.template_id,
@@ -207,6 +208,7 @@ async def create_task_from_template(
         field_values=request.field_values,
         user_id=current_user.id,
         task_name=request.task_name,
-        db=db
+        db=db,
+        cron_expression=request.cron_expression
     )
     return task

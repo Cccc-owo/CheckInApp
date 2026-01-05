@@ -89,11 +89,6 @@ export const taskAPI = {
     return client.get('/api/tasks', { params });
   },
 
-  // 创建任务
-  createTask: taskData => {
-    return client.post('/api/tasks', taskData);
-  },
-
   // 获取任务详情
   getTask: taskId => {
     return client.get(`/api/tasks/${taskId}`);

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
 from backend.models import get_db, User
-from backend.schemas.task import TaskCreate, TaskUpdate, TaskResponse
+from backend.schemas.task import TaskUpdate, TaskResponse
 from backend.services.task_service import TaskService
 from backend.dependencies import get_current_user
 
@@ -16,37 +16,7 @@ class CronValidateRequest(BaseModel):
     """Cron 表达式验证请求"""
     cron_expression: str = Field(..., min_length=9, description="Crontab 表达式")
 
-
-@router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED, summary="创建打卡任务")
-async def create_task(
-    task_data: TaskCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    创建新的打卡任务（基于模板）
-
-    现在的任务创建流程：
-    1. 管理员在后台创建模板（包含完整的 payload_config）
-    2. 用户基于模板创建任务，填写字段值
-    3. 系统自动生成完整的 payload_config
-
-    注意：直接创建任务的方式已废弃，请使用模板接口。
-    """
-    try:
-        task = TaskService.create_task(current_user.id, task_data, db)
-        return task
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"创建任务失败: {str(e)}"
-        )
-
+# create_task_from_template: 已在 templates.py 中定义
 
 @router.get("/", response_model=List[TaskResponse], summary="获取当前用户的任务列表")
 async def get_tasks(

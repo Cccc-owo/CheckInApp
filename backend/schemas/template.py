@@ -137,6 +137,7 @@ class TaskFromTemplateRequest(BaseModel):
     thread_id: str = Field(..., min_length=1, description="接龙项目 ID")
     field_values: Dict[str, Any] = Field(default_factory=dict, description="用户填写的字段值")
     task_name: Optional[str] = Field(None, max_length=100, description="任务名称（可选）")
+    cron_expression: Optional[str] = Field("0 20 * * *", description="Cron 表达式（可选，默认每天 20:00）")
 
 
 class TemplatePreviewResponse(BaseModel):

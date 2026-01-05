@@ -503,7 +503,8 @@ class TemplateService:
         field_values: Dict[str, Any],
         user_id: int,
         task_name: Optional[str],
-        db: Session
+        db: Session,
+        cron_expression: Optional[str] = "0 20 * * *"
     ) -> CheckInTask:
         """
         从模板创建打卡任务
@@ -515,6 +516,7 @@ class TemplateService:
             user_id: 用户 ID
             task_name: 任务名称（可选）
             db: 数据库会话
+            cron_expression: Cron 表达式（可选，默认每天 20:00）
 
         Returns:
             创建的任务对象
@@ -544,19 +546,26 @@ class TemplateService:
             signature = payload.get('Signature', 'Unknown')
             task_name = f"{template.name} - {signature}"
 
-        # 创建任务（只存储 payload_config，不再需要 thread_id 和 email）
+        # 创建任务（包含 cron_expression）
         try:
             task = CheckInTask(
                 user_id=user_id,
                 payload_config=json.dumps(payload, ensure_ascii=False),
                 name=task_name,
-                is_active=True
+                is_active=True,
+                cron_expression=cron_expression or "0 20 * * *"
             )
             db.add(task)
             db.commit()
             db.refresh(task)
 
             logger.info(f"从模板创建任务成功: {task.name} (ID: {task.id}, 模板: {template.name}, ThreadId: {thread_id})")
+
+            # 如果任务启用且包含 cron_expression，立即添加到调度器
+            if task.is_scheduled_enabled:
+                from backend.services.task_service import TaskService
+                TaskService._reload_scheduler_for_task(task, db)
+
             return task
 
         except Exception as e:
