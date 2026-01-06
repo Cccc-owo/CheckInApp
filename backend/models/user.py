@@ -20,6 +20,12 @@ class User(Base):
     token_expired_notified = Column(Boolean, default=False, nullable=False, comment="Token 已过期提醒是否已发送（过期后30分钟内）")
     role = Column(String(20), default="user", index=True, comment="角色: user/admin")
     is_approved = Column(Boolean, default=False, index=True, comment="是否已通过管理员审批")
+
+    # 账户锁定相关字段
+    failed_login_attempts = Column(Integer, default=0, nullable=False, comment="连续登录失败次数")
+    locked_until = Column(DateTime(timezone=True), nullable=True, comment="账户锁定到期时间")
+    last_failed_login = Column(DateTime(timezone=True), nullable=True, comment="最后一次登录失败时间")
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), comment="更新时间")
 

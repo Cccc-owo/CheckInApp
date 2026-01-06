@@ -13,6 +13,7 @@ python-dotenv>=1.0.1
 # Authentication & Security
 pyjwt>=2.10.1
 bcrypt>=4.2.2
+slowapi>=0.1.9
 
 # Task Scheduling
 apscheduler>=3.10.4

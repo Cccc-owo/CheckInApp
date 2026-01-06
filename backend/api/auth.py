@@ -13,11 +13,13 @@ from backend.schemas.auth import (
 )
 from backend.services.auth_service import AuthService
 from backend.exceptions import BusinessLogicError
+from backend.limiter import limiter
 
 router = APIRouter()
 
 
 @router.post("/request_qrcode", response_model=dict, summary="请求 QQ 扫码二维码")
+@limiter.limit("10/minute")  # 每分钟最多10次请求
 async def request_qrcode(
     request_obj: QRCodeRequest,
     req: Request,
@@ -156,8 +158,10 @@ async def verify_token(
 
 
 @router.post("/alias_login", response_model=dict, summary="别名+密码登录")
+@limiter.limit("5/minute")  # 每分钟最多5次登录尝试
 async def alias_login(
     request: AliasLoginRequest,
+    req: Request,
     db: Session = Depends(get_db)
 ):
     """

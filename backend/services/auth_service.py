@@ -458,6 +458,24 @@ class AuthService:
                 "message": "用户名或密码错误"
             }
 
+        # 检查账户是否被锁定
+        if user.locked_until:
+            # 如果锁定时间还未到期
+            if datetime.now() < user.locked_until:
+                remaining_seconds = (user.locked_until - datetime.now()).total_seconds()
+                remaining_minutes = int(remaining_seconds / 60) + 1
+                logger.warning(f"别名登录失败：用户 {alias} 账户已锁定，剩余 {remaining_minutes} 分钟")
+                return {
+                    "success": False,
+                    "message": f"账户已锁定，请 {remaining_minutes} 分钟后再试"
+                }
+            else:
+                # 锁定时间已过，重置锁定状态
+                user.locked_until = None
+                user.failed_login_attempts = 0
+                db.commit()
+                logger.info(f"用户 {alias} 的账户锁定已自动解除")
+
         # 检查用户是否设置了密码
         if not user.password_hash:
             logger.warning(f"别名登录失败：用户 {alias} 未设置密码")
@@ -472,10 +490,26 @@ class AuthService:
             hash_bytes = user.password_hash.encode('utf-8')
 
             if not bcrypt.checkpw(password_bytes, hash_bytes):
-                logger.warning(f"别名登录失败：用户 {alias} 密码错误")
+                # 密码错误，增加失败次数
+                user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
+                user.last_failed_login = datetime.now()
+
+                # 如果失败次数达到5次，锁定账户15分钟
+                if user.failed_login_attempts >= 5:
+                    user.locked_until = datetime.now() + timedelta(minutes=15)
+                    db.commit()
+                    logger.warning(f"别名登录失败：用户 {alias} 密码错误次数过多，账户已锁定15分钟")
+                    return {
+                        "success": False,
+                        "message": "密码错误次数过多，账户已锁定15分钟"
+                    }
+
+                db.commit()
+                remaining_attempts = 5 - user.failed_login_attempts
+                logger.warning(f"别名登录失败：用户 {alias} 密码错误，剩余尝试次数: {remaining_attempts}")
                 return {
                     "success": False,
-                    "message": "用户名或密码错误"
+                    "message": f"用户名或密码错误，剩余尝试次数: {remaining_attempts}"
                 }
         except Exception as e:
             logger.error(f"密码验证异常：{e}")
@@ -483,6 +517,12 @@ class AuthService:
                 "success": False,
                 "message": "登录失败，请稍后重试"
             }
+
+        # 密码正确，重置失败次数
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        user.last_failed_login = None
+        db.commit()
 
         # 检查 Token 状态（仅作提示，不阻止登录）
         token_warning = None

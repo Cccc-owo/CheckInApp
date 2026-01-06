@@ -11,6 +11,7 @@ from backend.config import settings
 from backend.models import init_db
 from backend.exceptions import BaseAPIException
 from backend.schemas.response import ErrorResponse, ErrorDetail
+from backend.limiter import limiter
 
 # 配置日志
 settings.LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -63,6 +64,9 @@ app = FastAPI(
     description="接龙自动打卡系统 API",
     lifespan=lifespan,
 )
+
+# 绑定速率限制器到应用
+app.state.limiter = limiter
 
 # 配置 CORS
 app.add_middleware(
