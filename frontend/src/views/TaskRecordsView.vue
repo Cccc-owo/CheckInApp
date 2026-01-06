@@ -216,12 +216,18 @@ import {
 import Layout from '@/components/Layout.vue';
 import { useTaskStore } from '@/stores/task';
 import { formatDateTime } from '@/utils/helpers';
-import { usePolling } from '@/composables/usePolling';
+import { usePollStatus } from '@/composables/usePollStatus';
 
 const route = useRoute();
 const router = useRouter();
 const taskStore = useTaskStore();
-const { startPolling } = usePolling();
+
+// 使用轮询 composable
+const { startPolling } = usePollStatus({
+  interval: 2000,
+  maxRetries: 15,
+  backoff: false,
+});
 
 const taskId = computed(() => parseInt(route.params.taskId));
 const currentTask = ref(null);
