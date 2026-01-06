@@ -52,8 +52,9 @@ export const useCheckInStore = defineStore('checkIn', {
           limit: this.pageSize,
           ...params,
         });
+        // 后端现在返回 { records, total, skip, limit }
         this.myRecords = data.records || data;
-        this.total = data.total || this.myRecords.length;
+        this.total = data.total || 0;
         return data;
       } catch (error) {
         throw new Error(error.message || '获取打卡记录失败');
@@ -71,8 +72,9 @@ export const useCheckInStore = defineStore('checkIn', {
           limit: this.pageSize,
           ...params,
         });
+        // 后端现在返回 { records, total, skip, limit }
         this.allRecords = data.records || data;
-        this.total = data.total || this.allRecords.length;
+        this.total = data.total || 0;
         return data;
       } catch (error) {
         throw new Error(error.message || '获取打卡记录失败');

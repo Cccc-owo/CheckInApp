@@ -7,6 +7,7 @@ from backend.schemas.check_in import (
     ManualCheckInRequest,
     CheckInRecordResponse,
     CheckInResultResponse,
+    PaginatedResponse,
 )
 from backend.services.check_in_service import CheckInService
 from backend.services.task_service import TaskService
@@ -91,7 +92,7 @@ async def get_check_in_record_status(
     }
 
 
-@router.get("/task/{task_id}/records", response_model=List[CheckInRecordResponse], summary="查看任务的打卡记录")
+@router.get("/task/{task_id}/records", response_model=PaginatedResponse[CheckInRecordResponse], summary="查看任务的打卡记录")
 async def get_task_check_in_records(
     task_id: int,
     skip: int = Query(0, ge=0, description="跳过记录数"),
@@ -120,10 +121,15 @@ async def get_task_check_in_records(
         )
 
     try:
-        records = CheckInService.get_task_records(
+        records, total = CheckInService.get_task_records(
             task_id, db, skip, limit, status_filter, trigger_type
         )
-        return records
+        return PaginatedResponse(
+            records=records,
+            total=total,
+            skip=skip,
+            limit=limit
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -131,7 +137,7 @@ async def get_task_check_in_records(
         )
 
 
-@router.get("/my-records", response_model=List[CheckInRecordResponse], summary="查看当前用户的所有打卡记录")
+@router.get("/my-records", response_model=PaginatedResponse[CheckInRecordResponse], summary="查看当前用户的所有打卡记录")
 async def get_my_check_in_records(
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(100, ge=1, le=500, description="限制记录数"),
@@ -149,10 +155,15 @@ async def get_my_check_in_records(
     - **trigger_type**: 过滤触发类型 (scheduler/manual)
     """
     try:
-        records = CheckInService.get_user_records(
+        records, total = CheckInService.get_user_records(
             current_user.id, db, skip, limit, status_filter, trigger_type
         )
-        return records
+        return PaginatedResponse(
+            records=records,
+            total=total,
+            skip=skip,
+            limit=limit
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -161,7 +172,7 @@ async def get_my_check_in_records(
 
 
 
-@router.get("/records", response_model=List[CheckInRecordResponse], summary="查看所有打卡记录（管理员）")
+@router.get("/records", response_model=PaginatedResponse[CheckInRecordResponse], summary="查看所有打卡记录（管理员）")
 async def get_all_check_in_records(
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(100, ge=1, le=500, description="限制记录数"),
@@ -179,10 +190,15 @@ async def get_all_check_in_records(
     - **status**: 过滤指定状态的记录
     """
     try:
-        records = CheckInService.get_all_records(db, skip, limit, task_id, status_filter)
+        records, total = CheckInService.get_all_records(db, skip, limit, task_id, status_filter)
         # 为每条记录添加用户和任务信息
         enriched_records = [CheckInService.enrich_record_with_user_task_info(record, db) for record in records]
-        return enriched_records
+        return PaginatedResponse(
+            records=enriched_records,
+            total=total,
+            skip=skip,
+            limit=limit
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

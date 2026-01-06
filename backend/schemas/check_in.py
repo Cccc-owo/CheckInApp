@@ -1,6 +1,8 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Generic, TypeVar
 from pydantic import BaseModel, Field, ConfigDict
+
+T = TypeVar('T')
 
 
 class ManualCheckInRequest(BaseModel):
@@ -46,3 +48,11 @@ class CheckInResultResponse(BaseModel):
     message: str
     record_id: Optional[int] = None
     error: Optional[str] = None
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """分页响应 Schema"""
+    records: List[T] = Field(..., description="记录列表")
+    total: int = Field(..., description="总记录数")
+    skip: int = Field(..., description="跳过的记录数")
+    limit: int = Field(..., description="每页记录数")

@@ -432,7 +432,7 @@ class CheckInService:
         limit: int = 100,
         status: Optional[str] = None,
         trigger_type: Optional[str] = None
-    ) -> List[CheckInRecord]:
+    ) -> tuple[List[CheckInRecord], int]:
         """
         获取任务的打卡记录
 
@@ -445,7 +445,7 @@ class CheckInService:
             trigger_type: 过滤触发类型 (scheduler/manual)
 
         Returns:
-            打卡记录列表
+            (打卡记录列表, 总记录数)
         """
         query = db.query(CheckInRecord).filter(CheckInRecord.task_id == task_id)
 
@@ -455,9 +455,15 @@ class CheckInService:
         if trigger_type:
             query = query.filter(CheckInRecord.trigger_type == trigger_type)
 
-        return query.order_by(
+        # 获取总数
+        total = query.count()
+
+        # 获取分页数据
+        records = query.order_by(
             CheckInRecord.check_in_time.desc()
         ).offset(skip).limit(limit).all()
+
+        return records, total
 
     @staticmethod
     def get_user_records(
@@ -467,7 +473,7 @@ class CheckInService:
         limit: int = 100,
         status: Optional[str] = None,
         trigger_type: Optional[str] = None
-    ) -> List[CheckInRecord]:
+    ) -> tuple[List[CheckInRecord], int]:
         """
         获取用户的所有打卡记录
 
@@ -480,7 +486,7 @@ class CheckInService:
             trigger_type: 过滤触发类型 (scheduler/manual)
 
         Returns:
-            打卡记录列表
+            (打卡记录列表, 总记录数)
         """
         # 获取用户的所有任务ID
         user_task_ids = db.query(CheckInTask.id).filter(CheckInTask.user_id == user_id).all()
@@ -495,9 +501,15 @@ class CheckInService:
         if trigger_type:
             query = query.filter(CheckInRecord.trigger_type == trigger_type)
 
-        return query.order_by(
+        # 获取总数
+        total = query.count()
+
+        # 获取分页数据
+        records = query.order_by(
             CheckInRecord.check_in_time.desc()
         ).offset(skip).limit(limit).all()
+
+        return records, total
 
     @staticmethod
     def get_all_records(
@@ -506,7 +518,7 @@ class CheckInService:
         limit: int = 100,
         task_id: Optional[int] = None,
         status: Optional[str] = None
-    ) -> List[CheckInRecord]:
+    ) -> tuple[List[CheckInRecord], int]:
         """
         获取所有打卡记录（管理员）- 使用联表查询优化性能
 
@@ -518,7 +530,7 @@ class CheckInService:
             status: 过滤状态
 
         Returns:
-            打卡记录列表
+            (打卡记录列表, 总记录数)
         """
         from sqlalchemy.orm import joinedload
 
@@ -533,9 +545,15 @@ class CheckInService:
         if status:
             query = query.filter(CheckInRecord.status == status)
 
-        return query.order_by(
+        # 获取总数
+        total = query.count()
+
+        # 获取分页数据
+        records = query.order_by(
             CheckInRecord.check_in_time.desc()
         ).offset(skip).limit(limit).all()
+
+        return records, total
 
     @staticmethod
     def enrich_record_with_user_task_info(record: CheckInRecord, db: Session) -> dict:

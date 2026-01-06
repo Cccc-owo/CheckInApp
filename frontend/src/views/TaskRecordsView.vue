@@ -216,10 +216,12 @@ import {
 import Layout from '@/components/Layout.vue';
 import { useTaskStore } from '@/stores/task';
 import { formatDateTime } from '@/utils/helpers';
+import { usePolling } from '@/composables/usePolling';
 
 const route = useRoute();
 const router = useRouter();
 const taskStore = useTaskStore();
+const { startPolling } = usePolling();
 
 const taskId = computed(() => parseInt(route.params.taskId));
 const currentTask = ref(null);
@@ -297,13 +299,14 @@ const fetchRecords = async () => {
 
     const response = await taskStore.fetchTaskRecords(taskId.value, params);
 
-    // API 可能返回数组或对象
-    if (Array.isArray(response)) {
+    // 后端现在返回 { records, total, skip, limit }
+    if (response.records) {
+      records.value = response.records;
+      total.value = response.total || 0;
+    } else if (Array.isArray(response)) {
+      // 兼容旧格式
       records.value = response;
       total.value = response.length;
-    } else if (response.items) {
-      records.value = response.items;
-      total.value = response.total || response.items.length;
     } else {
       records.value = [];
       total.value = 0;
@@ -319,25 +322,69 @@ const fetchRecords = async () => {
 const handleManualCheckIn = async () => {
   checkInLoading.value = true;
 
-  // 显示持久化通知
-  const hide = message.loading('正在打卡中，请稍候... 您可以继续浏览其他页面', 0);
-
   try {
+    // 调用异步打卡接口，立即返回 record_id
     const result = await taskStore.checkInTask(taskId.value);
-    hide();
 
-    if (result.success) {
-      message.success('打卡成功');
-      // 刷新记录列表
-      await fetchRecords();
-    } else {
-      message.warning(result.message || '打卡失败');
+    // 获取 record_id
+    const recordId = result.record_id;
+    if (!recordId) {
+      message.error('打卡请求失败：未获取到记录ID');
+      checkInLoading.value = false;
+      return;
     }
+
+    // 如果初始状态就是失败，显示错误并刷新记录列表
+    if (result.status === 'failure') {
+      const errorMsg =
+        (result.error_message && result.error_message.trim()) ||
+        (result.response_text && result.response_text.trim()) ||
+        '打卡失败';
+      message.error(errorMsg);
+      checkInLoading.value = false;
+      await fetchRecords();
+      return;
+    }
+
+    // 显示提示消息
+    message.info('打卡任务已启动，正在后台处理...');
+
+    // 使用轮询 composable 检查打卡状态
+    startPolling(
+      async () => {
+        const status = await taskStore.getCheckInRecordStatus(recordId);
+        return {
+          completed: status.status !== 'pending',
+          success: status.status === 'success',
+          data: status,
+        };
+      },
+      {
+        onSuccess: async () => {
+          checkInLoading.value = false;
+          message.success('打卡成功！');
+          await fetchRecords();
+        },
+        onFailure: async statusData => {
+          checkInLoading.value = false;
+          // 优先使用 error_message，如果为空则使用 response_text，都为空则使用默认消息
+          const errorMsg =
+            (statusData.error_message && statusData.error_message.trim()) ||
+            (statusData.response_text && statusData.response_text.trim()) ||
+            '打卡失败';
+          message.error(errorMsg);
+          await fetchRecords();
+        },
+        onTimeout: () => {
+          checkInLoading.value = false;
+          message.warning('打卡处理时间较长，请稍后查看打卡记录');
+        },
+      }
+    );
   } catch (error) {
-    hide();
-    message.error(error.message || '打卡失败');
-  } finally {
+    console.error('启动打卡失败:', error);
     checkInLoading.value = false;
+    message.error(error.message || '启动打卡任务失败');
   }
 };
 

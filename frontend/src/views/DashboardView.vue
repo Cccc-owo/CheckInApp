@@ -418,7 +418,11 @@ const handleCheckIn = async () => {
         },
         onFailure: statusData => {
           checkInLoading.value = false;
-          const errorMsg = statusData.error_message || statusData.response_text || '打卡失败';
+          // 优先使用 error_message，如果为空则使用 response_text，都为空则使用默认消息
+          const errorMsg =
+            (statusData.error_message && statusData.error_message.trim()) ||
+            (statusData.response_text && statusData.response_text.trim()) ||
+            '打卡失败';
           message.error(errorMsg);
           checkInStore.fetchMyRecords({ limit: 1 });
         },
