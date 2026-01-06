@@ -22,7 +22,7 @@ router = APIRouter()
 @limiter.limit("10/minute")  # 每分钟最多10次请求
 async def request_qrcode(
     request_obj: QRCodeRequest,
-    req: Request,
+    request: Request,
     response: Response,
     db: Session = Depends(get_db)
 ):
@@ -37,7 +37,7 @@ async def request_qrcode(
     import secrets
 
     # 检查注册限流 Cookie
-    reg_cookie = req.cookies.get("reg_limit")
+    reg_cookie = request.cookies.get("reg_limit")
 
     if reg_cookie:
         if not registration_manager.check_registration_cookie(reg_cookie):
@@ -51,10 +51,10 @@ async def request_qrcode(
         reg_cookie = secrets.token_urlsafe(16)
 
     # 获取客户端 IP
-    client_ip = req.client.host if req.client else "unknown"
+    client_ip = request.client.host if request.client else "unknown"
 
     # 如果有代理，尝试从 X-Forwarded-For 获取真实 IP
-    forwarded_for = req.headers.get("X-Forwarded-For")
+    forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         client_ip = forwarded_for.split(",")[0].strip()
 
@@ -160,8 +160,8 @@ async def verify_token(
 @router.post("/alias_login", response_model=dict, summary="别名+密码登录")
 @limiter.limit("5/minute")  # 每分钟最多5次登录尝试
 async def alias_login(
-    request: AliasLoginRequest,
-    req: Request,
+    login_data: AliasLoginRequest,
+    request: Request,  # slowapi需要的request参数
     db: Session = Depends(get_db)
 ):
     """
@@ -183,7 +183,7 @@ async def alias_login(
     - 如需更新打卡 token，请使用扫码登录
     """
     try:
-        result = AuthService.alias_login(request.alias, request.password, db)
+        result = AuthService.alias_login(login_data.alias, login_data.password, db)
         return result
     except Exception as e:
         raise HTTPException(
