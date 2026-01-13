@@ -252,9 +252,12 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             }
 
         # 情况4: Token 失效的特征标识 → 失败
-        elif ("登录" in response_text):
-            logger.warning(f"⚠️ 检测到登录失败关键字，Token 可能已失效")
-            # 发送失败邮件通知
+        # 扩展检测条件：检测多种 Token 失效的响应特征
+        elif ("登录" in response_text or "授权" in response_text or
+              "未登录" in response_text or "token" in response_text.lower() or
+              "Unauthorized" in response_text or response.status_code == 401):
+            logger.warning(f"⚠️ 检测到Token失效特征，Token 可能已失效")
+            # 发送打卡失败邮件通知（邮件内容已包含Token失效提醒和刷新指引）
             if task.user and task.user.email:
                 try:
                     from backend.services.email_service import EmailService
@@ -262,13 +265,14 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                         'thread_id': payload.get('ThreadId', '未知'),
                         'name': getattr(task, 'name', '打卡任务')
                     }
+                    # 只发送打卡失败通知（内容已说明Token失效）
                     EmailService.notify_check_in_result(task.user, task_info, False, "Token 已失效，需要重新授权")
                 except Exception as e:
                     logger.error(f"发送打卡失败邮件失败: {e}")
 
             return {
                 "success": False,
-                "status": "failure",
+                "status": "token_expired",  # 特殊状态，用于标识 Token 过期
                 "response_text": response_text,
                 "error_message": "Token 已失效，需要重新授权"
             }

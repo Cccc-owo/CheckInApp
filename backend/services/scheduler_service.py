@@ -199,8 +199,10 @@ def check_token_expiration():
                         else:
                             logger.warning(f"用户 {user.alias} 的打卡 Token 即将过期邮件发送失败")
 
-                # 情况2：Token 已过期（过期后 30 分钟内）
-                elif -1800 < time_until_expiry <= 0:  # 过期后 30 分钟内
+                # 情况2：Token 已过期
+                # 修改逻辑：只要过期就发送提醒（不限制在30分钟内）
+                # 但为了避免频繁发送，使用 token_expired_notified 标志
+                elif time_until_expiry <= 0:  # Token 已过期
                     if user.email and not user.token_expired_notified:
                         logger.info(f"用户 {user.alias} 的打卡 Token 已过期，发送邮件提醒到 {user.email}...")
                         from backend.services.email_service import EmailService

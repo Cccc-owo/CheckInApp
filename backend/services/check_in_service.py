@@ -80,6 +80,11 @@ class CheckInService:
             # 执行打卡
             result = perform_check_in(task, user_token)
 
+            # 如果是 Token 过期导致的失败，标记用户的 token_expired_notified 标志
+            if result["status"] == "token_expired" and task.user:
+                task.user.token_expired_notified = True
+                logger.info(f"标记用户 {task.user.alias} 的 token_expired_notified 为 True")
+
             # 更新记录
             db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update({
                 "status": result["status"],
@@ -263,6 +268,11 @@ class CheckInService:
         # 执行打卡（传递 task 对象和用户 token）
         logger.info(f"🤖 调用 Selenium Worker 执行打卡...")
         result = perform_check_in(task, user.authorization)
+
+        # 如果是 Token 过期导致的失败，标记用户的 token_expired_notified 标志
+        if result["status"] == "token_expired" and user:
+            user.token_expired_notified = True
+            logger.info(f"标记用户 {user.alias} 的 token_expired_notified 为 True")
 
         # 保存打卡记录
         record = CheckInRecord(

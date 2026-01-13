@@ -666,6 +666,33 @@ class EmailService:
 
         subject = f"【接龙自动打卡】打卡{status_text} - {user.alias}"
 
+        # 判断是否是 Token 失效导致的失败
+        is_token_error = not success and message and (
+            "Token" in message or "token" in message or
+            "失效" in message or "授权" in message or "登录" in message
+        )
+
+        # Token 失效时的额外提示内容
+        token_error_section = ""
+        if is_token_error:
+            token_error_section = f"""
+                    <div class="error-box">
+                        <strong>⚠️ 打卡凭证已过期</strong>
+                        <p style="margin: 10px 0;">打卡凭证已过期，无法自动打卡。所有自动打卡任务已暂停，请尽快刷新 Token 以恢复服务。</p>
+                    </div>
+
+                    <p><strong>如何刷新 Token：</strong></p>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>登录系统（扫码或密码登录）</li>
+                        <li>进入"仪表盘"或点击右上角的"刷新 Token"按钮</li>
+                        <li>使用手机 QQ 扫描二维码完成刷新</li>
+                    </ol>
+
+                    <p style="text-align: center; margin-top: 20px;">
+                        <a href="{settings.FRONTEND_URL}/dashboard" class="btn">立即登录刷新</a>
+                    </p>
+            """
+
         body_html = f"""
         <!DOCTYPE html>
         <html>
@@ -714,6 +741,21 @@ class EmailService:
                     color: #999;
                     font-size: 12px;
                 }}
+                .error-box {{
+                    background-color: #f8d7da;
+                    border-left: 4px solid #dc3545;
+                    padding: 15px;
+                    margin: 15px 0;
+                }}
+                .btn {{
+                    display: inline-block;
+                    padding: 12px 24px;
+                    background-color: #667eea;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin: 10px 0;
+                }}
             </style>
         </head>
         <body>
@@ -738,10 +780,10 @@ class EmailService:
                             <td>打卡状态</td>
                             <td><strong style="color: {status_color};">{status_text}</strong></td>
                         </tr>
-                        {f'<tr><td>详细信息</td><td>{message}</td></tr>' if message else ''}
+                        {f'<tr><td>失败原因</td><td>{message}</td></tr>' if message else ''}
                     </table>
 
-                    <p>如有问题，请及时检查您的打卡配置。</p>
+                    {token_error_section if is_token_error else '<p>如有问题，请及时检查您的打卡配置。</p>'}
                 </div>
                 <div class="footer">
                     <p>此邮件由系统自动发送，请勿直接回复。</p>
