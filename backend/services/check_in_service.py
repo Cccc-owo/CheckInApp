@@ -15,6 +15,53 @@ class CheckInService:
     """打卡服务"""
 
     @staticmethod
+    def handle_token_expired(user: User, task: CheckInTask, db: Session) -> None:
+        """
+        处理 Token 过期情况：发送邮件通知并标记标志位
+
+        Args:
+            user: 用户对象
+            task: 打卡任务对象
+            db: 数据库会话
+        """
+        if not user or not user.email:
+            return
+
+        # 检查是否已经发送过通知
+        if user.token_expired_notified:
+            logger.debug(f"用户 {user.alias} 已发送过 Token 过期通知，跳过")
+            return
+
+        try:
+            from backend.services.email_service import EmailService
+
+            # 构建 task_info
+            task_info = {
+                'thread_id': '未知',
+                'name': task.name or f'Task-{task.id}'
+            }
+
+            # 尝试从 payload_config 中获取 ThreadId
+            if task.payload_config:
+                try:
+                    payload = json.loads(task.payload_config)
+                    task_info['thread_id'] = payload.get('ThreadId', '未知')
+                except (json.JSONDecodeError, KeyError):
+                    pass
+
+            # 发送打卡失败通知（内容包含 Token 失效说明和刷新指引）
+            EmailService.notify_check_in_result(user, task_info, False, "Token 已失效，需要重新授权")
+            logger.info(f"已发送 Token 过期邮件到 {user.email}")
+
+            # 标记已发送 Token 过期通知
+            user.token_expired_notified = True
+            db.commit()
+            logger.info(f"标记用户 {user.alias} 的 token_expired_notified 为 True")
+
+        except Exception as e:
+            logger.error(f"处理 Token 过期失败: {e}")
+
+    @staticmethod
     def create_pending_check_in_record(task: CheckInTask, trigger_type: str, db: Session) -> int:
         """
         创建一个待处理的打卡记录并返回 record_id
@@ -80,10 +127,9 @@ class CheckInService:
             # 执行打卡
             result = perform_check_in(task, user_token)
 
-            # 如果是 Token 过期导致的失败，标记用户的 token_expired_notified 标志
+            # 如果是 Token 过期导致的失败，处理 Token 过期情况
             if result["status"] == "token_expired" and task.user:
-                task.user.token_expired_notified = True
-                logger.info(f"标记用户 {task.user.alias} 的 token_expired_notified 为 True")
+                CheckInService.handle_token_expired(task.user, task, db)
 
             # 更新记录
             db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update({
@@ -152,31 +198,8 @@ class CheckInService:
                 "message": error_msg
             }
 
-        # 使用统一的打卡 Token 验证方法
-        from backend.services.auth_service import AuthService
-        token_result = AuthService.verify_checkin_authorization(user)
-
-        if not token_result["is_valid"]:
-            error_msg = token_result["message"]
-            logger.warning(f"⏰ {error_msg} - Task ID: {task.id}")
-
-            record = CheckInRecord(
-                task_id=task.id,
-                status="failure",
-                response_text="",
-                error_message=f"{error_msg}，请重新扫码登录",
-                location="{}",
-                trigger_type=trigger_type
-            )
-            db.add(record)
-            db.commit()
-            db.refresh(record)
-
-            return {
-                "record_id": record.id,
-                "status": "failure",
-                "message": f"{error_msg}，请重新扫码登录"
-            }
+        # 不再提前验证 Token，交给统一的打卡逻辑处理
+        # 这样可以确保所有错误（包括 Token 过期）都通过统一的流程处理
 
         # 创建待处理记录
         record_id = CheckInService.create_pending_check_in_record(task, trigger_type, db)
@@ -246,10 +269,13 @@ class CheckInService:
             error_msg = token_result["message"]
             logger.warning(f"⏰ {error_msg} - 用户: {user.alias}, Task ID: {task.id}")
 
+            # 处理 Token 过期：发送邮件并标记
+            CheckInService.handle_token_expired(user, task, db)
+
             # 记录失败
             record = CheckInRecord(
                 task_id=task.id,
-                status="failure",
+                status="token_expired",  # 使用统一的状态标识
                 response_text="",
                 error_message=error_msg,
                 location="{}",
@@ -269,10 +295,9 @@ class CheckInService:
         logger.info(f"🤖 调用 Selenium Worker 执行打卡...")
         result = perform_check_in(task, user.authorization)
 
-        # 如果是 Token 过期导致的失败，标记用户的 token_expired_notified 标志
+        # 如果是 Token 过期导致的失败，处理 Token 过期情况
         if result["status"] == "token_expired" and user:
-            user.token_expired_notified = True
-            logger.info(f"标记用户 {user.alias} 的 token_expired_notified 为 True")
+            CheckInService.handle_token_expired(user, task, db)
 
         # 保存打卡记录
         record = CheckInRecord(
