@@ -59,9 +59,10 @@ def get_session_status(session_id: str) -> str:
                 content = f.read()
                 if not content:
                     return None
-                data = json.loads(content)
+                from backend.utils.json_helpers import safe_parse_json
+                data = safe_parse_json(content, {})
         return data.get('status')
-    except (IOError, json.JSONDecodeError) as e:
+    except IOError as e:
         logger.error(f"读取会话文件 {filepath} 失败: {e}")
         return None
 
@@ -80,8 +81,9 @@ def get_session_data(session_id: str) -> dict:
                 content = f.read()
                 if not content:
                     return None
-                return json.loads(content)
-    except (IOError, json.JSONDecodeError) as e:
+                from backend.utils.json_helpers import safe_parse_json
+                return safe_parse_json(content, {})
+    except IOError as e:
         logger.error(f"读取会话文件 {filepath} 失败: {e}")
         return None
 
@@ -106,11 +108,13 @@ def cancel_session(session_id: str) -> bool:
     try:
         with FileLock(lock_path, timeout=5):
             # 读取当前会话数据
+            from backend.utils.json_helpers import safe_parse_json
+
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
                 if not content:
                     return False
-                data = json.loads(content)
+                data = safe_parse_json(content, {})
 
             # 如果已经成功,不允许取消
             if data.get('status') == 'success':

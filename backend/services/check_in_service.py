@@ -2,7 +2,6 @@ import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
-import json
 import threading
 
 from backend.models import User, CheckInTask, CheckInRecord
@@ -34,20 +33,10 @@ class CheckInService:
 
         try:
             from backend.services.email_service import EmailService
+            from backend.utils.json_helpers import build_task_info
 
-            # 构建 task_info
-            task_info = {
-                'thread_id': '未知',
-                'name': task.name or f'Task-{task.id}'
-            }
-
-            # 尝试从 payload_config 中获取 ThreadId
-            if task.payload_config:
-                try:
-                    payload = json.loads(task.payload_config)
-                    task_info['thread_id'] = payload.get('ThreadId', '未知')
-                except (json.JSONDecodeError, KeyError):
-                    pass
+            # 使用辅助函数构建 task_info
+            task_info = build_task_info(task)
 
             # 发送打卡失败通知（内容包含 Token 失效说明和刷新指引）
             EmailService.notify_check_in_result(user, task_info, False, "Token 已失效，需要重新授权")
@@ -553,12 +542,8 @@ class CheckInService:
             task_name = task.name
 
             # 从 payload_config 提取 ThreadId
-            try:
-                payload = json.loads(str(task.payload_config))
-                thread_id = payload.get('ThreadId')
-            except (json.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
-                logger.debug(f"解析任务 {task.id} 的 payload_config 失败: {e}")
-                pass
+            from backend.utils.json_helpers import extract_thread_id
+            thread_id = extract_thread_id(task.payload_config)  # type: ignore
 
         # 转换为字典并添加额外字段
         record_dict = {

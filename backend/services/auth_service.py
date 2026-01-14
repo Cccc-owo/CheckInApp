@@ -381,6 +381,14 @@ class AuthService:
         Returns:
             包含打卡 token 验证结果的字典
         """
+        from backend.utils.time_helpers import (
+            parse_jwt_exp,
+            is_timestamp_expired,
+            days_until_expiry,
+            minutes_until_expiry,
+            seconds_until_expiry
+        )
+
         # 检查是否有 authorization token
         if not user.authorization or user.authorization == "":
             return {
@@ -389,51 +397,41 @@ class AuthService:
                 "reason": "no_token"
             }
 
-        # 检查 Token 是否过期
-        if not user.jwt_exp or user.jwt_exp == "0":
+        # 解析 jwt_exp
+        exp_timestamp = parse_jwt_exp(user.jwt_exp)
+        if not exp_timestamp:
             return {
                 "is_valid": False,
                 "message": "打卡凭证无效",
                 "reason": "invalid_expiry"
             }
 
-        try:
-            exp_timestamp = int(user.jwt_exp)
-            current_timestamp = int(datetime.now().timestamp())
-
-            if current_timestamp > exp_timestamp:
-                days_expired = (current_timestamp - exp_timestamp) // 86400
-                return {
-                    "is_valid": False,
-                    "message": f"打卡凭证已过期 {days_expired} 天",
-                    "reason": "expired",
-                    "days_expired": days_expired
-                }
-
-            # 计算剩余时间
-            seconds_remaining = exp_timestamp - current_timestamp
-            days_remaining = seconds_remaining // 86400
-            minutes_remaining = seconds_remaining // 60
-
-            # 判断是否即将过期（30分钟内）
-            expiring_soon = minutes_remaining <= 30
-
-            return {
-                "is_valid": True,
-                "message": "打卡凭证有效",
-                "days_remaining": days_remaining,
-                "minutes_remaining": minutes_remaining,
-                "expiring_soon": expiring_soon,
-                "expires_at": exp_timestamp
-            }
-
-        except ValueError:
-            logger.error(f"用户 {user.id} 的 jwt_exp 格式不正确: {user.jwt_exp}")
+        # 检查是否过期
+        if is_timestamp_expired(exp_timestamp):
+            days_expired = abs(days_until_expiry(exp_timestamp))
             return {
                 "is_valid": False,
-                "message": "打卡凭证格式错误",
-                "reason": "invalid_format"
+                "message": f"打卡凭证已过期 {days_expired} 天",
+                "reason": "expired",
+                "days_expired": days_expired
             }
+
+        # Token 有效，计算剩余时间
+        seconds_remaining = seconds_until_expiry(exp_timestamp)
+        days_remaining = days_until_expiry(exp_timestamp)
+        minutes_remaining = minutes_until_expiry(exp_timestamp)
+
+        # 判断是否即将过期（30分钟内）
+        expiring_soon = minutes_remaining <= 30
+
+        return {
+            "is_valid": True,
+            "message": "打卡凭证有效",
+            "days_remaining": days_remaining,
+            "minutes_remaining": minutes_remaining,
+            "expiring_soon": expiring_soon,
+            "expires_at": exp_timestamp
+        }
 
     @staticmethod
     def alias_login(alias: str, password: str, db: Session) -> Dict[str, Any]:
@@ -532,15 +530,12 @@ class AuthService:
             token_warning = "token_invalid"
         else:
             # 检查 Token 是否过期
-            try:
-                exp_timestamp = int(user.jwt_exp)
-                current_timestamp = int(datetime.now().timestamp())
+            from backend.utils.time_helpers import parse_jwt_exp, is_timestamp_expired
 
-                if current_timestamp > exp_timestamp:
-                    logger.info(f"用户 {alias} Token 已过期，允许密码登录但需提示用户更新")
-                    token_warning = "token_expired"
-            except ValueError:
-                logger.error(f"用户 {user.id} 的 jwt_exp 格式不正确: {user.jwt_exp}")
+            exp_timestamp = parse_jwt_exp(user.jwt_exp)
+            if exp_timestamp and is_timestamp_expired(exp_timestamp):
+                logger.info(f"用户 {alias} Token 已过期，允许密码登录但需提示用户更新")
+                token_warning = "token_expired"
 
         # 登录成功
         logger.info(f"✅ 用户 {alias} (ID: {user.id}) 别名登录成功")

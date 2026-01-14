@@ -428,12 +428,10 @@ class EmailService:
             return False
 
         # 计算剩余时间
-        try:
-            exp_timestamp = int(jwt_exp)
-            current_timestamp = int(datetime.now().timestamp())
-            minutes_left = (exp_timestamp - current_timestamp) // 60
-        except ValueError:
-            minutes_left = 0
+        from backend.utils.time_helpers import parse_jwt_exp, minutes_until_expiry
+
+        exp_timestamp = parse_jwt_exp(jwt_exp)
+        minutes_left = minutes_until_expiry(exp_timestamp) if exp_timestamp else 0
 
         # 构建邮件内容
         subject = f"【接龙自动打卡系统】登录凭证即将过期 - {user.alias}"

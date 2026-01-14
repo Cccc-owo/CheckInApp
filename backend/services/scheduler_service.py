@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-from datetime import datetime
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -154,6 +153,8 @@ def check_token_expiration():
     检查所有用户的打卡 authorization token，如果在 30 分钟内过期，发送提醒邮件
     注意：检查的是打卡业务 token，不是网站登录 JWT token
     """
+    from backend.utils.time_helpers import seconds_until_expiry
+
     logger.info("Scheduler: 正在执行打卡 Token 过期检查...")
 
     try:
@@ -165,8 +166,6 @@ def check_token_expiration():
             from backend.services.auth_service import AuthService
 
             users = db.query(User).all()
-            current_timestamp = int(datetime.now().timestamp())
-
             notified_count = 0
 
             for user in users:
@@ -178,7 +177,7 @@ def check_token_expiration():
                 if not exp_timestamp:
                     continue
 
-                time_until_expiry = exp_timestamp - current_timestamp
+                time_until_expiry = seconds_until_expiry(exp_timestamp)
 
                 # 情况1：Token 即将过期（过期前 30 分钟内，且还未过期）
                 if 0 < time_until_expiry < 1800:  # 30分钟 = 1800秒

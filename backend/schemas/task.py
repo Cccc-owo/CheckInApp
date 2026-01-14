@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Optional
-import json
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -16,25 +15,23 @@ class TaskBase(BaseModel):
         """
         验证 payload_config 是否为有效的 JSON，并且包含必需的 ThreadId 字段
         """
+        from backend.utils.json_helpers import safe_parse_json, extract_thread_id
+
         if not v or not v.strip():
             raise ValueError("payload_config 不能为空")
 
-        try:
-            payload = json.loads(v)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"payload_config 必须是有效的 JSON 格式: {str(e)}")
+        payload = safe_parse_json(v)
+        if payload is None:
+            raise ValueError("payload_config 必须是有效的 JSON 格式")
 
         # 检查是否为字典类型
         if not isinstance(payload, dict):
             raise ValueError("payload_config 必须是 JSON 对象（字典）")
 
         # 检查必需字段 ThreadId
-        if 'ThreadId' not in payload:
-            raise ValueError("payload_config 必须包含 ThreadId 字段")
-
-        thread_id = payload.get('ThreadId')
+        thread_id = extract_thread_id(v)
         if not thread_id or not str(thread_id).strip():
-            raise ValueError("ThreadId 不能为空")
+            raise ValueError("payload_config 必须包含有效的 ThreadId 字段")
 
         return v
 
@@ -84,28 +81,26 @@ class TaskUpdate(BaseModel):
         """
         验证 payload_config 是否为有效的 JSON（如果提供的话）
         """
+        from backend.utils.json_helpers import safe_parse_json, extract_thread_id
+
         if v is None:
             return v
 
         if not v.strip():
             raise ValueError("payload_config 不能为空字符串")
 
-        try:
-            payload = json.loads(v)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"payload_config 必须是有效的 JSON 格式: {str(e)}")
+        payload = safe_parse_json(v)
+        if payload is None:
+            raise ValueError("payload_config 必须是有效的 JSON 格式")
 
         # 检查是否为字典类型
         if not isinstance(payload, dict):
             raise ValueError("payload_config 必须是 JSON 对象（字典）")
 
         # 检查必需字段 ThreadId
-        if 'ThreadId' not in payload:
-            raise ValueError("payload_config 必须包含 ThreadId 字段")
-
-        thread_id = payload.get('ThreadId')
+        thread_id = extract_thread_id(v)
         if not thread_id or not str(thread_id).strip():
-            raise ValueError("ThreadId 不能为空")
+            raise ValueError("payload_config 必须包含有效的 ThreadId 字段")
 
         return v
 

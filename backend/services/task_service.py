@@ -2,7 +2,6 @@ import logging
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-import json
 
 from backend.models import User, CheckInTask, CheckInRecord
 from backend.schemas.task import TaskCreate, TaskUpdate
@@ -34,35 +33,26 @@ class TaskService:
             raise ValueError(f"用户 ID {user_id} 不存在")
 
         # 2. 从 payload_config 中提取 ThreadId 用于唯一性校验
-        try:
-            payload = json.loads(task_data.payload_config)
-            thread_id = payload.get('ThreadId')
-            if not thread_id:
-                raise ValueError("payload_config 中缺少 ThreadId")
-        except json.JSONDecodeError:
-            raise ValueError("payload_config 格式错误，必须是有效的 JSON")
+        from backend.utils.json_helpers import safe_parse_payload, extract_thread_id
+
+        payload = safe_parse_payload(task_data.payload_config)
+        thread_id = payload.get('ThreadId')
+        if not thread_id:
+            raise ValueError("payload_config 中缺少 ThreadId")
 
         # 3. 验证唯一性：同一用户在同一个接龙中不能有重复的任务
-        # 优化：只查询必要的字段（id 和 payload_config），避免加载完整对象
         existing_tasks = db.query(
-            CheckInTask.id,
             CheckInTask.payload_config
         ).filter(
             CheckInTask.user_id == user_id
         ).all()
 
-        for task_id, payload_config in existing_tasks:
-            try:
-                existing_payload = json.loads(payload_config)
-                if existing_payload.get('ThreadId') == thread_id:
-                    logger.warning(f"⚠️ 任务创建冲突 - User: {user.alias}({user_id}), ThreadId: {thread_id}")
-                    raise ValueError(
-                        f"该接龙中已存在任务。ThreadId: {thread_id}"
-                    )
-            except (json.JSONDecodeError, AttributeError, TypeError):
-                # 跳过无法解析的 payload_config
-                logger.debug(f"跳过无法解析的任务配置 - Task ID: {task_id}")
-                continue
+        for (payload_config,) in existing_tasks:
+            existing_thread_id = extract_thread_id(payload_config)
+            # extract_thread_id 已处理异常，失败时返回 None
+            if existing_thread_id and existing_thread_id == thread_id:
+                logger.warning(f"⚠️ 任务创建冲突 - User: {user.alias}({user_id}), ThreadId: {thread_id}")
+                raise ValueError(f"该接龙中已存在任务。ThreadId: {thread_id}")
 
         # 4. 记录日志
         task_name = task_data.name or f"接龙任务 {thread_id}"
@@ -118,19 +108,15 @@ class TaskService:
         Returns:
             包含额外信息的任务字典
         """
+        from backend.utils.json_helpers import extract_thread_id
+
         # 获取最后一次打卡记录
         last_record = db.query(CheckInRecord).filter(
             CheckInRecord.task_id == task.id
         ).order_by(desc(CheckInRecord.check_in_time)).first()
 
         # 从 payload_config 提取 ThreadId
-        thread_id = None
-        try:
-            payload = json.loads(str(task.payload_config))
-            thread_id = payload.get('ThreadId')
-        except (json.JSONDecodeError, AttributeError, TypeError):
-            logger.debug(f"无法从任务 {task.id} 的 payload_config 中提取 ThreadId")
-            pass
+        thread_id = extract_thread_id(task.payload_config)  # type: ignore
 
         # 转换为字典并添加额外字段
         task_dict = {

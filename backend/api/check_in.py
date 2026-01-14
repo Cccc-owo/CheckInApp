@@ -66,13 +66,10 @@ async def get_check_in_record_status(
 
     返回状态：pending（进行中）、success（成功）、failure（失败）
     """
+    from backend.utils.db_helpers import get_or_404
+
     # 获取打卡记录
-    record = db.query(CheckInRecord).filter(CheckInRecord.id == record_id).first()
-    if not record:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="打卡记录不存在"
-        )
+    record = get_or_404(CheckInRecord, record_id, db, "打卡记录不存在")
 
     # 验证记录归属（通过任务归属）
     if not TaskService.verify_task_ownership(record.task_id, current_user.id, db):

@@ -52,20 +52,11 @@ async def get_task(
 
     需要验证任务属于当前用户
     """
-    # 验证任务归属
-    if not TaskService.verify_task_ownership(task_id, current_user.id, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问此任务"
-        )
+    from backend.models import CheckInTask
+    from backend.utils.db_helpers import get_owned_or_403
 
-    task = TaskService.get_task(task_id, db)
-
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="任务不存在"
-        )
+    # 获取任务并验证归属
+    task = get_owned_or_403(CheckInTask, task_id, current_user.id, db)  # type: ignore
 
     return task
 
@@ -82,12 +73,11 @@ async def update_task(
 
     需要验证任务属于当前用户
     """
-    # 验证任务归属
-    if not TaskService.verify_task_ownership(task_id, current_user.id, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问此任务"
-        )
+    from backend.models import CheckInTask
+    from backend.utils.db_helpers import get_owned_or_403
+
+    # 验证任务归属并获取任务
+    get_owned_or_403(CheckInTask, task_id, current_user.id, db)  # type: ignore
 
     task = TaskService.update_task(task_id, task_data, db)
 
@@ -111,12 +101,11 @@ async def delete_task(
 
     需要验证任务属于当前用户，删除后会同时删除所有关联的打卡记录
     """
+    from backend.models import CheckInTask
+    from backend.utils.db_helpers import get_owned_or_403
+
     # 验证任务归属
-    if not TaskService.verify_task_ownership(task_id, current_user.id, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问此任务"
-        )
+    get_owned_or_403(CheckInTask, task_id, current_user.id, db)  # type: ignore
 
     success = TaskService.delete_task(task_id, db)
 
@@ -138,12 +127,11 @@ async def toggle_task(
 
     需要验证任务属于当前用户
     """
+    from backend.models import CheckInTask
+    from backend.utils.db_helpers import get_owned_or_403
+
     # 验证任务归属
-    if not TaskService.verify_task_ownership(task_id, current_user.id, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问此任务"
-        )
+    get_owned_or_403(CheckInTask, task_id, current_user.id, db)  # type: ignore
 
     task = TaskService.toggle_task(task_id, db)
 

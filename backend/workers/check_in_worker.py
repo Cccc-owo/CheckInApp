@@ -132,12 +132,10 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             - error_message: 错误信息
     """
     # 从 payload_config 中提取 Signature 用于日志
-    try:
-        payload_dict = json.loads(task.payload_config) if task.payload_config else {}
-        signature = payload_dict.get('Signature', 'Unknown')
-    except (json.JSONDecodeError, KeyError, TypeError, AttributeError) as e:
-        logger.debug(f"解析任务 {task.id} 的 payload_config 失败: {e}")
-        signature = 'Unknown'
+    from backend.utils.json_helpers import safe_parse_payload, extract_signature
+
+    payload_dict = safe_parse_payload(task.payload_config)
+    signature = extract_signature(task.payload_config) or 'Unknown'
 
     logger.info(f"Selenium打卡: 正在为任务 ID: {task.id} (Signature: {signature}) 执行打卡...")
 
@@ -165,9 +163,12 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
 
     try:
         # 使用任务的 payload_config（从模板生成的完整配置，包含 ThreadId）
-        payload = json.loads(task.payload_config) if task.payload_config else {}
+        from backend.utils.json_helpers import safe_parse_payload, extract_thread_id
 
-        if not payload.get('ThreadId'):
+        payload = safe_parse_payload(task.payload_config)
+        thread_id = extract_thread_id(task.payload_config)
+
+        if not thread_id:
             error_msg = f"任务 ID: {task.id} 的 payload_config 缺少 ThreadId"
             logger.error(error_msg)
             return {
@@ -261,10 +262,11 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             if task.user and task.user.email:
                 try:
                     from backend.services.email_service import EmailService
-                    task_info = {
-                        'thread_id': payload.get('ThreadId', '未知'),
-                        'name': getattr(task, 'name', '打卡任务')
-                    }
+                    from backend.utils.json_helpers import build_task_info
+
+                    # 使用辅助函数构建 task_info（从 task 对象提取信息）
+                    task_info = build_task_info(task)
+
                     # 只发送打卡失败通知（内容已说明Token失效）
                     EmailService.notify_check_in_result(task.user, task_info, False, "Token 已失效，需要重新授权")
                 except Exception as e:

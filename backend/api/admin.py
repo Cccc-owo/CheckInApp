@@ -189,7 +189,9 @@ async def get_system_stats(
 
         # Token 即将过期的用户数（7天内）
         # 使用 SQL 直接查询，避免 N+1 问题
-        current_timestamp = int(datetime.now().timestamp())
+        from backend.utils.time_helpers import now_timestamp
+
+        current_timestamp = now_timestamp()
         expiring_soon_timestamp = current_timestamp + (7 * 24 * 60 * 60)  # 7天后
 
         # 直接在数据库层面筛选即将过期的用户
