@@ -235,34 +235,6 @@ def check_token_expiration():
         logger.error(f"Scheduler: Token 过期检查任务发生错误: {e}", exc_info=True)
 
 
-def scheduled_check_in():
-    """
-    定时打卡任务：每天定时为所有启用的任务执行打卡
-    """
-    logger.info("Scheduler: 开始执行定时打卡任务...")
-
-    try:
-        # 创建数据库会话
-        db = next(get_db())
-
-        try:
-            result = CheckInService.scheduled_check_in_all_active_tasks(db)
-
-            logger.info(
-                f"Scheduler: 定时打卡任务完成，"
-                f"总计: {result['total']}, "
-                f"成功: {result['success']}, "
-                f"失败: {result['failure']}, "
-                f"跳过: {result['skipped']}"
-            )
-
-        finally:
-            db.close()
-
-    except Exception as e:
-        logger.error(f"Scheduler: 定时打卡任务发生错误: {e}", exc_info=True)
-
-
 def cleanup_old_sessions():
     """
     清理旧的会话文件
