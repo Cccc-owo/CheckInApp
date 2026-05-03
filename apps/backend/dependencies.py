@@ -11,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 async def get_current_user(
-    authorization: Optional[str] = Header(None),
-    db: Session = Depends(get_db)
+    authorization: Optional[str] = Header(None), db: Session = Depends(get_db)
 ) -> User:
     """
     获取当前用户（使用 JWT 认证）
@@ -30,7 +29,11 @@ async def get_current_user(
         )
 
     # 移除 "Bearer " 前缀（如果存在）
-    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+    token = (
+        authorization.replace("Bearer ", "")
+        if authorization.startswith("Bearer ")
+        else authorization
+    )
 
     try:
         # 验证 JWT token
@@ -77,39 +80,33 @@ async def get_current_user(
         )
 
 
-async def require_approved_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
+async def require_approved_user(current_user: User = Depends(get_current_user)) -> User:
     """
     要求用户已通过审批
     """
     if not current_user.is_approved:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="您的账户正在等待管理员审批，请耐心等待（24小时内）"
+            detail="您的账户正在等待管理员审批，请耐心等待（24小时内）",
         )
 
     return current_user
 
 
-async def get_current_admin_user(
-    current_user: User = Depends(require_approved_user)
-) -> User:
+async def get_current_admin_user(current_user: User = Depends(require_approved_user)) -> User:
     """
     获取当前管理员用户
     验证用户是否具有管理员权限
     """
     if current_user.role != "admin":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="权限不足，需要管理员权限"
+            status_code=status.HTTP_403_FORBIDDEN, detail="权限不足，需要管理员权限"
         )
     return current_user
 
 
 async def get_optional_user(
-    authorization: Optional[str] = Header(None),
-    db: Session = Depends(get_db)
+    authorization: Optional[str] = Header(None), db: Session = Depends(get_db)
 ) -> Optional[User]:
     """
     可选的用户认证

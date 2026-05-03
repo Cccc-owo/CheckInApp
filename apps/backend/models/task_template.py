@@ -6,6 +6,7 @@ from backend.models.database import Base
 
 class TaskTemplate(Base):
     """打卡任务模板"""
+
     __tablename__ = "task_templates"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -13,7 +14,12 @@ class TaskTemplate(Base):
     description = Column(Text, nullable=True, comment="模板描述")
 
     # 父模板 ID（用于继承）
-    parent_id = Column(Integer, ForeignKey("task_templates.id", ondelete="SET NULL"), nullable=True, comment="父模板 ID")
+    parent_id = Column(
+        Integer,
+        ForeignKey("task_templates.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="父模板 ID",
+    )
 
     # 字段配置（JSON 格式）
     field_config = Column(Text, nullable=False, comment="字段配置（JSON）")

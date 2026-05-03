@@ -42,17 +42,17 @@ def get_live_x_api_payload(auth_token: str) -> str:
         chrome_options.binary_location = CHROME_BINARY_PATH
 
     # 开启性能日志记录功能
-    logging_prefs = {'performance': 'ALL'}
-    chrome_options.set_capability('goog:loggingPrefs', logging_prefs)
+    logging_prefs = {"performance": "ALL"}
+    chrome_options.set_capability("goog:loggingPrefs", logging_prefs)
 
     # Headless 模式配置
     user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-    chrome_options.add_argument(f'user-agent={user_agent}')
+    chrome_options.add_argument(f"user-agent={user_agent}")
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument("--ignore-certificate-errors")
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
     driver = webdriver.Chrome(service=service, options=chrome_options)
@@ -63,11 +63,7 @@ def get_live_x_api_payload(auth_token: str) -> str:
         driver.get("https://i.jielong.com/my-class")
 
         # 注入长期 Token
-        driver.add_cookie({
-            'name': 'token',
-            'value': auth_token,
-            'domain': '.jielong.com'
-        })
+        driver.add_cookie({"name": "token", "value": auth_token, "domain": ".jielong.com"})
 
         # 导航到触发 API 的页面
         driver.get("https://i.jielong.com/my-form")
@@ -78,14 +74,14 @@ def get_live_x_api_payload(auth_token: str) -> str:
         found = False
 
         while time.time() - start_time < max_wait_time:
-            logs = driver.get_log('performance')
+            logs = driver.get_log("performance")
             for entry in logs:
-                log = json.loads(entry['message'])['message']
-                if log['method'] == 'Network.requestWillBeSent':
-                    headers = log.get('params', {}).get('request', {}).get('headers', {})
+                log = json.loads(entry["message"])["message"]
+                if log["method"] == "Network.requestWillBeSent":
+                    headers = log.get("params", {}).get("request", {}).get("headers", {})
                     headers_lower = {k.lower(): v for k, v in headers.items()}
-                    if 'x-api-request-payload' in headers_lower:
-                        payload_signature = headers_lower['x-api-request-payload']
+                    if "x-api-request-payload" in headers_lower:
+                        payload_signature = headers_lower["x-api-request-payload"]
                         logger.info("成功通过网络日志捕获到现场的 x-api-request-payload！")
                         found = True
                         break
@@ -94,12 +90,14 @@ def get_live_x_api_payload(auth_token: str) -> str:
             time.sleep(1)
 
         if not payload_signature:
-            raise Exception(f"在 {max_wait_time} 秒内未能通过网络日志捕获到 x-api-request-payload。")
+            raise Exception(
+                f"在 {max_wait_time} 秒内未能通过网络日志捕获到 x-api-request-payload。"
+            )
 
     except Exception as e:
         logger.error(f"获取现场 x-api-request-payload 时失败: {e}")
         try:
-            debug_screenshot = os.path.join(settings.BASE_DIR, 'payload_debug.png')
+            debug_screenshot = os.path.join(settings.BASE_DIR, "payload_debug.png")
             driver.save_screenshot(debug_screenshot)
         except Exception as screenshot_error:
             logger.warning(f"保存调试截图失败: {screenshot_error}")
@@ -135,7 +133,7 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
     from backend.utils.json_helpers import safe_parse_payload, extract_signature
 
     payload_dict = safe_parse_payload(task.payload_config)
-    signature = extract_signature(task.payload_config) or 'Unknown'
+    signature = extract_signature(task.payload_config) or "Unknown"
 
     logger.info(f"Selenium打卡: 正在为任务 ID: {task.id} (Signature: {signature}) 执行打卡...")
 
@@ -146,7 +144,7 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             "success": False,
             "status": "failure",
             "response_text": "",
-            "error_message": error_msg
+            "error_message": error_msg,
         }
 
     # 获取 x-api-request-payload
@@ -158,7 +156,7 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             "success": False,
             "status": "failure",
             "response_text": "",
-            "error_message": error_msg
+            "error_message": error_msg,
         }
 
     try:
@@ -175,19 +173,19 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "success": False,
                 "status": "failure",
                 "response_text": "",
-                "error_message": error_msg
+                "error_message": error_msg,
             }
 
         headers = {
-            'User-Agent': "Mozilla%2f5.0+(Linux%3b+Android+16%3b+wv)+AppleWebKit%2f537.36+(KHTML%2c+like+Gecko)+Chrome%2f142.0.0.0+Safari%2f537.36+QQ%2f9.2.30.31620+QQ%2fMiniApp",
-            'Accept-Encoding': "gzip",
-            'Content-Type': "application/json",
-            'authorization': f"Bearer {user_token}",
-            'x-api-request-referer': "https://appservice.qq.com/1110276759",
-            'x-api-request-payload': payload_signature,
-            'referer': "https://appservice.qq.com/1110276759/8.10.1.7/page-frame.html",
-            'platform': "qq",
-            'x-api-request-mode': "cors",
+            "User-Agent": "Mozilla%2f5.0+(Linux%3b+Android+16%3b+wv)+AppleWebKit%2f537.36+(KHTML%2c+like+Gecko)+Chrome%2f142.0.0.0+Safari%2f537.36+QQ%2f9.2.30.31620+QQ%2fMiniApp",
+            "Accept-Encoding": "gzip",
+            "Content-Type": "application/json",
+            "authorization": f"Bearer {user_token}",
+            "x-api-request-referer": "https://appservice.qq.com/1110276759",
+            "x-api-request-payload": payload_signature,
+            "referer": "https://appservice.qq.com/1110276759/8.10.1.7/page-frame.html",
+            "platform": "qq",
+            "x-api-request-mode": "cors",
         }
 
         url = "https://api.jielong.com/api/CheckIn/EditRecord"
@@ -203,7 +201,9 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
         response.raise_for_status()
         response_text = response.text
 
-        logger.info(f"✉️ 任务 ID: {task.id} (Signature: {signature}) 打卡请求完成！响应: {response_text}")
+        logger.info(
+            f"✉️ 任务 ID: {task.id} (Signature: {signature}) 打卡请求完成！响应: {response_text}"
+        )
 
         # 判断响应内容（参考 V1 实现逻辑）
         # 情况1: 明确包含"打卡成功" → 成功
@@ -213,9 +213,10 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             if task.user and task.user.email:
                 try:
                     from backend.services.email_service import EmailService
+
                     task_info = {
-                        'thread_id': payload.get('ThreadId', '未知'),
-                        'name': getattr(task, 'name', '打卡任务')
+                        "thread_id": payload.get("ThreadId", "未知"),
+                        "name": getattr(task, "name", "打卡任务"),
                     }
                     EmailService.notify_check_in_result(task.user, task_info, True, "打卡成功")
                 except Exception as e:
@@ -225,38 +226,45 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "success": True,
                 "status": "success",
                 "response_text": response_text,
-                "error_message": ""
+                "error_message": "",
             }
 
         # 情况2: 已经提交过了（重复提交）→ 视为成功，但不发送邮件
         # 匹配 "已被提交" 或 "已经打卡"
-        elif ("已被提交" in response_text or "已经打卡" in response_text or
-              "重复提交" in response_text):
+        elif (
+            "已被提交" in response_text
+            or "已经打卡" in response_text
+            or "重复提交" in response_text
+        ):
             logger.info(f"✅ 检测到'已被提交'，本次打卡已完成（重复提交，不发送邮件）")
             return {
                 "success": True,
                 "status": "success",
                 "response_text": response_text,
-                "error_message": ""
+                "error_message": "",
             }
 
         # 情况3: 不在打卡时间范围 → 标记为时间范围外
         # 匹配 Data 或 Description 中的内容
-        elif ("不在打卡时间范围" in response_text or
-              "不在打卡时间" in response_text):
+        elif "不在打卡时间范围" in response_text or "不在打卡时间" in response_text:
             logger.warning(f"⏰ 检测到'不在打卡时间范围'，打卡时间不符")
             return {
                 "success": False,
                 "status": "out_of_time",
                 "response_text": response_text,
-                "error_message": "不在打卡时间范围内"
+                "error_message": "不在打卡时间范围内",
             }
 
         # 情况4: Token 失效的特征标识 → 失败
         # 扩展检测条件：检测多种 Token 失效的响应特征
-        elif ("登录" in response_text or "授权" in response_text or
-              "未登录" in response_text or "token" in response_text.lower() or
-              "Unauthorized" in response_text or response.status_code == 401):
+        elif (
+            "登录" in response_text
+            or "授权" in response_text
+            or "未登录" in response_text
+            or "token" in response_text.lower()
+            or "Unauthorized" in response_text
+            or response.status_code == 401
+        ):
             logger.warning(f"⚠️ 检测到Token失效特征，Token 可能已失效")
             # 发送打卡失败邮件通知（邮件内容已包含Token失效提醒和刷新指引）
             if task.user and task.user.email:
@@ -268,7 +276,9 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                     task_info = build_task_info(task)
 
                     # 只发送打卡失败通知（内容已说明Token失效）
-                    EmailService.notify_check_in_result(task.user, task_info, False, "Token 已失效，需要重新授权")
+                    EmailService.notify_check_in_result(
+                        task.user, task_info, False, "Token 已失效，需要重新授权"
+                    )
                 except Exception as e:
                     logger.error(f"发送打卡失败邮件失败: {e}")
 
@@ -276,7 +286,7 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "success": False,
                 "status": "token_expired",  # 特殊状态，用于标识 Token 过期
                 "response_text": response_text,
-                "error_message": "Token 已失效，需要重新授权"
+                "error_message": "Token 已失效，需要重新授权",
             }
 
         # 情况5: 其他响应 → 需要人工确认（标记为异常）
@@ -287,7 +297,7 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "success": False,
                 "status": "unknown",
                 "response_text": response_text,
-                "error_message": "未识别的响应，请人工确认"
+                "error_message": "未识别的响应，请人工确认",
             }
 
     except requests.exceptions.RequestException as e:
@@ -303,15 +313,10 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             "success": False,
             "status": "failure",
             "response_text": response_text,
-            "error_message": str(e)
+            "error_message": str(e),
         }
 
     except Exception as e:
         error_msg = f"为任务 ID: {task.id} (Signature: {signature}) 打卡时发生未知错误: {e}"
         logger.error(error_msg)
-        return {
-            "success": False,
-            "status": "failure",
-            "response_text": "",
-            "error_message": str(e)
-        }
+        return {"success": False, "status": "failure", "response_text": "", "error_message": str(e)}

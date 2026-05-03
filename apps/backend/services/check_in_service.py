@@ -39,7 +39,9 @@ class CheckInService:
             task_info = build_task_info(task)
 
             # 发送打卡失败通知（内容包含 Token 失效说明和刷新指引）
-            EmailService.notify_check_in_result(user, task_info, False, "Token 已失效，需要重新授权")
+            EmailService.notify_check_in_result(
+                user, task_info, False, "Token 已失效，需要重新授权"
+            )
             logger.info(f"已发送 Token 过期邮件到 {user.email}")
 
             # 标记已发送 Token 过期通知
@@ -63,7 +65,9 @@ class CheckInService:
         Returns:
             打卡记录 ID
         """
-        logger.info(f"🎯 创建待处理打卡记录 - 任务: {task.name or f'Task-{task.id}'} (ID: {task.id})")
+        logger.info(
+            f"🎯 创建待处理打卡记录 - 任务: {task.name or f'Task-{task.id}'} (ID: {task.id})"
+        )
 
         # 创建一个 pending 状态的记录
         record = CheckInRecord(
@@ -72,7 +76,7 @@ class CheckInService:
             response_text="",
             error_message="",
             location="{}",
-            trigger_type=trigger_type
+            trigger_type=trigger_type,
         )
         db.add(record)
         db.commit()
@@ -106,10 +110,9 @@ class CheckInService:
                 # 更新记录状态为失败
                 record = db.query(CheckInRecord).filter(CheckInRecord.id == record_id).first()
                 if record:
-                    db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update({
-                        "status": "failure",
-                        "error_message": "任务不存在"
-                    })
+                    db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update(
+                        {"status": "failure", "error_message": "任务不存在"}
+                    )
                     db.commit()
                 return
 
@@ -121,26 +124,31 @@ class CheckInService:
                 CheckInService.handle_token_expired(task.user, task, db)
 
             # 更新记录
-            db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update({
-                "status": result["status"],
-                "response_text": result["response_text"],
-                "error_message": result["error_message"]
-            })
+            db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update(
+                {
+                    "status": result["status"],
+                    "response_text": result["response_text"],
+                    "error_message": result["error_message"],
+                }
+            )
             db.commit()
 
             if result["success"]:
                 logger.info(f"✅ 后台打卡成功 - Record ID: {record_id}")
             else:
-                logger.error(f"❌ 后台打卡失败 - Record ID: {record_id}, 错误: {result['error_message']}")
+                logger.error(
+                    f"❌ 后台打卡失败 - Record ID: {record_id}, 错误: {result['error_message']}"
+                )
 
         except Exception as e:
-            logger.error(f"💥 后台打卡异常 - Task ID: {task_id}, Record ID: {record_id}, 错误: {str(e)}")
+            logger.error(
+                f"💥 后台打卡异常 - Task ID: {task_id}, Record ID: {record_id}, 错误: {str(e)}"
+            )
             # 更新记录状态
             try:
-                db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update({
-                    "status": "failure",
-                    "error_message": f"后台执行异常: {str(e)}"
-                })
+                db.query(CheckInRecord).filter(CheckInRecord.id == record_id).update(
+                    {"status": "failure", "error_message": f"后台执行异常: {str(e)}"}
+                )
                 db.commit()
             except Exception as inner_e:
                 logger.error(f"💥 更新记录失败: {str(inner_e)}")
@@ -175,17 +183,13 @@ class CheckInService:
                 response_text="",
                 error_message=error_msg,
                 location="{}",
-                trigger_type=trigger_type
+                trigger_type=trigger_type,
             )
             db.add(record)
             db.commit()
             db.refresh(record)
 
-            return {
-                "record_id": record.id,
-                "status": "failure",
-                "message": error_msg
-            }
+            return {"record_id": record.id, "status": "failure", "message": error_msg}
 
         # 不再提前验证 Token，交给统一的打卡逻辑处理
         # 这样可以确保所有错误（包括 Token 过期）都通过统一的流程处理
@@ -195,10 +199,11 @@ class CheckInService:
 
         # 在后台线程中执行打卡
         import threading
+
         thread = threading.Thread(
             target=CheckInService.execute_check_in_async,
             args=(task.id, record_id, user.authorization),
-            daemon=True
+            daemon=True,
         )
         thread.start()
 
@@ -207,7 +212,7 @@ class CheckInService:
         return {
             "record_id": record_id,
             "status": "pending",
-            "message": "打卡任务已启动，正在后台处理"
+            "message": "打卡任务已启动，正在后台处理",
         }
 
     @staticmethod
@@ -223,13 +228,17 @@ class CheckInService:
         Returns:
             打卡结果字典
         """
-        logger.info(f"🎯 开始打卡 - 任务: {task.name or f'Task-{task.id}'} (ID: {task.id}), 触发: {trigger_type}")
+        logger.info(
+            f"🎯 开始打卡 - 任务: {task.name or f'Task-{task.id}'} (ID: {task.id}), 触发: {trigger_type}"
+        )
 
         # 获取用户的打卡 Token
         user = task.user
         if not user or not user.authorization:
             error_msg = f"用户没有有效的打卡 Token"
-            logger.error(f"❌ {error_msg} - Task ID: {task.id}, User ID: {user.id if user else 'None'}")
+            logger.error(
+                f"❌ {error_msg} - Task ID: {task.id}, User ID: {user.id if user else 'None'}"
+            )
 
             # 记录失败
             record = CheckInRecord(
@@ -238,20 +247,17 @@ class CheckInService:
                 response_text="",
                 error_message=error_msg,
                 location="{}",
-                trigger_type=trigger_type
+                trigger_type=trigger_type,
             )
             db.add(record)
             db.commit()
             db.refresh(record)
 
-            return {
-                "success": False,
-                "message": error_msg,
-                "record_id": record.id
-            }
+            return {"success": False, "message": error_msg, "record_id": record.id}
 
         # 使用统一的打卡 Token 验证方法
         from backend.services.auth_service import AuthService
+
         token_result = AuthService.verify_checkin_authorization(user)
 
         if not token_result["is_valid"]:
@@ -268,7 +274,7 @@ class CheckInService:
                 response_text="",
                 error_message=error_msg,
                 location="{}",
-                trigger_type=trigger_type
+                trigger_type=trigger_type,
             )
             db.add(record)
             db.commit()
@@ -277,7 +283,7 @@ class CheckInService:
             return {
                 "success": False,
                 "message": f"{error_msg}，请重新扫码登录",
-                "record_id": record.id
+                "record_id": record.id,
             }
 
         # 执行打卡（传递 task 对象和用户 token）
@@ -295,7 +301,7 @@ class CheckInService:
             response_text=result["response_text"],
             error_message=result["error_message"],
             location="{}",
-            trigger_type=trigger_type
+            trigger_type=trigger_type,
         )
         db.add(record)
         db.commit()
@@ -309,7 +315,7 @@ class CheckInService:
         return {
             "success": result["success"],
             "message": "打卡成功" if result["success"] else f"打卡失败: {result['error_message']}",
-            "record_id": record.id
+            "record_id": record.id,
         }
 
     @staticmethod
@@ -326,13 +332,7 @@ class CheckInService:
         """
         logger.info(f"🚀 开始批量打卡，任务数量: {len(task_ids)}")
 
-        results = {
-            "total": len(task_ids),
-            "success": 0,
-            "failure": 0,
-            "skipped": 0,
-            "details": []
-        }
+        results = {"total": len(task_ids), "success": 0, "failure": 0, "skipped": 0, "details": []}
 
         # 优化：一次性查询所有任务，避免 N+1 查询
         tasks = db.query(CheckInTask).filter(CheckInTask.id.in_(task_ids)).all()
@@ -344,11 +344,9 @@ class CheckInService:
                 if not task:
                     logger.warning(f"⚠️ 任务 ID {task_id} 不存在，跳过")
                     results["skipped"] += 1
-                    results["details"].append({
-                        "task_id": task_id,
-                        "success": False,
-                        "message": "任务不存在"
-                    })
+                    results["details"].append(
+                        {"task_id": task_id, "success": False, "message": "任务不存在"}
+                    )
                     continue
 
                 # 执行打卡（移除 is_active 检查，允许手动打卡）
@@ -361,24 +359,26 @@ class CheckInService:
                     results["failure"] += 1
                     logger.error(f"❌ 任务 {task_id} 批量打卡失败: {result['message']}")
 
-                results["details"].append({
-                    "task_id": task_id,
-                    "task_name": task.name or f'Task-{task.id}',
-                    "success": result["success"],
-                    "message": result["message"],
-                    "record_id": result.get("record_id")
-                })
+                results["details"].append(
+                    {
+                        "task_id": task_id,
+                        "task_name": task.name or f"Task-{task.id}",
+                        "success": result["success"],
+                        "message": result["message"],
+                        "record_id": result.get("record_id"),
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"💥 任务 {task_id} 处理异常: {str(e)}")
                 results["failure"] += 1
-                results["details"].append({
-                    "task_id": task_id,
-                    "success": False,
-                    "message": f"异常: {str(e)}"
-                })
+                results["details"].append(
+                    {"task_id": task_id, "success": False, "message": f"异常: {str(e)}"}
+                )
 
-        logger.info(f"📊 批量打卡完成 - 成功: {results['success']}, 失败: {results['failure']}, 跳过: {results['skipped']}")
+        logger.info(
+            f"📊 批量打卡完成 - 成功: {results['success']}, 失败: {results['failure']}, 跳过: {results['skipped']}"
+        )
         return results
 
     @staticmethod
@@ -388,7 +388,7 @@ class CheckInService:
         skip: int = 0,
         limit: int = 100,
         status: Optional[str] = None,
-        trigger_type: Optional[str] = None
+        trigger_type: Optional[str] = None,
     ) -> tuple[List[CheckInRecord], int]:
         """
         获取任务的打卡记录
@@ -416,9 +416,7 @@ class CheckInService:
         total = query.count()
 
         # 获取分页数据
-        records = query.order_by(
-            CheckInRecord.check_in_time.desc()
-        ).offset(skip).limit(limit).all()
+        records = query.order_by(CheckInRecord.check_in_time.desc()).offset(skip).limit(limit).all()
 
         return records, total
 
@@ -429,7 +427,7 @@ class CheckInService:
         skip: int = 0,
         limit: int = 100,
         status: Optional[str] = None,
-        trigger_type: Optional[str] = None
+        trigger_type: Optional[str] = None,
     ) -> tuple[List[CheckInRecord], int]:
         """
         获取用户的所有打卡记录
@@ -462,9 +460,7 @@ class CheckInService:
         total = query.count()
 
         # 获取分页数据
-        records = query.order_by(
-            CheckInRecord.check_in_time.desc()
-        ).offset(skip).limit(limit).all()
+        records = query.order_by(CheckInRecord.check_in_time.desc()).offset(skip).limit(limit).all()
 
         return records, total
 
@@ -474,7 +470,7 @@ class CheckInService:
         skip: int = 0,
         limit: int = 100,
         task_id: Optional[int] = None,
-        status: Optional[str] = None
+        status: Optional[str] = None,
     ) -> tuple[List[CheckInRecord], int]:
         """
         获取所有打卡记录（管理员）- 使用联表查询优化性能
@@ -506,9 +502,7 @@ class CheckInService:
         total = query.count()
 
         # 获取分页数据
-        records = query.order_by(
-            CheckInRecord.check_in_time.desc()
-        ).offset(skip).limit(limit).all()
+        records = query.order_by(CheckInRecord.check_in_time.desc()).offset(skip).limit(limit).all()
 
         return records, total
 
@@ -527,8 +521,11 @@ class CheckInService:
             包含额外信息的记录字典
         """
         # 尝试使用已加载的关联对象，如果没有则查询
-        task = record.task if hasattr(record, 'task') and record.task else \
-               db.query(CheckInTask).filter(CheckInTask.id == record.task_id).first()
+        task = (
+            record.task
+            if hasattr(record, "task") and record.task
+            else db.query(CheckInTask).filter(CheckInTask.id == record.task_id).first()
+        )
 
         # 获取用户信息
         user = None
@@ -537,28 +534,32 @@ class CheckInService:
 
         if task:
             # 尝试使用已加载的 user，否则查询
-            user = task.user if hasattr(task, 'user') and task.user else \
-                   db.query(User).filter(User.id == task.user_id).first()
+            user = (
+                task.user
+                if hasattr(task, "user") and task.user
+                else db.query(User).filter(User.id == task.user_id).first()
+            )
             task_name = task.name
 
             # 从 payload_config 提取 ThreadId
             from backend.utils.json_helpers import extract_thread_id
+
             thread_id = extract_thread_id(task.payload_config)  # type: ignore
 
         # 转换为字典并添加额外字段
         record_dict = {
-            'id': record.id,
-            'task_id': record.task_id,
-            'status': record.status,
-            'response_text': record.response_text,
-            'error_message': record.error_message,
-            'location': record.location,
-            'trigger_type': record.trigger_type,
-            'check_in_time': record.check_in_time,
-            'user_id': user.id if user else None,
-            'user_email': user.email if user else None,
-            'task_name': task_name,
-            'thread_id': thread_id,
+            "id": record.id,
+            "task_id": record.task_id,
+            "status": record.status,
+            "response_text": record.response_text,
+            "error_message": record.error_message,
+            "location": record.location,
+            "trigger_type": record.trigger_type,
+            "check_in_time": record.check_in_time,
+            "user_id": user.id if user else None,
+            "user_email": user.email if user else None,
+            "task_name": task_name,
+            "thread_id": thread_id,
         }
 
         return record_dict

@@ -3,6 +3,7 @@
 
 提供统一的时间戳处理和格式化功能
 """
+
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -85,7 +86,7 @@ def minutes_until_expiry(timestamp: int) -> int:
     return seconds // 60
 
 
-def format_timestamp(timestamp: int, format_str: str = '%Y-%m-%d %H:%M:%S') -> str:
+def format_timestamp(timestamp: int, format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
     """
     格式化时间戳为人类可读格式
 

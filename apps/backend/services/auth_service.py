@@ -45,10 +45,7 @@ class AuthService:
             # 检查是否为空 jwt_sub（测试账号）
             if not existing_user.jwt_sub:
                 logger.warning(f"用户 {alias} 是测试账号（未绑定 QQ），禁止扫码登录")
-                return {
-                    "status": "error",
-                    "message": "此账户为测试账号，暂未绑定 QQ，无法扫码登录"
-                }
+                return {"status": "error", "message": "此账户为测试账号，暂未绑定 QQ，无法扫码登录"}
 
             # 老用户：刷新 Token
             logger.info(f"老用户 {alias} 请求刷新 Token，会话: {session_id}")
@@ -57,7 +54,7 @@ class AuthService:
             thread = threading.Thread(
                 target=get_token_headless,
                 args=(session_id, existing_user.jwt_sub, alias, client_ip),
-                daemon=True
+                daemon=True,
             )
             thread.start()
 
@@ -67,16 +64,14 @@ class AuthService:
                 logger.warning(f"用户名 {alias} 已被预占")
                 return {
                     "status": "error",
-                    "message": "该用户名正在被其他人注册，请稍后再试或更换用户名"
+                    "message": "该用户名正在被其他人注册，请稍后再试或更换用户名",
                 }
 
             logger.info(f"新用户 {alias} 请求注册，会话: {session_id}，已预占用户名")
 
             # 在后台线程启动 Selenium，不传入 jwt_sub（新用户）
             thread = threading.Thread(
-                target=get_token_headless,
-                args=(session_id, None, alias, client_ip),
-                daemon=True
+                target=get_token_headless, args=(session_id, None, alias, client_ip), daemon=True
             )
             thread.start()
 
@@ -96,29 +91,20 @@ class AuthService:
                     qr_image_data = session_data.get("qr_image_data")
                     if qr_image_data:
                         logger.info(f"会话 {session_id} 的二维码已生成")
-                        return {
-                            "session_id": session_id,
-                            "qrcode_base64": qr_image_data
-                        }
+                        return {"session_id": session_id, "qrcode_base64": qr_image_data}
 
                 # 如果已经失败，直接返回错误
                 elif status == "failed":
                     error_msg = session_data.get("message", "生成二维码失败")
                     logger.error(f"会话 {session_id} 生成二维码失败: {error_msg}")
-                    return {
-                        "status": "error",
-                        "message": error_msg
-                    }
+                    return {"status": "error", "message": error_msg}
 
             # 每 0.5 秒检查一次
             time.sleep(0.5)
 
         # 超时
         logger.error(f"会话 {session_id} 等待二维码生成超时（{max_wait_time}秒）")
-        return {
-            "status": "error",
-            "message": f"生成二维码超时，请重试"
-        }
+        return {"status": "error", "message": f"生成二维码超时，请重试"}
 
     @staticmethod
     def get_qrcode_status(session_id: str, db: Session) -> Dict[str, Any]:
@@ -135,10 +121,7 @@ class AuthService:
         session_data = get_session_data(session_id)
 
         if not session_data:
-            return {
-                "status": "pending",
-                "message": "会话不存在或正在初始化"
-            }
+            return {"status": "pending", "message": "会话不存在或正在初始化"}
 
         status = session_data.get("status")
         jwt_sub = session_data.get("jwt_sub")  # 使用 jwt_sub 而非 signature
@@ -147,7 +130,7 @@ class AuthService:
             return {
                 "status": "waiting_scan",
                 "message": "请使用手机 QQ 扫描二维码",
-                "qrcode_image": session_data.get("qr_image_data")
+                "qrcode_image": session_data.get("qr_image_data"),
             }
 
         elif status == "success":
@@ -160,15 +143,12 @@ class AuthService:
 
             if not token:
                 logger.error("Token 为空")
-                return {
-                    "status": "error",
-                    "message": "Token 为空"
-                }
+                return {"status": "error", "message": "Token 为空"}
 
             try:
                 # 清洗 Token：URL 解码 + 去除 Bearer 前缀（参考 v1 实现）
                 pure_token = unquote(token)  # URL 解码
-                if pure_token.lower().startswith('bearer '):
+                if pure_token.lower().startswith("bearer "):
                     pure_token = pure_token[7:]  # 去除 "Bearer " 前缀
 
                 decoded = jwt.decode(pure_token, options={"verify_signature": False})
@@ -177,10 +157,7 @@ class AuthService:
                 logger.info(f"成功解析 JWT for sub={jwt_sub}, exp={jwt_exp}")
             except Exception as e:
                 logger.error(f"解析 JWT Token 失败: {e}")
-                return {
-                    "status": "error",
-                    "message": f"Token 解析失败: {str(e)}"
-                }
+                return {"status": "error", "message": f"Token 解析失败: {str(e)}"}
 
             # 查找用户（通过 jwt_sub）
             user = db.query(User).filter(User.jwt_sub == jwt_sub).first()
@@ -191,12 +168,18 @@ class AuthService:
                 if alias and alias == user.alias:
                     # 用户使用别名登录，验证 jwt_sub 是否一致
                     # 如果用户之前的 jwt_sub 不为空且与当前不一致，说明QQ号被换绑了
-                    existing_jwt_sub = getattr(user, 'jwt_sub', '')
-                    if isinstance(existing_jwt_sub, str) and existing_jwt_sub.strip() and existing_jwt_sub != jwt_sub:
-                        logger.warning(f"⚠️ 用户 {user.alias} 的 jwt_sub 不匹配！数据库: {existing_jwt_sub}, 当前: {jwt_sub}")
+                    existing_jwt_sub = getattr(user, "jwt_sub", "")
+                    if (
+                        isinstance(existing_jwt_sub, str)
+                        and existing_jwt_sub.strip()
+                        and existing_jwt_sub != jwt_sub
+                    ):
+                        logger.warning(
+                            f"⚠️ 用户 {user.alias} 的 jwt_sub 不匹配！数据库: {existing_jwt_sub}, 当前: {jwt_sub}"
+                        )
                         return {
                             "status": "error",
-                            "message": "QQ账号不匹配，请使用正确的QQ号扫码登录"
+                            "message": "QQ账号不匹配，请使用正确的QQ号扫码登录",
                         }
 
                 user.authorization = pure_token  # 存储清理后的 token
@@ -221,9 +204,9 @@ class AuthService:
                         "alias": user.alias,
                         "role": user.role,
                         "is_approved": user.is_approved,
-                        "jwt_sub": user.jwt_sub
+                        "jwt_sub": user.jwt_sub,
                     },
-                    "is_new_user": False
+                    "is_new_user": False,
                 }
 
             else:
@@ -233,20 +216,14 @@ class AuthService:
                 # 验证用户名是否被预占
                 if not alias or not registration_manager.is_alias_reserved(alias):
                     logger.error(f"新用户注册失败：用户名 {alias} 未预占或已过期")
-                    return {
-                        "status": "error",
-                        "message": "注册失败：会话已过期，请重新扫码"
-                    }
+                    return {"status": "error", "message": "注册失败：会话已过期，请重新扫码"}
 
                 # 检查用户名是否已被其他人注册（防止竞态）
                 existing_user_by_alias = db.query(User).filter(User.alias == alias).first()
                 if existing_user_by_alias:
                     registration_manager.release_alias(alias)
                     logger.error(f"新用户注册失败：用户名 {alias} 已被占用")
-                    return {
-                        "status": "error",
-                        "message": "注册失败：用户名已被占用，请更换用户名"
-                    }
+                    return {"status": "error", "message": "注册失败：用户名已被占用，请更换用户名"}
 
                 # 创建新用户（待审批状态）
                 new_user = User(
@@ -270,6 +247,7 @@ class AuthService:
                 # 发送邮件通知管理员
                 try:
                     from backend.services.email_service import EmailService
+
                     EmailService.notify_new_user_registration(new_user, db)
                 except Exception as e:
                     logger.error(f"发送注册通知邮件失败: {e}")
@@ -286,22 +264,16 @@ class AuthService:
                         "alias": new_user.alias,
                         "role": new_user.role,
                         "is_approved": new_user.is_approved,
-                        "jwt_sub": new_user.jwt_sub
+                        "jwt_sub": new_user.jwt_sub,
                     },
-                    "is_new_user": True
+                    "is_new_user": True,
                 }
 
         elif status == "error":
-            return {
-                "status": "error",
-                "message": session_data.get("message", "未知错误")
-            }
+            return {"status": "error", "message": session_data.get("message", "未知错误")}
 
         else:
-            return {
-                "status": "pending",
-                "message": "正在初始化..."
-            }
+            return {"status": "pending", "message": "正在初始化..."}
 
     @staticmethod
     def verify_token(authorization: str, db: Session) -> Dict[str, Any]:
@@ -318,7 +290,11 @@ class AuthService:
         from backend.utils.jwt import JWTManager
 
         # 移除 "Bearer " 前缀
-        token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+        token = (
+            authorization.replace("Bearer ", "")
+            if authorization.startswith("Bearer ")
+            else authorization
+        )
 
         try:
             # 验证 JWT token
@@ -326,19 +302,13 @@ class AuthService:
             user_id = payload.get("user_id")
 
             if not user_id:
-                return {
-                    "is_valid": False,
-                    "message": "Token 格式错误"
-                }
+                return {"is_valid": False, "message": "Token 格式错误"}
 
             # 从数据库获取用户
             user = db.query(User).filter(User.id == user_id).first()
 
             if not user:
-                return {
-                    "is_valid": False,
-                    "message": "用户不存在"
-                }
+                return {"is_valid": False, "message": "用户不存在"}
 
             return {
                 "is_valid": True,
@@ -346,25 +316,16 @@ class AuthService:
                 "user_id": user.id,
                 "alias": user.alias,
                 "role": user.role,
-                "is_approved": user.is_approved
+                "is_approved": user.is_approved,
             }
 
         except jwt.ExpiredSignatureError:
-            return {
-                "is_valid": False,
-                "message": "JWT Token 已过期"
-            }
+            return {"is_valid": False, "message": "JWT Token 已过期"}
         except jwt.InvalidTokenError:
-            return {
-                "is_valid": False,
-                "message": "JWT Token 无效"
-            }
+            return {"is_valid": False, "message": "JWT Token 无效"}
         except Exception as e:
             logger.error(f"验证 JWT Token 失败: {str(e)}")
-            return {
-                "is_valid": False,
-                "message": "Token 验证失败"
-            }
+            return {"is_valid": False, "message": "Token 验证失败"}
 
     @staticmethod
     def verify_checkin_authorization(user: User) -> Dict[str, Any]:
@@ -386,25 +347,17 @@ class AuthService:
             is_timestamp_expired,
             days_until_expiry,
             minutes_until_expiry,
-            seconds_until_expiry
+            seconds_until_expiry,
         )
 
         # 检查是否有 authorization token
         if not user.authorization or user.authorization == "":
-            return {
-                "is_valid": False,
-                "message": "未设置打卡凭证",
-                "reason": "no_token"
-            }
+            return {"is_valid": False, "message": "未设置打卡凭证", "reason": "no_token"}
 
         # 解析 jwt_exp
         exp_timestamp = parse_jwt_exp(user.jwt_exp)
         if not exp_timestamp:
-            return {
-                "is_valid": False,
-                "message": "打卡凭证无效",
-                "reason": "invalid_expiry"
-            }
+            return {"is_valid": False, "message": "打卡凭证无效", "reason": "invalid_expiry"}
 
         # 检查是否过期
         if is_timestamp_expired(exp_timestamp):
@@ -413,7 +366,7 @@ class AuthService:
                 "is_valid": False,
                 "message": f"打卡凭证已过期 {days_expired} 天",
                 "reason": "expired",
-                "days_expired": days_expired
+                "days_expired": days_expired,
             }
 
         # Token 有效，计算剩余时间
@@ -430,7 +383,7 @@ class AuthService:
             "days_remaining": days_remaining,
             "minutes_remaining": minutes_remaining,
             "expiring_soon": expiring_soon,
-            "expires_at": exp_timestamp
+            "expires_at": exp_timestamp,
         }
 
     @staticmethod
@@ -451,10 +404,7 @@ class AuthService:
 
         if not user:
             logger.warning(f"别名登录失败：用户 {alias} 不存在")
-            return {
-                "success": False,
-                "message": "用户名或密码错误"
-            }
+            return {"success": False, "message": "用户名或密码错误"}
 
         # 检查账户是否被锁定
         if user.locked_until:
@@ -462,10 +412,12 @@ class AuthService:
             if datetime.now() < user.locked_until:
                 remaining_seconds = (user.locked_until - datetime.now()).total_seconds()
                 remaining_minutes = int(remaining_seconds / 60) + 1
-                logger.warning(f"别名登录失败：用户 {alias} 账户已锁定，剩余 {remaining_minutes} 分钟")
+                logger.warning(
+                    f"别名登录失败：用户 {alias} 账户已锁定，剩余 {remaining_minutes} 分钟"
+                )
                 return {
                     "success": False,
-                    "message": f"账户已锁定，请 {remaining_minutes} 分钟后再试"
+                    "message": f"账户已锁定，请 {remaining_minutes} 分钟后再试",
                 }
             else:
                 # 锁定时间已过，重置锁定状态
@@ -477,15 +429,12 @@ class AuthService:
         # 检查用户是否设置了密码
         if not user.password_hash:
             logger.warning(f"别名登录失败：用户 {alias} 未设置密码")
-            return {
-                "success": False,
-                "message": "该用户未设置密码，请使用扫码登录"
-            }
+            return {"success": False, "message": "该用户未设置密码，请使用扫码登录"}
 
         # 验证密码
         try:
-            password_bytes = password.encode('utf-8')
-            hash_bytes = user.password_hash.encode('utf-8')
+            password_bytes = password.encode("utf-8")
+            hash_bytes = user.password_hash.encode("utf-8")
 
             if not bcrypt.checkpw(password_bytes, hash_bytes):
                 # 密码错误，增加失败次数
@@ -497,24 +446,20 @@ class AuthService:
                     user.locked_until = datetime.now() + timedelta(minutes=15)
                     db.commit()
                     logger.warning(f"别名登录失败：用户 {alias} 密码错误次数过多，账户已锁定15分钟")
-                    return {
-                        "success": False,
-                        "message": "密码错误次数过多，账户已锁定15分钟"
-                    }
+                    return {"success": False, "message": "密码错误次数过多，账户已锁定15分钟"}
 
                 db.commit()
                 remaining_attempts = 5 - user.failed_login_attempts
-                logger.warning(f"别名登录失败：用户 {alias} 密码错误，剩余尝试次数: {remaining_attempts}")
+                logger.warning(
+                    f"别名登录失败：用户 {alias} 密码错误，剩余尝试次数: {remaining_attempts}"
+                )
                 return {
                     "success": False,
-                    "message": f"用户名或密码错误，剩余尝试次数: {remaining_attempts}"
+                    "message": f"用户名或密码错误，剩余尝试次数: {remaining_attempts}",
                 }
         except Exception as e:
             logger.error(f"密码验证异常：{e}")
-            return {
-                "success": False,
-                "message": "登录失败，请稍后重试"
-            }
+            return {"success": False, "message": "登录失败，请稍后重试"}
 
         # 密码正确，重置失败次数
         user.failed_login_attempts = 0
@@ -551,17 +496,21 @@ class AuthService:
                 "id": user.id,
                 "alias": user.alias,
                 "role": user.role,
-                "is_approved": user.is_approved
-            }
+                "is_approved": user.is_approved,
+            },
         }
 
         # 如果打卡 Token 有问题，添加警告信息（不影响网站使用）
         if token_warning:
             result["token_warning"] = token_warning
             if token_warning == "token_invalid":
-                result["warning_message"] = "登录成功，但检测到打卡凭证无效，无法自动打卡，建议扫码更新"
+                result["warning_message"] = (
+                    "登录成功，但检测到打卡凭证无效，无法自动打卡，建议扫码更新"
+                )
             elif token_warning == "token_expired":
-                result["warning_message"] = "登录成功，但检测到打卡凭证已过期，无法自动打卡，建议扫码更新"
+                result["warning_message"] = (
+                    "登录成功，但检测到打卡凭证已过期，无法自动打卡，建议扫码更新"
+                )
 
         return result
 
@@ -576,10 +525,10 @@ class AuthService:
         Returns:
             加密后的密码哈希
         """
-        password_bytes = password.encode('utf-8')
+        password_bytes = password.encode("utf-8")
         salt = bcrypt.gensalt()
         hash_bytes = bcrypt.hashpw(password_bytes, salt)
-        return hash_bytes.decode('utf-8')
+        return hash_bytes.decode("utf-8")
 
     @staticmethod
     def verify_password(password: str, password_hash: str) -> bool:
@@ -594,8 +543,8 @@ class AuthService:
             密码是否正确
         """
         try:
-            password_bytes = password.encode('utf-8')
-            hash_bytes = password_hash.encode('utf-8')
+            password_bytes = password.encode("utf-8")
+            hash_bytes = password_hash.encode("utf-8")
             return bcrypt.checkpw(password_bytes, hash_bytes)
         except Exception as e:
             logger.error(f"密码验证异常：{e}")
@@ -617,12 +566,6 @@ class AuthService:
         success = cancel_session(session_id)
 
         if success:
-            return {
-                "success": True,
-                "message": "会话已取消"
-            }
+            return {"success": True, "message": "会话已取消"}
         else:
-            return {
-                "success": False,
-                "message": "取消失败或会话不存在"
-            }
+            return {"success": False, "message": "取消失败或会话不存在"}

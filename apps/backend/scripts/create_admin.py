@@ -5,6 +5,7 @@
 使用方法:
     uv run python apps/backend/scripts/create_admin.py
 """
+
 import sys
 from pathlib import Path
 
@@ -51,7 +52,7 @@ def create_admin_user(alias: str):
 
             # 升级为管理员
             response = input("\n是否将该用户升级为管理员？(y/n): ")
-            if response.lower() == 'y':
+            if response.lower() == "y":
                 existing_user.role = "admin"
                 existing_user.is_approved = True  # 确保已审批
                 db.commit()

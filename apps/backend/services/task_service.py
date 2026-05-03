@@ -36,22 +36,22 @@ class TaskService:
         from backend.utils.json_helpers import safe_parse_payload, extract_thread_id
 
         payload = safe_parse_payload(task_data.payload_config)
-        thread_id = payload.get('ThreadId')
+        thread_id = payload.get("ThreadId")
         if not thread_id:
             raise ValueError("payload_config 中缺少 ThreadId")
 
         # 3. 验证唯一性：同一用户在同一个接龙中不能有重复的任务
-        existing_tasks = db.query(
-            CheckInTask.payload_config
-        ).filter(
-            CheckInTask.user_id == user_id
-        ).all()
+        existing_tasks = (
+            db.query(CheckInTask.payload_config).filter(CheckInTask.user_id == user_id).all()
+        )
 
         for (payload_config,) in existing_tasks:
             existing_thread_id = extract_thread_id(payload_config)
             # extract_thread_id 已处理异常，失败时返回 None
             if existing_thread_id and existing_thread_id == thread_id:
-                logger.warning(f"⚠️ 任务创建冲突 - User: {user.alias}({user_id}), ThreadId: {thread_id}")
+                logger.warning(
+                    f"⚠️ 任务创建冲突 - User: {user.alias}({user_id}), ThreadId: {thread_id}"
+                )
                 raise ValueError(f"该接龙中已存在任务。ThreadId: {thread_id}")
 
         # 4. 记录日志
@@ -63,14 +63,16 @@ class TaskService:
             user_id=user_id,
             payload_config=task_data.payload_config,
             name=task_data.name or task_name,
-            is_active=task_data.is_active if task_data.is_active is not None else True
+            is_active=task_data.is_active if task_data.is_active is not None else True,
         )
 
         try:
             db.add(task)
             db.commit()
             db.refresh(task)
-            logger.info(f"✅ 任务创建成功 - ID: {task.id}, Name: {task.name}, ThreadId: {thread_id}")
+            logger.info(
+                f"✅ 任务创建成功 - ID: {task.id}, Name: {task.name}, ThreadId: {thread_id}"
+            )
 
             # 如果任务启用且包含 cron_expression，立即添加到调度器
             if task.is_scheduled_enabled:
@@ -111,33 +113,38 @@ class TaskService:
         from backend.utils.json_helpers import extract_thread_id
 
         # 获取最后一次打卡记录
-        last_record = db.query(CheckInRecord).filter(
-            CheckInRecord.task_id == task.id
-        ).order_by(desc(CheckInRecord.check_in_time)).first()
+        last_record = (
+            db.query(CheckInRecord)
+            .filter(CheckInRecord.task_id == task.id)
+            .order_by(desc(CheckInRecord.check_in_time))
+            .first()
+        )
 
         # 从 payload_config 提取 ThreadId
         thread_id = extract_thread_id(task.payload_config)  # type: ignore
 
         # 转换为字典并添加额外字段
         task_dict = {
-            'id': task.id,
-            'user_id': task.user_id,
-            'payload_config': task.payload_config,
-            'name': task.name,
-            'is_active': task.is_active,
-            'cron_expression': task.cron_expression,
-            'is_scheduled_enabled': task.is_scheduled_enabled,
-            'created_at': task.created_at,
-            'updated_at': task.updated_at,
-            'thread_id': thread_id,
-            'last_check_in_time': last_record.check_in_time if last_record else None,
-            'last_check_in_status': last_record.status if last_record else None,
+            "id": task.id,
+            "user_id": task.user_id,
+            "payload_config": task.payload_config,
+            "name": task.name,
+            "is_active": task.is_active,
+            "cron_expression": task.cron_expression,
+            "is_scheduled_enabled": task.is_scheduled_enabled,
+            "created_at": task.created_at,
+            "updated_at": task.updated_at,
+            "thread_id": thread_id,
+            "last_check_in_time": last_record.check_in_time if last_record else None,
+            "last_check_in_status": last_record.status if last_record else None,
         }
 
         return task_dict
 
     @staticmethod
-    def get_user_tasks(user_id: int, db: Session, include_inactive: bool = True) -> List[CheckInTask]:
+    def get_user_tasks(
+        user_id: int, db: Session, include_inactive: bool = True
+    ) -> List[CheckInTask]:
         """
         获取用户的所有任务
 
@@ -191,8 +198,8 @@ class TaskService:
         update_data = task_data.model_dump(exclude_unset=True)
 
         # 检查是否更新了 cron_expression 或 is_active
-        cron_changed = 'cron_expression' in update_data
-        active_changed = 'is_active' in update_data
+        cron_changed = "cron_expression" in update_data
+        active_changed = "is_active" in update_data
 
         for field, value in update_data.items():
             setattr(task, field, value)
@@ -297,10 +304,11 @@ class TaskService:
         Returns:
             是否属于该用户
         """
-        task = db.query(CheckInTask).filter(
-            CheckInTask.id == task_id,
-            CheckInTask.user_id == user_id
-        ).first()
+        task = (
+            db.query(CheckInTask)
+            .filter(CheckInTask.id == task_id, CheckInTask.user_id == user_id)
+            .first()
+        )
 
         return task is not None
 
@@ -342,7 +350,7 @@ class TaskService:
                         id=job_id,
                         name=f"CheckIn-Task-{task.id}",
                         args=[task.id],
-                        replace_existing=True
+                        replace_existing=True,
                     )
                     logger.info(f"✅ 任务 {task.id} 已重新加载到调度器: {cron_str}")
                 else:

@@ -18,6 +18,7 @@ router = APIRouter()
 
 class BatchToggleTasksRequest(BaseModel):
     """批量启用/禁用任务请求"""
+
     task_ids: List[int]
     is_active: bool
 
@@ -26,7 +27,7 @@ class BatchToggleTasksRequest(BaseModel):
 async def batch_toggle_tasks(
     request: BatchToggleTasksRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     批量启用或禁用任务的自动打卡功能（需要管理员权限）
@@ -47,12 +48,11 @@ async def batch_toggle_tasks(
         return {
             "success": True,
             "message": f"已{'启用' if request.is_active else '禁用'} {count} 个任务",
-            "count": count
+            "count": count,
         }
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"批量操作失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"批量操作失败: {str(e)}"
         )
 
 
@@ -60,7 +60,7 @@ async def batch_toggle_tasks(
 async def batch_check_in(
     request: BatchCheckInRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     批量触发任务打卡（需要管理员权限）
@@ -74,15 +74,14 @@ async def batch_check_in(
         return result
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"批量打卡失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"批量打卡失败: {str(e)}"
         )
 
 
 @router.get("/logs", summary="获取系统日志")
 async def get_system_logs(
     lines: int = Query(200, ge=1, le=2000, description="读取的日志行数"),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     获取系统日志（需要管理员权限）
@@ -95,40 +94,34 @@ async def get_system_logs(
         log_file = settings.LOG_FILE
 
         if not log_file.exists():
-            return {
-                "success": True,
-                "message": "日志文件不存在",
-                "logs": "日志文件不存在"
-            }
+            return {"success": True, "message": "日志文件不存在", "logs": "日志文件不存在"}
 
         # 使用 deque 高效读取最后 N 行，避免将整个文件加载到内存
         from collections import deque
 
-        with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
             # 使用 deque 保持最后 N 行，内存占用固定
             last_lines = deque(f, maxlen=lines)
 
         # 返回字符串格式（不是数组）
-        log_content = ''.join(last_lines)
+        log_content = "".join(last_lines)
 
         return {
             "success": True,
             "message": f"读取了最后 {len(last_lines)} 行日志",
-            "logs": log_content
+            "logs": log_content,
         }
 
     except Exception as e:
         logger.error(f"读取日志失败: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"读取日志失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"读取日志失败: {str(e)}"
         )
 
 
 @router.get("/stats", summary="获取系统统计")
 async def get_system_stats(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)
 ):
     """
     获取系统统计信息（需要管理员权限）
@@ -159,33 +152,39 @@ async def get_system_stats(
 
         # 今日打卡记录数
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        today_records = db.query(CheckInRecord).filter(
-            CheckInRecord.check_in_time >= today_start
-        ).count()
+        today_records = (
+            db.query(CheckInRecord).filter(CheckInRecord.check_in_time >= today_start).count()
+        )
 
         # 今日成功打卡数
-        today_success = db.query(CheckInRecord).filter(
-            CheckInRecord.check_in_time >= today_start,
-            CheckInRecord.status == "success"
-        ).count()
+        today_success = (
+            db.query(CheckInRecord)
+            .filter(CheckInRecord.check_in_time >= today_start, CheckInRecord.status == "success")
+            .count()
+        )
 
         # 今日失败打卡数
-        today_failure = db.query(CheckInRecord).filter(
-            CheckInRecord.check_in_time >= today_start,
-            CheckInRecord.status == "failure"
-        ).count()
+        today_failure = (
+            db.query(CheckInRecord)
+            .filter(CheckInRecord.check_in_time >= today_start, CheckInRecord.status == "failure")
+            .count()
+        )
 
         # 今日时间范围外打卡数
-        today_out_of_time = db.query(CheckInRecord).filter(
-            CheckInRecord.check_in_time >= today_start,
-            CheckInRecord.status == "out_of_time"
-        ).count()
+        today_out_of_time = (
+            db.query(CheckInRecord)
+            .filter(
+                CheckInRecord.check_in_time >= today_start, CheckInRecord.status == "out_of_time"
+            )
+            .count()
+        )
 
         # 今日异常打卡数
-        today_unknown = db.query(CheckInRecord).filter(
-            CheckInRecord.check_in_time >= today_start,
-            CheckInRecord.status == "unknown"
-        ).count()
+        today_unknown = (
+            db.query(CheckInRecord)
+            .filter(CheckInRecord.check_in_time >= today_start, CheckInRecord.status == "unknown")
+            .count()
+        )
 
         # Token 即将过期的用户数（7天内）
         # 使用 SQL 直接查询，避免 N+1 问题
@@ -198,28 +197,32 @@ async def get_system_stats(
         # 条件：authorization 不为空、jwt_exp 不为 "0"、且在未来 7 天内过期
         from sqlalchemy import cast, Integer, and_
 
-        expiring_users = db.query(User).filter(
-            and_(
-                User.authorization.isnot(None),
-                User.authorization != "",
-                User.jwt_exp.isnot(None),
-                User.jwt_exp != "0",
-                cast(User.jwt_exp, Integer) > current_timestamp,  # 未过期
-                cast(User.jwt_exp, Integer) < expiring_soon_timestamp  # 7天内过期
+        expiring_users = (
+            db.query(User)
+            .filter(
+                and_(
+                    User.authorization.isnot(None),
+                    User.authorization != "",
+                    User.jwt_exp.isnot(None),
+                    User.jwt_exp != "0",
+                    cast(User.jwt_exp, Integer) > current_timestamp,  # 未过期
+                    cast(User.jwt_exp, Integer) < expiring_soon_timestamp,  # 7天内过期
+                )
             )
-        ).count()
+            .count()
+        )
 
         return {
             "users": {
                 "total": total_users,
                 "admin": admin_users,
                 "regular": total_users - admin_users,
-                "active": approved_users  # 使用已审批用户数
+                "active": approved_users,  # 使用已审批用户数
             },
             "tasks": {
                 "total": total_tasks,
                 "active": active_tasks,
-                "inactive": total_tasks - active_tasks
+                "inactive": total_tasks - active_tasks,
             },
             "check_in_records": {
                 "total": total_records,
@@ -227,24 +230,20 @@ async def get_system_stats(
                 "today_success": today_success,
                 "today_failure": today_failure,
                 "today_out_of_time": today_out_of_time,
-                "today_unknown": today_unknown
+                "today_unknown": today_unknown,
             },
-            "tokens": {
-                "expiring_soon": expiring_users
-            }
+            "tokens": {"expiring_soon": expiring_users},
         }
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"获取统计失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取统计失败: {str(e)}"
         )
 
 
 @router.get("/users/pending", response_model=List[UserResponse], summary="获取待审批用户")
 async def get_pending_users(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)
 ):
     """
     获取所有待审批的用户（需要管理员权限）
@@ -255,7 +254,7 @@ async def get_pending_users(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"获取待审批用户失败: {str(e)}"
+            detail=f"获取待审批用户失败: {str(e)}",
         )
 
 
@@ -263,7 +262,7 @@ async def get_pending_users(
 async def approve_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     审批通过指定用户（需要管理员权限）
@@ -272,18 +271,14 @@ async def approve_user(
         result = AdminService.approve_user(user_id, db)
 
         if not result["success"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result["message"]
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"])
 
         return result
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"审批用户失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"审批用户失败: {str(e)}"
         )
 
 
@@ -291,7 +286,7 @@ async def approve_user(
 async def reject_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     拒绝并删除指定用户（需要管理员权限）
@@ -300,16 +295,12 @@ async def reject_user(
         result = AdminService.reject_user(user_id, db)
 
         if not result["success"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result["message"]
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"])
 
         return result
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"拒绝用户失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"拒绝用户失败: {str(e)}"
         )

@@ -1,6 +1,7 @@
 """
 用户名预占和注册限流管理器
 """
+
 import time
 import threading
 import logging
@@ -47,23 +48,22 @@ class RegistrationManager:
                 reservation = self._reserved_aliases[alias]
 
                 # 检查是否过期
-                if reservation['expire_time'] > current_time:
+                if reservation["expire_time"] > current_time:
                     # 未过期，检查是否是同一个 session
-                    if reservation['session_id'] == session_id:
+                    if reservation["session_id"] == session_id:
                         # 同一个 session，更新过期时间
-                        reservation['expire_time'] = expire_time
+                        reservation["expire_time"] = expire_time
                         logger.info(f"用户名 {alias} 预占时间已更新（session: {session_id}）")
                         return True
                     else:
                         # 不同 session，预占失败
-                        logger.warning(f"用户名 {alias} 已被占用（session: {reservation['session_id']}）")
+                        logger.warning(
+                            f"用户名 {alias} 已被占用（session: {reservation['session_id']}）"
+                        )
                         return False
 
             # 预占用户名
-            self._reserved_aliases[alias] = {
-                'session_id': session_id,
-                'expire_time': expire_time
-            }
+            self._reserved_aliases[alias] = {"session_id": session_id, "expire_time": expire_time}
             logger.info(f"用户名 {alias} 已预占（session: {session_id}, 超时: {timeout_seconds}s）")
             return True
 
@@ -85,7 +85,7 @@ class RegistrationManager:
             reservation = self._reserved_aliases[alias]
 
             # 如果指定了 session_id，则只释放匹配的
-            if session_id and reservation['session_id'] != session_id:
+            if session_id and reservation["session_id"] != session_id:
                 logger.warning(f"尝试释放用户名 {alias}，但 session 不匹配")
                 return False
 
@@ -111,7 +111,7 @@ class RegistrationManager:
             current_time = time.time()
 
             # 检查是否过期
-            if reservation['expire_time'] <= current_time:
+            if reservation["expire_time"] <= current_time:
                 # 已过期，自动释放
                 del self._reserved_aliases[alias]
                 return False
@@ -138,7 +138,9 @@ class RegistrationManager:
                 # 检查是否过期
                 if expire_time > current_time:
                     remaining = int(expire_time - current_time)
-                    logger.warning(f"Cookie {cookie_value[:8]}... 在限流期内（剩余 {remaining} 秒）")
+                    logger.warning(
+                        f"Cookie {cookie_value[:8]}... 在限流期内（剩余 {remaining} 秒）"
+                    )
                     return False
                 else:
                     # 已过期，移除记录
@@ -168,8 +170,9 @@ class RegistrationManager:
 
             # 清理过期的用户名预占
             expired_aliases = [
-                alias for alias, reservation in self._reserved_aliases.items()
-                if reservation['expire_time'] <= current_time
+                alias
+                for alias, reservation in self._reserved_aliases.items()
+                if reservation["expire_time"] <= current_time
             ]
 
             for alias in expired_aliases:
@@ -178,7 +181,8 @@ class RegistrationManager:
 
             # 清理过期的注册限流记录
             expired_cookies = [
-                cookie for cookie, expire_time in self._registration_cookies.items()
+                cookie
+                for cookie, expire_time in self._registration_cookies.items()
                 if expire_time <= current_time
             ]
 
@@ -187,10 +191,13 @@ class RegistrationManager:
                 logger.debug(f"Cookie {cookie[:8]}... 限流记录已过期，自动清理")
 
             if expired_aliases or expired_cookies:
-                logger.info(f"清理完成：{len(expired_aliases)} 个用户名，{len(expired_cookies)} 个 Cookie")
+                logger.info(
+                    f"清理完成：{len(expired_aliases)} 个用户名，{len(expired_cookies)} 个 Cookie"
+                )
 
     def _start_cleanup_thread(self) -> None:
         """启动定期清理线程"""
+
         def cleanup_loop():
             while True:
                 try:
@@ -207,9 +214,9 @@ class RegistrationManager:
         """获取当前状态统计"""
         with self._lock:
             return {
-                'reserved_aliases_count': len(self._reserved_aliases),
-                'rate_limited_cookies_count': len(self._registration_cookies),
-                'reserved_aliases': list(self._reserved_aliases.keys()),
+                "reserved_aliases_count": len(self._reserved_aliases),
+                "rate_limited_cookies_count": len(self._registration_cookies),
+                "reserved_aliases": list(self._reserved_aliases.keys()),
             }
 
 

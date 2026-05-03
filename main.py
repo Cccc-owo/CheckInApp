@@ -173,7 +173,15 @@ def start_frontend_daemon(args: argparse.Namespace) -> int:
 
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     log_file = FRONTEND_LOG.open("a", encoding="utf-8")
-    cmd = [get_python(), str(REPO_ROOT / "main.py"), "frontend", "--host", args.host, "--port", str(args.port)]
+    cmd = [
+        get_python(),
+        str(REPO_ROOT / "main.py"),
+        "frontend",
+        "--host",
+        args.host,
+        "--port",
+        str(args.port),
+    ]
     proc = subprocess.Popen(
         cmd,
         cwd=REPO_ROOT,
@@ -263,13 +271,17 @@ def build_parser() -> argparse.ArgumentParser:
     frontend.add_argument("--port", type=int, default=FRONTEND_PORT)
     frontend.set_defaults(func=run_frontend)
 
-    frontend_daemon = sub.add_parser("frontend-daemon", help="start frontend dev server in the background")
+    frontend_daemon = sub.add_parser(
+        "frontend-daemon", help="start frontend dev server in the background"
+    )
     frontend_daemon.add_argument("--host", default="0.0.0.0")
     frontend_daemon.add_argument("--port", type=int, default=FRONTEND_PORT)
     frontend_daemon.set_defaults(func=start_frontend_daemon)
 
     frontend_build = sub.add_parser("frontend-build", help="build current frontend")
-    frontend_build.add_argument("--install", action="store_true", help="run npm install if node_modules is missing")
+    frontend_build.add_argument(
+        "--install", action="store_true", help="run npm install if node_modules is missing"
+    )
     frontend_build.set_defaults(func=build_frontend)
 
     deploy = sub.add_parser("frontend-deploy", help="show frontend deployment output path")
@@ -279,7 +291,9 @@ def build_parser() -> argparse.ArgumentParser:
     service_status.set_defaults(func=status)
 
     service_stop = sub.add_parser("stop", help="stop managed daemon processes")
-    service_stop.add_argument("target", choices=["backend", "frontend", "all"], nargs="?", default="all")
+    service_stop.add_argument(
+        "target", choices=["backend", "frontend", "all"], nargs="?", default="all"
+    )
     service_stop.set_defaults(func=stop)
 
     return parser

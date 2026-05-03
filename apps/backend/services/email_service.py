@@ -69,7 +69,11 @@ class EmailService:
 
         # 安全获取创建时间
         created_at_value = user.created_at
-        created_time = created_at_value.strftime('%Y-%m-%d %H:%M:%S') if created_at_value is not None else '未知'
+        created_time = (
+            created_at_value.strftime("%Y-%m-%d %H:%M:%S")
+            if created_at_value is not None
+            else "未知"
+        )
 
         body_html = f"""
         <!DOCTYPE html>
@@ -191,7 +195,9 @@ class EmailService:
 
         # 安全获取创建时间
         user_created_at = user.created_at
-        created_time = user_created_at.strftime('%Y-%m-%d %H:%M:%S') if user_created_at is not None else '未知'
+        created_time = (
+            user_created_at.strftime("%Y-%m-%d %H:%M:%S") if user_created_at is not None else "未知"
+        )
 
         body_html = f"""
         <!DOCTYPE html>
@@ -270,7 +276,7 @@ class EmailService:
                     <div class="success-box">
                         <strong>✅ 审批结果：</strong> 已通过
                         <br>
-                        <strong>审批时间：</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                        <strong>审批时间：</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                     </div>
 
                     <table class="info-table">
@@ -391,7 +397,7 @@ class EmailService:
                     <div class="error-box">
                         <strong>❌ 审批结果：</strong> 未通过
                         <br>
-                        <strong>处理时间：</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                        <strong>处理时间：</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
                     </div>
 
                     {reason_html}
@@ -408,7 +414,6 @@ class EmailService:
         """
 
         return EmailService.send_email([str(user_email)], subject, body_html)
-
 
     @staticmethod
     def notify_token_expiring(user: User, jwt_exp: str) -> bool:
@@ -640,7 +645,9 @@ class EmailService:
         return EmailService.send_email([str(user_email)], subject, body_html)
 
     @staticmethod
-    def notify_check_in_result(user: User, task_info: dict, success: bool, message: str = "") -> bool:
+    def notify_check_in_result(
+        user: User, task_info: dict, success: bool, message: str = ""
+    ) -> bool:
         """
         通知用户打卡结果
 
@@ -665,9 +672,16 @@ class EmailService:
         subject = f"【接龙自动打卡】打卡{status_text} - {user.alias}"
 
         # 判断是否是 Token 失效导致的失败
-        is_token_error = not success and message and (
-            "Token" in message or "token" in message or
-            "失效" in message or "授权" in message or "登录" in message
+        is_token_error = (
+            not success
+            and message
+            and (
+                "Token" in message
+                or "token" in message
+                or "失效" in message
+                or "授权" in message
+                or "登录" in message
+            )
         )
 
         # Token 失效时的额外提示内容
@@ -768,20 +782,20 @@ class EmailService:
                     <table class="info-table">
                         <tr>
                             <td>执行时间</td>
-                            <td>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</td>
+                            <td>{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</td>
                         </tr>
                         <tr>
                             <td>任务 ID</td>
-                            <td>{task_info.get('thread_id', '未知')}</td>
+                            <td>{task_info.get("thread_id", "未知")}</td>
                         </tr>
                         <tr>
                             <td>打卡状态</td>
                             <td><strong style="color: {status_color};">{status_text}</strong></td>
                         </tr>
-                        {f'<tr><td>失败原因</td><td>{message}</td></tr>' if message else ''}
+                        {f"<tr><td>失败原因</td><td>{message}</td></tr>" if message else ""}
                     </table>
 
-                    {token_error_section if is_token_error else '<p>如有问题，请及时检查您的打卡配置。</p>'}
+                    {token_error_section if is_token_error else "<p>如有问题，请及时检查您的打卡配置。</p>"}
                 </div>
                 <div class="footer">
                     <p>此邮件由系统自动发送，请勿直接回复。</p>

@@ -14,10 +14,12 @@ class AdminService:
     @staticmethod
     def get_pending_users(db: Session) -> List[User]:
         """获取待审批用户列表"""
-        users = db.query(User).filter(
-            User.is_approved == False,
-            User.role == "user"
-        ).order_by(User.created_at.desc()).all()
+        users = (
+            db.query(User)
+            .filter(User.is_approved == False, User.role == "user")
+            .order_by(User.created_at.desc())
+            .all()
+        )
 
         return users
 
@@ -38,11 +40,7 @@ class AdminService:
 
         logger.info(f"管理员审批通过用户: {user.alias} (ID: {user.id})")
 
-        return {
-            "success": True,
-            "message": "审批成功",
-            "user_id": user.id
-        }
+        return {"success": True, "message": "审批成功", "user_id": user.id}
 
     @staticmethod
     def reject_user(user_id: int, db: Session) -> Dict[str, Any]:
@@ -58,21 +56,18 @@ class AdminService:
 
         logger.info(f"管理员拒绝用户: {alias} (ID: {user_id})")
 
-        return {
-            "success": True,
-            "message": "已拒绝并删除用户"
-        }
+        return {"success": True, "message": "已拒绝并删除用户"}
 
     @staticmethod
     def delete_expired_pending_users(db: Session) -> int:
         """删除24小时未审批的用户"""
         cutoff_time = datetime.now() - timedelta(hours=24)
 
-        expired_users = db.query(User).filter(
-            User.is_approved == False,
-            User.role == "user",
-            User.created_at < cutoff_time
-        ).all()
+        expired_users = (
+            db.query(User)
+            .filter(User.is_approved == False, User.role == "user", User.created_at < cutoff_time)
+            .all()
+        )
 
         count = len(expired_users)
 

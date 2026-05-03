@@ -42,7 +42,7 @@ class JWTManager:
             "alias": user_alias,
             "iat": now,  # Issued At - 签发时间
             "exp": exp,  # Expiration Time - 过期时间
-            "type": "access"  # Token 类型
+            "type": "access",  # Token 类型
         }
 
         token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
@@ -97,10 +97,7 @@ class JWTManager:
         try:
             # decode 时设置 verify=False 跳过过期验证
             payload = jwt.decode(
-                token,
-                JWT_SECRET_KEY,
-                algorithms=[JWT_ALGORITHM],
-                options={"verify_exp": False}
+                token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM], options={"verify_exp": False}
             )
             return payload.get("user_id")
         except Exception as e:

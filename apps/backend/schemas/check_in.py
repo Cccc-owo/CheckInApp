@@ -2,21 +2,24 @@ from datetime import datetime
 from typing import Optional, List, Generic, TypeVar
 from pydantic import BaseModel, Field, ConfigDict
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ManualCheckInRequest(BaseModel):
     """手动打卡请求 Schema（已废弃，现在使用路径参数 task_id）"""
+
     task_id: Optional[int] = Field(None, description="任务 ID")
 
 
 class BatchCheckInRequest(BaseModel):
     """批量打卡请求 Schema"""
+
     task_ids: list[int] = Field(..., description="任务 ID 列表")
 
 
 class CheckInRecordResponse(BaseModel):
     """打卡记录响应 Schema"""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -37,6 +40,7 @@ class CheckInRecordResponse(BaseModel):
 
 class CheckInRecordWithTaskInfo(CheckInRecordResponse):
     """带任务信息的打卡记录响应 Schema"""
+
     task_name: str
     task_signature: str
     user_alias: str
@@ -44,6 +48,7 @@ class CheckInRecordWithTaskInfo(CheckInRecordResponse):
 
 class CheckInResultResponse(BaseModel):
     """打卡结果响应 Schema"""
+
     success: bool
     message: str
     record_id: Optional[int] = None
@@ -52,6 +57,7 @@ class CheckInResultResponse(BaseModel):
 
 class PaginatedResponse(BaseModel, Generic[T]):
     """分页响应 Schema"""
+
     records: List[T] = Field(..., description="记录列表")
     total: int = Field(..., description="总记录数")
     skip: int = Field(..., description="跳过的记录数")

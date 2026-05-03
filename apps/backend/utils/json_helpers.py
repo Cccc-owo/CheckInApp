@@ -3,6 +3,7 @@ JSON 处理辅助函数
 
 提供安全的 JSON 解析和数据提取功能
 """
+
 import json
 import logging
 from typing import Optional, Any, Dict
@@ -10,11 +11,7 @@ from typing import Optional, Any, Dict
 logger = logging.getLogger(__name__)
 
 
-def safe_parse_json(
-    json_str: Optional[str],
-    default: Any = None,
-    log_error: bool = True
-) -> Any:
+def safe_parse_json(json_str: Optional[str], default: Any = None, log_error: bool = True) -> Any:
     """
     安全解析 JSON 字符串，失败时返回默认值
 
@@ -37,10 +34,7 @@ def safe_parse_json(
         return default
 
 
-def safe_parse_payload(
-    payload_config: Optional[str],
-    default: Optional[Dict] = None
-) -> Dict:
+def safe_parse_payload(payload_config: Optional[str], default: Optional[Dict] = None) -> Dict:
     """
     安全解析 payload_config，失败时返回默认字典
 
@@ -70,7 +64,7 @@ def extract_thread_id(payload_config: Optional[str]) -> Optional[str]:
         ThreadId 或 None
     """
     payload = safe_parse_payload(payload_config)
-    return payload.get('ThreadId')
+    return payload.get("ThreadId")
 
 
 def extract_signature(payload_config: Optional[str]) -> Optional[str]:
@@ -84,7 +78,7 @@ def extract_signature(payload_config: Optional[str]) -> Optional[str]:
         Signature 或 None
     """
     payload = safe_parse_payload(payload_config)
-    return payload.get('Signature')
+    return payload.get("Signature")
 
 
 def build_task_info(task) -> Dict[str, str]:
@@ -98,6 +92,6 @@ def build_task_info(task) -> Dict[str, str]:
         包含 thread_id 和 name 的字典
     """
     return {
-        'thread_id': extract_thread_id(getattr(task, 'payload_config', None)) or '未知',
-        'name': getattr(task, 'name', None) or f'Task-{getattr(task, "id", "Unknown")}'
+        "thread_id": extract_thread_id(getattr(task, "payload_config", None)) or "未知",
+        "name": getattr(task, "name", None) or f"Task-{getattr(task, 'id', 'Unknown')}",
     }

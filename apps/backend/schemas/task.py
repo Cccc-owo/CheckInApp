@@ -5,11 +5,14 @@ from pydantic import BaseModel, Field, field_validator
 
 class TaskBase(BaseModel):
     """打卡任务基础 Schema"""
-    payload_config: str = Field(..., description="完整的 payload 配置 JSON（包含 ThreadId 和所有字段）")
+
+    payload_config: str = Field(
+        ..., description="完整的 payload 配置 JSON（包含 ThreadId 和所有字段）"
+    )
     name: Optional[str] = Field("", max_length=100, description="任务名称（用户自定义）")
     is_active: Optional[bool] = Field(True, description="是否启用自动打卡")
 
-    @field_validator('payload_config')
+    @field_validator("payload_config")
     @classmethod
     def validate_payload_config(cls, v: str) -> str:
         """
@@ -38,13 +41,14 @@ class TaskBase(BaseModel):
 
 class TaskCreate(TaskBase):
     """创建打卡任务 Schema"""
+
     cron_expression: Optional[str] = Field(
         None,
         max_length=100,
-        description="Crontab 表达式（例如 '0 20 * * *' 表示每天 20:00）。NULL 表示禁用定时打卡"
+        description="Crontab 表达式（例如 '0 20 * * *' 表示每天 20:00）。NULL 表示禁用定时打卡",
     )
 
-    @field_validator('cron_expression')
+    @field_validator("cron_expression")
     @classmethod
     def validate_cron_expression(cls, v: Optional[str]) -> Optional[str]:
         """验证 Crontab 表达式格式"""
@@ -56,6 +60,7 @@ class TaskCreate(TaskBase):
 
         try:
             from croniter import croniter
+
             if not croniter.is_valid(v):
                 raise ValueError(f"无效的 Crontab 表达式: '{v}'")
         except Exception as e:
@@ -66,16 +71,15 @@ class TaskCreate(TaskBase):
 
 class TaskUpdate(BaseModel):
     """更新打卡任务 Schema"""
+
     payload_config: Optional[str] = None
     name: Optional[str] = None
     is_active: Optional[bool] = None
     cron_expression: Optional[str] = Field(
-        None,
-        max_length=100,
-        description="Crontab 表达式。NULL 表示禁用定时打卡"
+        None, max_length=100, description="Crontab 表达式。NULL 表示禁用定时打卡"
     )
 
-    @field_validator('payload_config')
+    @field_validator("payload_config")
     @classmethod
     def validate_payload_config(cls, v: Optional[str]) -> Optional[str]:
         """
@@ -104,7 +108,7 @@ class TaskUpdate(BaseModel):
 
         return v
 
-    @field_validator('cron_expression')
+    @field_validator("cron_expression")
     @classmethod
     def validate_cron_expression(cls, v: Optional[str]) -> Optional[str]:
         """验证 Crontab 表达式（与 TaskCreate 相同）"""
@@ -116,6 +120,7 @@ class TaskUpdate(BaseModel):
 
         try:
             from croniter import croniter
+
             if not croniter.is_valid(v):
                 raise ValueError(f"无效的 Crontab 表达式: '{v}'")
         except Exception as e:
@@ -126,18 +131,15 @@ class TaskUpdate(BaseModel):
 
 class TaskResponse(TaskBase):
     """打卡任务响应 Schema"""
+
     id: int
     user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
     cron_expression: Optional[str] = Field(
-        None,
-        description="当前 Crontab 表达式（NULL = 禁用定时打卡）"
+        None, description="当前 Crontab 表达式（NULL = 禁用定时打卡）"
     )
-    is_scheduled_enabled: Optional[bool] = Field(
-        None,
-        description="是否启用了定时打卡"
-    )
+    is_scheduled_enabled: Optional[bool] = Field(None, description="是否启用了定时打卡")
 
     # 新增字段：最后一次打卡信息
     last_check_in_time: Optional[datetime] = Field(None, description="最后一次打卡时间")

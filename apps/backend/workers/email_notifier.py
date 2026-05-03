@@ -32,7 +32,9 @@ class EmailNotifier:
         """
         # 检查必要的邮件配置是否存在
         if not settings.SMTP_SERVER or not settings.SMTP_SENDER_EMAIL:
-            logger.debug("邮件配置未完成（SMTP_SERVER 或 SMTP_SENDER_EMAIL 为空），邮件发送功能已禁用")
+            logger.debug(
+                "邮件配置未完成（SMTP_SERVER 或 SMTP_SENDER_EMAIL 为空），邮件发送功能已禁用"
+            )
             return None
 
         if not settings.SMTP_PORT:
@@ -41,19 +43,16 @@ class EmailNotifier:
 
         # 返回配置字典
         return {
-            'smtp_server': settings.SMTP_SERVER,
-            'smtp_port': settings.SMTP_PORT,
-            'sender_email': settings.SMTP_SENDER_EMAIL,
-            'sender_password': settings.SMTP_SENDER_PASSWORD,
-            'use_ssl': settings.SMTP_USE_SSL
+            "smtp_server": settings.SMTP_SERVER,
+            "smtp_port": settings.SMTP_PORT,
+            "sender_email": settings.SMTP_SENDER_EMAIL,
+            "sender_password": settings.SMTP_SENDER_PASSWORD,
+            "use_ssl": settings.SMTP_USE_SSL,
         }
 
     @staticmethod
     def send_email(
-        to_emails: List[str],
-        subject: str,
-        html_content: str,
-        from_email: Optional[str] = None
+        to_emails: List[str], subject: str, html_content: str, from_email: Optional[str] = None
     ) -> bool:
         """
         发送邮件（底层方法）
@@ -74,30 +73,26 @@ class EmailNotifier:
 
         try:
             # 创建邮件
-            msg = MIMEMultipart('alternative')
-            msg['From'] = from_email or email_config['sender_email']
-            msg['To'] = ', '.join(to_emails)
-            msg['Subject'] = subject
+            msg = MIMEMultipart("alternative")
+            msg["From"] = from_email or email_config["sender_email"]
+            msg["To"] = ", ".join(to_emails)
+            msg["Subject"] = subject
 
             # 添加 HTML 正文
-            html_part = MIMEText(html_content, 'html', 'utf-8')
+            html_part = MIMEText(html_content, "html", "utf-8")
             msg.attach(html_part)
 
             # 连接 SMTP 服务器并发送
-            if email_config.get('use_ssl', True):
+            if email_config.get("use_ssl", True):
                 server = smtplib.SMTP_SSL(
-                    email_config['smtp_server'],
-                    int(email_config['smtp_port'])
+                    email_config["smtp_server"], int(email_config["smtp_port"])
                 )
             else:
-                server = smtplib.SMTP(
-                    email_config['smtp_server'],
-                    int(email_config['smtp_port'])
-                )
+                server = smtplib.SMTP(email_config["smtp_server"], int(email_config["smtp_port"]))
                 server.starttls()
 
-            server.login(email_config['sender_email'], email_config['sender_password'])
-            server.sendmail(msg['From'], to_emails, msg.as_string())
+            server.login(email_config["sender_email"], email_config["sender_password"])
+            server.sendmail(msg["From"], to_emails, msg.as_string())
             server.quit()
 
             logger.info(f"邮件发送成功: {subject} -> {', '.join(to_emails)}")
@@ -116,4 +111,3 @@ class EmailNotifier:
             邮件功能是否可用
         """
         return EmailNotifier.get_email_config() is not None
-

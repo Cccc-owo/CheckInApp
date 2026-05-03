@@ -24,7 +24,7 @@ def receive_load(target, context):
     """在从数据库加载对象后，将所有 datetime 字段转换为 timezone-aware (UTC)"""
     for attr_name in dir(target):
         # 跳过私有属性和方法
-        if attr_name.startswith('_'):
+        if attr_name.startswith("_"):
             continue
 
         try:

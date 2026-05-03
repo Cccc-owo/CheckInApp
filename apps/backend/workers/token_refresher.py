@@ -27,9 +27,8 @@ def get_chrome_config():
     """获取 Chrome 配置（从 settings 读取）"""
     return {
         "chrome_binary": settings.CHROME_BINARY_PATH,
-        "chromedriver": settings.CHROMEDRIVER_PATH
+        "chromedriver": settings.CHROMEDRIVER_PATH,
     }
-
 
 
 def update_session_file(session_id: str, data: dict) -> None:
@@ -39,7 +38,7 @@ def update_session_file(session_id: str, data: dict) -> None:
 
     try:
         with FileLock(lock_path, timeout=5):
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.error(f"写入会话文件 {filepath} 失败: {e}")
@@ -55,13 +54,14 @@ def get_session_status(session_id: str) -> str:
 
     try:
         with FileLock(lock_path, timeout=5):
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
                 if not content:
                     return None
                 from backend.utils.json_helpers import safe_parse_json
+
                 data = safe_parse_json(content, {})
-        return data.get('status')
+        return data.get("status")
     except IOError as e:
         logger.error(f"读取会话文件 {filepath} 失败: {e}")
         return None
@@ -77,11 +77,12 @@ def get_session_data(session_id: str) -> dict:
 
     try:
         with FileLock(lock_path, timeout=5):
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
                 if not content:
                     return None
                 from backend.utils.json_helpers import safe_parse_json
+
                 return safe_parse_json(content, {})
     except IOError as e:
         logger.error(f"读取会话文件 {filepath} 失败: {e}")
@@ -110,23 +111,23 @@ def cancel_session(session_id: str) -> bool:
             # 读取当前会话数据
             from backend.utils.json_helpers import safe_parse_json
 
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 content = f.read()
                 if not content:
                     return False
                 data = safe_parse_json(content, {})
 
             # 如果已经成功,不允许取消
-            if data.get('status') == 'success':
+            if data.get("status") == "success":
                 logger.info(f"会话 {session_id} 已成功,无法取消")
                 return False
 
             # 标记为已取消
-            data['status'] = 'cancelled'
-            data['message'] = '用户取消登录'
+            data["status"] = "cancelled"
+            data["message"] = "用户取消登录"
 
             # 写回文件
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
 
         logger.info(f"✅ 会话 {session_id} 已取消")
@@ -137,7 +138,9 @@ def cancel_session(session_id: str) -> bool:
         return False
 
 
-def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, client_ip: str = "") -> None:
+def get_token_headless(
+    session_id: str, jwt_sub: str = None, alias: str = None, client_ip: str = ""
+) -> None:
     """
     使用 Selenium 获取 QQ 扫码登录的 Token
 
@@ -171,12 +174,12 @@ def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, 
 
         # Headless 模式配置
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-        chrome_options.add_argument(f'user-agent={user_agent}')
+        chrome_options.add_argument(f"user-agent={user_agent}")
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument('--ignore-certificate-errors')
+        chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
         # 启动浏览器
@@ -203,7 +206,9 @@ def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, 
         current_step = "查找并点击切换按钮"
         toggle_button_selector = "div.login-wrap .toggle"
         logger.info(f"Selenium ({session_id}): {current_step} ({toggle_button_selector})...")
-        toggle_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, toggle_button_selector)))
+        toggle_button = wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, toggle_button_selector))
+        )
         toggle_button.click()
 
         # --- 步骤 2: 勾选同意服务协议 ---
@@ -219,27 +224,35 @@ def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, 
         current_step = "点击立即登录按钮"
         login_button_selector = "button.css-1wli0ry.ant-btn.ant-btn-default.login-btn"
         logger.info(f"Selenium ({session_id}): {current_step} ({login_button_selector})...")
-        login_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, login_button_selector)))
+        login_button = wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, login_button_selector))
+        )
         login_button.click()
 
         # --- 步骤 4: 等待二维码加载 ---
         import time
+
         time.sleep(3)  # 等待几秒让二维码刷新出来
 
         current_step = "等待QQ二维码图片加载"
         qq_qr_image_selector = "#login_container img"
         logger.info(f"Selenium ({session_id}): {current_step} ({qq_qr_image_selector})...")
-        qr_element = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, qq_qr_image_selector)))
+        qr_element = wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, qq_qr_image_selector))
+        )
 
         logger.info(f"Selenium ({session_id}): 成功找到QQ二维码元素，正在截图...")
         qr_base64 = qr_element.screenshot_as_base64
-        update_session_file(session_id, {
-            'status': 'waiting_scan',
-            'qr_image_data': qr_base64,
-            'jwt_sub': jwt_sub,
-            'alias': alias,  # 新增：保存 alias
-            'client_ip': client_ip  # 新增：保存 IP
-        })
+        update_session_file(
+            session_id,
+            {
+                "status": "waiting_scan",
+                "qr_image_data": qr_base64,
+                "jwt_sub": jwt_sub,
+                "alias": alias,  # 新增：保存 alias
+                "client_ip": client_ip,  # 新增：保存 IP
+            },
+        )
 
         current_step = "等待用户扫描登录 (Cookie 'token' 出现)"
         cookie_name_to_find = "token"
@@ -248,10 +261,11 @@ def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, 
         # 自定义等待逻辑:每秒检查cookie和session状态
         max_wait_seconds = 120
         import time
+
         for i in range(max_wait_seconds):
             # 检查session是否被取消
             status = get_session_status(session_id)
-            if status == 'cancelled':
+            if status == "cancelled":
                 logger.info(f"Selenium ({session_id}): 用户取消了登录,终止会话")
                 raise Exception("用户取消登录")
 
@@ -268,22 +282,28 @@ def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, 
         cookie = driver.get_cookie(cookie_name_to_find)
         if cookie:
             logger.info(f"Selenium ({session_id}): 成功在Cookie中捕获到Token！")
-            update_session_file(session_id, {
-                'status': 'success',
-                'token': cookie['value'],
-                'alias': alias,  # 保存 alias
-                'client_ip': client_ip  # 保存 IP
-            })
+            update_session_file(
+                session_id,
+                {
+                    "status": "success",
+                    "token": cookie["value"],
+                    "alias": alias,  # 保存 alias
+                    "client_ip": client_ip,  # 保存 IP
+                },
+            )
         else:
             raise Exception("等待Cookie成功但获取失败")
 
     except TimeoutException:
-        if get_session_status(session_id) == 'success':
-            logger.warning(f"Selenium ({session_id}): 一个并发线程超时，但会话已成功，将忽略此超时。")
+        if get_session_status(session_id) == "success":
+            logger.warning(
+                f"Selenium ({session_id}): 一个并发线程超时，但会话已成功，将忽略此超时。"
+            )
         else:
             # 释放预占的用户名
             if alias:
                 from backend.services.registration_manager import registration_manager
+
                 registration_manager.release_alias(alias, session_id)
                 logger.info(f"超时释放用户名预占: {alias}")
 
@@ -294,34 +314,35 @@ def get_token_headless(session_id: str, jwt_sub: str = None, alias: str = None, 
             if driver:
                 try:
                     driver.save_screenshot(DEBUG_SCREENSHOT_PATH)
-                    with open(DEBUG_PAGE_SOURCE_PATH, 'w', encoding='utf-8') as f:
+                    with open(DEBUG_PAGE_SOURCE_PATH, "w", encoding="utf-8") as f:
                         f.write(driver.page_source)
-                    logger.error(f"Selenium ({session_id}): 调试截图和源码已保存。当前URL: {driver.current_url}")
+                    logger.error(
+                        f"Selenium ({session_id}): 调试截图和源码已保存。当前URL: {driver.current_url}"
+                    )
                 except Exception as debug_error:
                     logger.error(f"Selenium ({session_id}): 保存调试信息失败: {debug_error}")
 
-            update_session_file(session_id, {
-                'status': 'error',
-                'message': error_message,
-                'jwt_sub': jwt_sub
-            })
+            update_session_file(
+                session_id, {"status": "error", "message": error_message, "jwt_sub": jwt_sub}
+            )
 
     except Exception as e:
-        if get_session_status(session_id) == 'success':
-            logger.warning(f"Selenium ({session_id}): 一个并发线程出错 ({e})，但会话已成功，将忽略此错误。")
+        if get_session_status(session_id) == "success":
+            logger.warning(
+                f"Selenium ({session_id}): 一个并发线程出错 ({e})，但会话已成功，将忽略此错误。"
+            )
         else:
             # 释放预占的用户名
             if alias:
                 from backend.services.registration_manager import registration_manager
+
                 registration_manager.release_alias(alias, session_id)
                 logger.info(f"异常释放用户名预占: {alias}")
 
             logger.error(f"Selenium ({session_id}): 发生未知错误: {e}", exc_info=True)
-            update_session_file(session_id, {
-                'status': 'error',
-                'message': str(e),
-                'jwt_sub': jwt_sub
-            })
+            update_session_file(
+                session_id, {"status": "error", "message": str(e), "jwt_sub": jwt_sub}
+            )
 
     finally:
         if driver:

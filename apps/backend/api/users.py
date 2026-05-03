@@ -3,7 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from backend.models import get_db, User
-from backend.schemas.user import UserCreate, UserUpdate, UserResponse, TokenStatus, UserUpdateProfile
+from backend.schemas.user import (
+    UserCreate,
+    UserUpdate,
+    UserResponse,
+    TokenStatus,
+    UserUpdateProfile,
+)
 from backend.schemas.task import TaskResponse
 from backend.services.user_service import UserService
 from backend.services.task_service import TaskService
@@ -13,11 +19,16 @@ from backend.exceptions import ValidationError, AuthorizationError, ResourceNotF
 router = APIRouter()
 
 
-@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED, summary="创建用户（管理员）")
+@router.post(
+    "",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="创建用户（管理员）",
+)
 async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     创建用户（需要管理员权限）
@@ -33,15 +44,12 @@ async def create_user(
         raise ValidationError(str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"创建用户失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"创建用户失败: {str(e)}"
         )
 
 
 @router.get("/me", response_model=UserResponse, summary="获取当前用户信息")
-async def get_current_user_info(
-    current_user: User = Depends(get_current_user)
-):
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
     获取当前登录用户的信息
     """
@@ -61,9 +69,7 @@ async def get_current_user_info(
 
 
 @router.get("/me/status", response_model=dict, summary="获取当前用户审批状态")
-async def get_user_status(
-    current_user: User = Depends(get_current_user)
-):
+async def get_user_status(current_user: User = Depends(get_current_user)):
     """
     获取用户审批状态（不要求审批通过）
     """
@@ -71,7 +77,7 @@ async def get_user_status(
         "user_id": current_user.id,
         "alias": current_user.alias,
         "is_approved": current_user.is_approved,
-        "created_at": current_user.created_at.isoformat() if current_user.created_at else None
+        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
     }
 
 
@@ -79,7 +85,7 @@ async def get_user_status(
 async def update_current_user_profile(
     profile_data: UserUpdateProfile,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     更新当前用户的个人信息
@@ -99,15 +105,12 @@ async def update_current_user_profile(
         raise ValidationError(str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"更新个人信息失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"更新个人信息失败: {str(e)}"
         )
 
 
 @router.get("/me/token_status", response_model=TokenStatus, summary="获取当前用户打卡 Token 状态")
-async def get_current_user_token_status(
-    current_user: User = Depends(get_current_user)
-):
+async def get_current_user_token_status(current_user: User = Depends(get_current_user)):
     """
     获取当前用户的打卡 Token 状态（authorization token，非 JWT）
 
@@ -123,7 +126,7 @@ async def get_current_user_token_status(
         "jwt_exp": current_user.jwt_exp,
         "expires_at": result.get("expires_at"),
         "days_until_expiry": result.get("days_remaining"),
-        "expiring_soon": result.get("expiring_soon", False)
+        "expiring_soon": result.get("expiring_soon", False),
     }
 
 
@@ -131,7 +134,7 @@ async def get_current_user_token_status(
 async def get_current_user_tasks(
     include_inactive: bool = Query(True, description="是否包含未启用的任务"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     获取当前登录用户的所有打卡任务
@@ -143,8 +146,7 @@ async def get_current_user_tasks(
         return tasks
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"获取任务列表失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取任务列表失败: {str(e)}"
         )
 
 
@@ -155,7 +157,7 @@ async def get_all_users(
     search: Optional[str] = Query(None, description="搜索关键词（alias）"),
     role: Optional[str] = Query(None, description="过滤角色 (user/admin)"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     获取所有用户列表（需要管理员权限）
@@ -170,16 +172,13 @@ async def get_all_users(
         return users
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"获取用户列表失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取用户列表失败: {str(e)}"
         )
 
 
 @router.get("/{user_id}", response_model=UserResponse, summary="获取指定用户")
 async def get_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """
     获取指定用户信息
@@ -203,7 +202,7 @@ async def update_user(
     user_id: int,
     user_data: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     更新用户信息
@@ -236,28 +235,26 @@ async def update_user(
         new_approved_value = user.is_approved
         is_approved_now = True if new_approved_value else False
 
-        is_admin = (current_user.role == "admin")
-        needs_notification = (is_admin and (not was_approved_before) and is_approved_now)
+        is_admin = current_user.role == "admin"
+        needs_notification = is_admin and (not was_approved_before) and is_approved_now
 
         if needs_notification:
             try:
                 from backend.services.email_service import EmailService
+
                 EmailService.notify_user_approved(user)
             except Exception as e:
                 # 邮件发送失败不影响审批操作
                 import logging
+
                 logging.getLogger(__name__).error(f"发送审批通过邮件失败: {e}")
 
         return user
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"更新用户失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"更新用户失败: {str(e)}"
         )
 
 
@@ -265,7 +262,7 @@ async def update_user(
 async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user),
 ):
     """
     删除用户（需要管理员权限）
@@ -277,6 +274,5 @@ async def delete_user(
         raise ResourceNotFoundError(str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"删除用户失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"删除用户失败: {str(e)}"
         )

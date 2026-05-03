@@ -39,14 +39,15 @@ def load_scheduled_tasks(db: Session, scheduler_instance):
 
     # 移除所有现有的动态任务（保留系统任务）
     for job in scheduler_instance.get_jobs():
-        if job.id.startswith('task_'):
+        if job.id.startswith("task_"):
             scheduler_instance.remove_job(job.id)
 
     # 查询所有启用且有 cron 表达式的任务
-    tasks = db.query(CheckInTask).filter(
-        CheckInTask.is_active == True,
-        CheckInTask.cron_expression.isnot(None)
-    ).all()
+    tasks = (
+        db.query(CheckInTask)
+        .filter(CheckInTask.is_active == True, CheckInTask.cron_expression.isnot(None))
+        .all()
+    )
 
     loaded_count = 0
     skipped_count = 0
@@ -76,7 +77,7 @@ def load_scheduled_tasks(db: Session, scheduler_instance):
                 id=job_id,
                 name=f"CheckIn-Task-{task.id}",
                 args=[task.id],
-                replace_existing=True
+                replace_existing=True,
             )
 
             logger.info(f"✅ 加载任务 {task.id}: {task.name} (Cron: {task.cron_expression})")
@@ -90,7 +91,7 @@ def load_scheduled_tasks(db: Session, scheduler_instance):
         "loaded": loaded_count,
         "skipped": skipped_count,
         "errors": error_count,
-        "total": len(tasks)
+        "total": len(tasks),
     }
 
     logger.info(f"任务加载完成: {result}")
@@ -114,7 +115,9 @@ def scheduled_check_in_task(task_id: int):
             return
 
         if not task.is_scheduled_enabled:
-            logger.info(f"任务 {task_id} 未启用定时打卡 (is_active={task.is_active}, cron={task.cron_expression})")
+            logger.info(
+                f"任务 {task_id} 未启用定时打卡 (is_active={task.is_active}, cron={task.cron_expression})"
+            )
             return
 
         logger.info(f"🤖 执行定时打卡任务 {task_id}")
@@ -184,14 +187,18 @@ def check_token_expiration():
                 # 计算剩余时间
                 time_until_expiry = seconds_until_expiry(exp_timestamp)
 
-                logger.debug(f"用户 {user.alias}: 剩余 {time_until_expiry} 秒 (即将过期标志={user.token_expiring_notified}, 已过期标志={user.token_expired_notified})")
+                logger.debug(
+                    f"用户 {user.alias}: 剩余 {time_until_expiry} 秒 (即将过期标志={user.token_expiring_notified}, 已过期标志={user.token_expired_notified})"
+                )
 
                 # 情况1：Token 即将过期（过期前 30 分钟内，且还未过期）
                 if 0 < time_until_expiry < 1800:  # 30分钟 = 1800秒
                     # 检查是否已发送过提醒
                     expiring_notified = bool(user.token_expiring_notified)
                     if not expiring_notified:
-                        logger.info(f"用户 {user.alias} 的打卡 Token 即将过期，发送邮件提醒到 {user_email}...")
+                        logger.info(
+                            f"用户 {user.alias} 的打卡 Token 即将过期，发送邮件提醒到 {user_email}..."
+                        )
                         from backend.services.email_service import EmailService
 
                         # 发送"即将过期"邮件
@@ -212,7 +219,9 @@ def check_token_expiration():
                     # 检查是否已发送过提醒
                     expired_notified = bool(user.token_expired_notified)
                     if not expired_notified:
-                        logger.info(f"用户 {user.alias} 的打卡 Token 已过期，发送邮件提醒到 {user_email}...")
+                        logger.info(
+                            f"用户 {user.alias} 的打卡 Token 已过期，发送邮件提醒到 {user_email}..."
+                        )
                         from backend.services.email_service import EmailService
 
                         # 发送"已过期"邮件
@@ -320,11 +329,9 @@ def start_scheduler():
             minutes=settings.TOKEN_CHECK_INTERVAL_MINUTES,
             id="check_token_expiration",
             name="Token 过期检查任务",
-            replace_existing=True
+            replace_existing=True,
         )
-        logger.info(
-            f"已添加 Token 过期检查任务: 每 {settings.TOKEN_CHECK_INTERVAL_MINUTES} 分钟"
-        )
+        logger.info(f"已添加 Token 过期检查任务: 每 {settings.TOKEN_CHECK_INTERVAL_MINUTES} 分钟")
 
         # 添加会话文件清理任务（每隔指定小时）
         scheduler.add_job(
@@ -333,11 +340,9 @@ def start_scheduler():
             hours=settings.SESSION_CLEANUP_INTERVAL_HOURS,
             id="cleanup_old_sessions",
             name="清理旧会话文件任务",
-            replace_existing=True
+            replace_existing=True,
         )
-        logger.info(
-            f"已添加会话清理任务: 每 {settings.SESSION_CLEANUP_INTERVAL_HOURS} 小时"
-        )
+        logger.info(f"已添加会话清理任务: 每 {settings.SESSION_CLEANUP_INTERVAL_HOURS} 小时")
 
         # 添加清理过期未审批用户任务（每小时执行一次）
         scheduler.add_job(
@@ -346,7 +351,7 @@ def start_scheduler():
             hours=1,
             id="cleanup_expired_pending_users",
             name="清理过期未审批用户任务",
-            replace_existing=True
+            replace_existing=True,
         )
         logger.info("已添加清理过期未审批用户任务: 每 1 小时")
 

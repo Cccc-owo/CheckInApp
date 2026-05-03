@@ -132,15 +132,13 @@ class TemplateService:
         except json.JSONDecodeError as e:
             logger.error(f"模板字段配置 JSON 格式错误: {str(e)}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"字段配置 JSON 格式错误: {str(e)}"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"字段配置 JSON 格式错误: {str(e)}"
             )
         except Exception as e:
             logger.error(f"创建模板失败: {str(e)}")
             db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"创建模板失败: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"创建模板失败: {str(e)}"
             )
 
     @staticmethod
@@ -159,10 +157,7 @@ class TemplateService:
 
     @staticmethod
     def get_all_templates(
-        db: Session,
-        skip: int = 0,
-        limit: int = 100,
-        is_active: Optional[bool] = None
+        db: Session, skip: int = 0, limit: int = 100, is_active: Optional[bool] = None
     ) -> List[TaskTemplate]:
         """
         获取所有模板列表
@@ -185,9 +180,7 @@ class TemplateService:
 
     @staticmethod
     def update_template(
-        template_id: int,
-        template_data: TemplateUpdate,
-        db: Session
+        template_id: int, template_data: TemplateUpdate, db: Session
     ) -> TaskTemplate:
         """
         更新模板
@@ -202,18 +195,15 @@ class TemplateService:
         """
         template = TemplateService.get_template(template_id, db)
         if not template:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="模板不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="模板不存在")
 
         try:
             # 更新字段
             update_data = template_data.model_dump(exclude_unset=True)
 
             # 验证 field_config 如果有更新
-            if 'field_config' in update_data and update_data['field_config']:
-                json.loads(update_data['field_config'])
+            if "field_config" in update_data and update_data["field_config"]:
+                json.loads(update_data["field_config"])
 
             for field, value in update_data.items():
                 setattr(template, field, value)
@@ -227,15 +217,13 @@ class TemplateService:
         except json.JSONDecodeError as e:
             logger.error(f"模板字段配置 JSON 格式错误: {str(e)}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"字段配置 JSON 格式错误: {str(e)}"
+                status_code=status.HTTP_400_BAD_REQUEST, detail=f"字段配置 JSON 格式错误: {str(e)}"
             )
         except Exception as e:
             logger.error(f"更新模板失败: {str(e)}")
             db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"更新模板失败: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"更新模板失败: {str(e)}"
             )
 
     @staticmethod
@@ -252,10 +240,7 @@ class TemplateService:
         """
         template = TemplateService.get_template(template_id, db)
         if not template:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="模板不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="模板不存在")
 
         try:
             db.delete(template)
@@ -266,28 +251,26 @@ class TemplateService:
             logger.error(f"删除模板失败: {str(e)}")
             db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"删除模板失败: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"删除模板失败: {str(e)}"
             )
 
     @staticmethod
     def _is_field_config(obj: Any) -> bool:
         """判断是否为字段配置对象"""
-        return isinstance(obj, dict) and 'display_name' in obj
+        return isinstance(obj, dict) and "display_name" in obj
 
     @staticmethod
     def _is_object_field(obj: Any) -> bool:
         """判断是否为对象字段（包含多个子字段配置）"""
         if not isinstance(obj, dict):
             return False
-        if 'display_name' in obj:
+        if "display_name" in obj:
             return False
         # 检查所有值是否都是字段配置对象
-        return all(
-            TemplateService._is_field_config(v)
-            for v in obj.values()
-            if isinstance(v, dict)
-        ) and len(obj) > 0
+        return (
+            all(TemplateService._is_field_config(v) for v in obj.values() if isinstance(v, dict))
+            and len(obj) > 0
+        )
 
     @staticmethod
     def _process_field_value(key: str, config: Any, field_values: Dict[str, Any]) -> Any:
@@ -304,12 +287,12 @@ class TemplateService:
         """
         # 1. 普通字段配置
         if TemplateService._is_field_config(config):
-            if config.get('hidden', False):
-                value = config.get('default_value', '')
+            if config.get("hidden", False):
+                value = config.get("default_value", "")
             else:
-                value = field_values.get(key, config.get('default_value', ''))
+                value = field_values.get(key, config.get("default_value", ""))
 
-            value_type = config.get('value_type', 'string')
+            value_type = config.get("value_type", "string")
             return TemplateService._validate_and_convert_value(value, value_type, key)
 
         # 2. 数组字段
@@ -319,10 +302,10 @@ class TemplateService:
                 # 检查数组元素是否是字段配置对象
                 if TemplateService._is_field_config(item_config):
                     # 数组元素是字段配置对象，需要序列化为 JSON 字符串
-                    value = item_config.get('default_value', '')
-                    value_type = item_config.get('value_type', 'string')
+                    value = item_config.get("default_value", "")
+                    value_type = item_config.get("value_type", "string")
                     # 将对象序列化为 JSON 字符串
-                    if value_type == 'json':
+                    if value_type == "json":
                         if isinstance(value, str):
                             # 如果是字符串，验证 JSON 格式
                             try:
@@ -333,15 +316,16 @@ class TemplateService:
                                 error_detail += f"JSON 解析错误: {str(e)}\n"
                                 error_detail += "常见问题: 数字不能有前导零（如 00.00 应改为 0.0）"
                                 raise HTTPException(
-                                    status_code=status.HTTP_400_BAD_REQUEST,
-                                    detail=error_detail
+                                    status_code=status.HTTP_400_BAD_REQUEST, detail=error_detail
                                 )
                             result.append(value)
                         else:
                             # 如果是对象，序列化为 JSON 字符串
                             result.append(json.dumps(value, ensure_ascii=False))
                     else:
-                        result.append(TemplateService._validate_and_convert_value(value, value_type, key))
+                        result.append(
+                            TemplateService._validate_and_convert_value(value, value_type, key)
+                        )
                 elif isinstance(item_config, dict):
                     # 数组元素是普通对象，递归处理
                     item = {}
@@ -388,9 +372,7 @@ class TemplateService:
             field_config = TemplateService.merge_parent_config(template, db)
 
             # 初始化 payload，只包含 ThreadId（唯一必需，不在模板中配置）
-            payload = {
-                "ThreadId": "<接龙项目ID>"
-            }
+            payload = {"ThreadId": "<接龙项目ID>"}
 
             # 递归处理所有字段，保持键名原样
             for key, config in field_config.items():
@@ -402,15 +384,12 @@ class TemplateService:
             logger.error(f"解析模板配置失败: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"解析模板配置失败: {str(e)}"
+                detail=f"解析模板配置失败: {str(e)}",
             )
 
     @staticmethod
     def assemble_payload_from_template(
-        template: TaskTemplate,
-        thread_id: str,
-        field_values: Dict[str, Any],
-        db: Session
+        template: TaskTemplate, thread_id: str, field_values: Dict[str, Any], db: Session
     ) -> Dict[str, Any]:
         """
         根据模板和用户输入组装完整的 payload
@@ -432,9 +411,7 @@ class TemplateService:
             field_config = TemplateService.merge_parent_config(template, db)
 
             # 初始化 payload，只包含 ThreadId（唯一必需）
-            payload = {
-                "ThreadId": thread_id
-            }
+            payload = {"ThreadId": thread_id}
 
             # 递归处理所有字段，保持键名原样
             for key, config in field_config.items():
@@ -445,14 +422,13 @@ class TemplateService:
         except json.JSONDecodeError as e:
             logger.error(f"解析模板配置失败: {str(e)}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"解析模板配置失败"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"解析模板配置失败"
             )
         except Exception as e:
             logger.error(f"组装 payload 失败: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"组装 payload 失败: {str(e)}"
+                detail=f"组装 payload 失败: {str(e)}",
             )
 
     @staticmethod
@@ -469,17 +445,17 @@ class TemplateService:
             转换后的值
         """
         try:
-            if value_type == 'int':
-                return int(value) if value != '' else 0
-            elif value_type == 'double':
-                return float(value) if value != '' else 0.0
-            elif value_type == 'bool':
+            if value_type == "int":
+                return int(value) if value != "" else 0
+            elif value_type == "double":
+                return float(value) if value != "" else 0.0
+            elif value_type == "bool":
                 if isinstance(value, bool):
                     return value
                 if isinstance(value, str):
-                    return value.lower() in ('true', '1', 'yes')
+                    return value.lower() in ("true", "1", "yes")
                 return bool(value)
-            elif value_type == 'json':
+            elif value_type == "json":
                 # JSON 类型：如果是字符串，尝试解析后再序列化；如果是对象，直接序列化
                 if isinstance(value, str):
                     # 验证是否为有效 JSON
@@ -493,7 +469,7 @@ class TemplateService:
         except (ValueError, TypeError, json.JSONDecodeError) as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"字段 '{field_name}' 类型错误：期望 {value_type}，实际值为 '{value}'，错误: {str(e)}"
+                detail=f"字段 '{field_name}' 类型错误：期望 {value_type}，实际值为 '{value}'，错误: {str(e)}",
             )
 
     @staticmethod
@@ -504,7 +480,7 @@ class TemplateService:
         user_id: int,
         task_name: Optional[str],
         db: Session,
-        cron_expression: Optional[str] = "0 20 * * *"
+        cron_expression: Optional[str] = "0 20 * * *",
     ) -> CheckInTask:
         """
         从模板创建打卡任务
@@ -524,16 +500,12 @@ class TemplateService:
         # 获取模板
         template = TemplateService.get_template(template_id, db)
         if not template:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="模板不存在"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="模板不存在")
 
         # 检查模板是否启用
         if template.is_active is not True:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="该模板未启用，无法创建任务"
+                status_code=status.HTTP_403_FORBIDDEN, detail="该模板未启用，无法创建任务"
             )
 
         # 组装 payload
@@ -543,7 +515,7 @@ class TemplateService:
 
         # 生成任务名称
         if not task_name:
-            signature = payload.get('Signature', 'Unknown')
+            signature = payload.get("Signature", "Unknown")
             task_name = f"{template.name} - {signature}"
 
         # 创建任务（包含 cron_expression）
@@ -553,17 +525,20 @@ class TemplateService:
                 payload_config=json.dumps(payload, ensure_ascii=False),
                 name=task_name,
                 is_active=True,
-                cron_expression=cron_expression or "0 20 * * *"
+                cron_expression=cron_expression or "0 20 * * *",
             )
             db.add(task)
             db.commit()
             db.refresh(task)
 
-            logger.info(f"从模板创建任务成功: {task.name} (ID: {task.id}, 模板: {template.name}, ThreadId: {thread_id})")
+            logger.info(
+                f"从模板创建任务成功: {task.name} (ID: {task.id}, 模板: {template.name}, ThreadId: {thread_id})"
+            )
 
             # 如果任务启用且包含 cron_expression，立即添加到调度器
             if task.is_scheduled_enabled:
                 from backend.services.task_service import TaskService
+
                 TaskService._reload_scheduler_for_task(task, db)
 
             return task
@@ -572,6 +547,5 @@ class TemplateService:
             logger.error(f"从模板创建任务失败: {str(e)}")
             db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"创建任务失败: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"创建任务失败: {str(e)}"
             )

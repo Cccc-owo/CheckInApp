@@ -20,7 +20,7 @@ def escape_like_pattern(text: str) -> str:
     Returns:
         转义后的文本
     """
-    return text.replace('%', r'\%').replace('_', r'\_')
+    return text.replace("%", r"\%").replace("_", r"\_")
 
 
 class UserService:
@@ -49,7 +49,9 @@ class UserService:
             alias=user_data.alias,
             email=user_data.email,
             role=user_data.role or "user",
-            is_approved=user_data.is_approved if user_data.is_approved is not None else True,  # 使用请求中的值，默认已审批
+            is_approved=user_data.is_approved
+            if user_data.is_approved is not None
+            else True,  # 使用请求中的值，默认已审批
             jwt_exp="0",
             authorization=None,
         )
@@ -57,14 +59,17 @@ class UserService:
         # 如果提供了密码，则设置密码
         if user_data.password:
             import bcrypt
-            password_hash = bcrypt.hashpw(user_data.password.encode('utf-8'), bcrypt.gensalt())
-            setattr(user, 'password_hash', password_hash.decode('utf-8'))
+
+            password_hash = bcrypt.hashpw(user_data.password.encode("utf-8"), bcrypt.gensalt())
+            setattr(user, "password_hash", password_hash.decode("utf-8"))
 
         db.add(user)
         db.commit()
         db.refresh(user)
 
-        logger.info(f"管理员创建用户成功: {user.alias} (ID: {user.id}, 角色: {user.role}, 密码: {'已设置' if user_data.password else '未设置'})")
+        logger.info(
+            f"管理员创建用户成功: {user.alias} (ID: {user.id}, 角色: {user.role}, 密码: {'已设置' if user_data.password else '未设置'})"
+        )
         return user
 
     @staticmethod
@@ -115,7 +120,7 @@ class UserService:
         skip: int = 0,
         limit: int = 100,
         search: Optional[str] = None,
-        role: Optional[str] = None
+        role: Optional[str] = None,
     ) -> List[User]:
         """
         获取所有用户
@@ -241,7 +246,9 @@ class UserService:
                     raise ValueError("修改密码时必须提供当前密码")
 
                 # 验证当前密码
-                if not AuthService.verify_password(update_data["current_password"], user.password_hash):
+                if not AuthService.verify_password(
+                    update_data["current_password"], user.password_hash
+                ):
                     raise ValueError("当前密码错误")
 
             # 设置新密码

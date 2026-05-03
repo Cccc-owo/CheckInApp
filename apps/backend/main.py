@@ -44,6 +44,7 @@ async def lifespan(app: FastAPI):
     # 启动调度器
     logger.info("正在启动调度器...")
     from backend.services.scheduler_service import start_scheduler
+
     start_scheduler()
 
     logger.info(f"CheckIn API 服务已启动，版本: {settings.VERSION}")
@@ -53,6 +54,7 @@ async def lifespan(app: FastAPI):
     # 关闭时执行
     logger.info("正在关闭 CheckIn API 服务...")
     from backend.services.scheduler_service import stop_scheduler
+
     stop_scheduler()
     logger.info("CheckIn API 服务已关闭")
 
@@ -85,11 +87,8 @@ async def api_exception_handler(request: Request, exc: BaseAPIException):
     return JSONResponse(
         status_code=exc.status_code,
         content=ErrorResponse(
-            error=ErrorDetail(
-                code=exc.error_code,
-                message=exc.message
-            )
-        ).model_dump()
+            error=ErrorDetail(code=exc.error_code, message=exc.message)
+        ).model_dump(),
     )
 
 
@@ -105,12 +104,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=ErrorResponse(
-            error=ErrorDetail(
-                code="VALIDATION_ERROR",
-                message=message,
-                field=field or None
-            )
-        ).model_dump()
+            error=ErrorDetail(code="VALIDATION_ERROR", message=message, field=field or None)
+        ).model_dump(),
     )
 
 
@@ -123,11 +118,8 @@ async def general_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=ErrorResponse(
-            error=ErrorDetail(
-                code="INTERNAL_ERROR",
-                message="服务器内部错误，请稍后重试"
-            )
-        ).model_dump()
+            error=ErrorDetail(code="INTERNAL_ERROR", message="服务器内部错误，请稍后重试")
+        ).model_dump(),
     )
 
 
@@ -156,6 +148,7 @@ async def root():
 
 # 注册路由
 from backend.api import auth, users, check_in, admin, tasks, templates
+
 app.include_router(auth.router, prefix=f"{settings.API_PREFIX}/auth", tags=["认证"])
 app.include_router(users.router, prefix=f"{settings.API_PREFIX}/users", tags=["用户"])
 app.include_router(tasks.router, prefix=f"{settings.API_PREFIX}/tasks", tags=["打卡任务"])
@@ -166,6 +159,7 @@ app.include_router(templates.router, prefix=f"{settings.API_PREFIX}/templates", 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",

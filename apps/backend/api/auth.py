@@ -21,10 +21,7 @@ router = APIRouter()
 @router.post("/request_qrcode", response_model=dict, summary="请求 QQ 扫码二维码")
 @limiter.limit("10/minute")  # 每分钟最多10次请求
 async def request_qrcode(
-    request_obj: QRCodeRequest,
-    request: Request,
-    response: Response,
-    db: Session = Depends(get_db)
+    request_obj: QRCodeRequest, request: Request, response: Response, db: Session = Depends(get_db)
 ):
     """
     请求 QQ 扫码二维码
@@ -44,7 +41,7 @@ async def request_qrcode(
             raise BusinessLogicError(
                 message="注册过于频繁，请 10 分钟后再试",
                 error_code="RATE_LIMIT_EXCEEDED",
-                status_code=429
+                status_code=429,
             )
     else:
         # 生成新的 Cookie
@@ -67,22 +64,18 @@ async def request_qrcode(
             value=reg_cookie,
             max_age=600,  # 10 分钟
             httponly=True,
-            samesite="lax"
+            samesite="lax",
         )
 
         return result
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"创建扫码会话失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"创建扫码会话失败: {str(e)}"
         )
 
 
 @router.get("/qrcode_status/{session_id}", response_model=dict, summary="检查二维码扫描状态")
-async def get_qrcode_status(
-    session_id: str,
-    db: Session = Depends(get_db)
-):
+async def get_qrcode_status(session_id: str, db: Session = Depends(get_db)):
     """
     检查二维码扫描状态
 
@@ -104,15 +97,12 @@ async def get_qrcode_status(
         return result
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"查询扫码状态失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"查询扫码状态失败: {str(e)}"
         )
 
 
 @router.delete("/qrcode_session/{session_id}", response_model=dict, summary="取消二维码登录会话")
-async def cancel_qrcode_session(
-    session_id: str
-):
+async def cancel_qrcode_session(session_id: str):
     """
     取消二维码登录会话
 
@@ -125,16 +115,12 @@ async def cancel_qrcode_session(
         return result
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"取消会话失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"取消会话失败: {str(e)}"
         )
 
 
 @router.post("/verify_token", response_model=dict, summary="验证 JWT Token 有效性")
-async def verify_token(
-    request: TokenVerifyRequest,
-    db: Session = Depends(get_db)
-):
+async def verify_token(request: TokenVerifyRequest, db: Session = Depends(get_db)):
     """
     验证 JWT Token 有效性（网站登录认证）
 
@@ -152,8 +138,7 @@ async def verify_token(
         return result
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"验证 Token 失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"验证 Token 失败: {str(e)}"
         )
 
 
@@ -162,7 +147,7 @@ async def verify_token(
 async def alias_login(
     login_data: AliasLoginRequest,
     request: Request,  # slowapi需要的request参数
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     别名+密码登录（仅限已设置密码的用户）
@@ -187,6 +172,5 @@ async def alias_login(
         return result
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"别名登录失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"别名登录失败: {str(e)}"
         )

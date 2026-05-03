@@ -1,6 +1,7 @@
 """
 测试新的异常处理系统
 """
+
 import sys
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from backend.exceptions import (
     BusinessLogicError,
 )
 from backend.schemas.response import ErrorResponse, ErrorDetail
+
 
 def test_exceptions():
     """测试自定义异常"""
@@ -32,7 +34,9 @@ def test_exceptions():
     try:
         raise AuthenticationError("Token已过期")
     except AuthenticationError as e:
-        print(f"✅ AuthenticationError: {e.message} (状态码: {e.status_code}, 代码: {e.error_code})")
+        print(
+            f"✅ AuthenticationError: {e.message} (状态码: {e.status_code}, 代码: {e.error_code})"
+        )
 
     # 测试 AuthorizationError
     try:
@@ -44,7 +48,9 @@ def test_exceptions():
     try:
         raise ResourceNotFoundError("用户不存在")
     except ResourceNotFoundError as e:
-        print(f"✅ ResourceNotFoundError: {e.message} (状态码: {e.status_code}, 代码: {e.error_code})")
+        print(
+            f"✅ ResourceNotFoundError: {e.message} (状态码: {e.status_code}, 代码: {e.error_code})"
+        )
 
     # 测试 BusinessLogicError
     try:
@@ -61,11 +67,7 @@ def test_response_schemas():
 
     # 测试 ErrorResponse
     error_response = ErrorResponse(
-        error=ErrorDetail(
-            code="VALIDATION_ERROR",
-            message="邮箱格式不正确",
-            field="email"
-        )
+        error=ErrorDetail(code="VALIDATION_ERROR", message="邮箱格式不正确", field="email")
     )
 
     response_dict = error_response.model_dump()
@@ -90,18 +92,18 @@ def check_old_exception_patterns():
 
     patterns = {
         "HTTPException with detail": r'raise HTTPException.*detail=f?".*{',
-        "except Exception": r'except Exception as',
+        "except Exception": r"except Exception as",
     }
 
     results = {}
     for pattern_name, pattern in patterns.items():
         results[pattern_name] = []
 
-        for root, dirs, files in os.walk(APPS_DIR / 'backend' / 'api'):
+        for root, dirs, files in os.walk(APPS_DIR / "backend" / "api"):
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     filepath = os.path.join(root, file)
-                    with open(filepath, 'r', encoding='utf-8') as f:
+                    with open(filepath, "r", encoding="utf-8") as f:
                         content = f.read()
                         matches = re.findall(pattern, content, re.MULTILINE)
                         if matches:

@@ -34,33 +34,31 @@ def migrate():
         columns = [row[1] for row in result]
 
         # 添加 failed_login_attempts 字段
-        if 'failed_login_attempts' not in columns:
+        if "failed_login_attempts" not in columns:
             logger.info("添加 failed_login_attempts 字段...")
-            conn.execute(text(
-                "ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER DEFAULT 0 NOT NULL"
-            ))
+            conn.execute(
+                text(
+                    "ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER DEFAULT 0 NOT NULL"
+                )
+            )
             conn.commit()
             logger.info("✓ failed_login_attempts 字段添加成功")
         else:
             logger.info("✓ failed_login_attempts 字段已存在，跳过")
 
         # 添加 locked_until 字段
-        if 'locked_until' not in columns:
+        if "locked_until" not in columns:
             logger.info("添加 locked_until 字段...")
-            conn.execute(text(
-                "ALTER TABLE users ADD COLUMN locked_until DATETIME"
-            ))
+            conn.execute(text("ALTER TABLE users ADD COLUMN locked_until DATETIME"))
             conn.commit()
             logger.info("✓ locked_until 字段添加成功")
         else:
             logger.info("✓ locked_until 字段已存在，跳过")
 
         # 添加 last_failed_login 字段
-        if 'last_failed_login' not in columns:
+        if "last_failed_login" not in columns:
             logger.info("添加 last_failed_login 字段...")
-            conn.execute(text(
-                "ALTER TABLE users ADD COLUMN last_failed_login DATETIME"
-            ))
+            conn.execute(text("ALTER TABLE users ADD COLUMN last_failed_login DATETIME"))
             conn.commit()
             logger.info("✓ last_failed_login 字段添加成功")
         else:
