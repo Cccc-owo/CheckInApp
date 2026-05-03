@@ -349,12 +349,12 @@ class AuthService:
                 "is_approved": user.is_approved
             }
 
-        except pyjwt.ExpiredSignatureError:
+        except jwt.ExpiredSignatureError:
             return {
                 "is_valid": False,
                 "message": "JWT Token 已过期"
             }
-        except pyjwt.InvalidTokenError:
+        except jwt.InvalidTokenError:
             return {
                 "is_valid": False,
                 "message": "JWT Token 无效"
