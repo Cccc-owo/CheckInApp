@@ -52,3 +52,5 @@ frontend/dist/
 frontend/.vite/
 
 .claude
+.codex
+openspec
