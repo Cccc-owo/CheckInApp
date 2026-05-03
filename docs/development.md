@@ -249,7 +249,9 @@ npm run test
 
 ### 后端规范
 
-- 使用 Black 格式化: `uv run black apps/backend/`
+- 使用 Ruff 检查和格式化:
+  - `uv run ruff check apps/backend tests main.py`
+  - `uv run ruff format apps/backend tests main.py`
 - 遵循 PEP 8
 - 函数添加类型注解
 - API 路由使用 Pydantic 模型验证
