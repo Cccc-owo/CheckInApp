@@ -8,7 +8,6 @@ import os
 import signal
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 
@@ -16,8 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parent
 APPS_DIR = REPO_ROOT / "apps"
 BACKEND_DIR = APPS_DIR / "backend"
 FRONTEND_DIR = APPS_DIR / "frontend"
-VENV_DIR = REPO_ROOT / "venv"
-PYTHON_BIN = VENV_DIR / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+UV_BIN = os.environ.get("UV", "uv")
 BACKEND_PID = REPO_ROOT / "backend.pid"
 FRONTEND_PID = REPO_ROOT / "frontend.pid"
 LOGS_DIR = REPO_ROOT / "logs"
@@ -41,9 +39,11 @@ def ensure_runtime_dirs() -> None:
 
 
 def get_python() -> str:
-    if PYTHON_BIN.exists():
-        return str(PYTHON_BIN)
     return sys.executable
+
+
+def backend_manager_command(*args: str) -> list[str]:
+    return [UV_BIN, "run", "python", str(REPO_ROOT / "main.py"), *args]
 
 
 def read_pid(path: Path) -> int | None:
@@ -93,7 +93,7 @@ def run_backend(args: argparse.Namespace) -> int:
             import backend.main  # noqa: F401
         except ModuleNotFoundError as exc:
             print(f"backend import path OK; missing dependency: {exc.name}", file=sys.stderr)
-            print(f"install dependencies with: {get_python()} -m pip install -r apps/backend/requirements.txt", file=sys.stderr)
+            print("install dependencies with: uv sync", file=sys.stderr)
             return 2
         print("backend.main:app import OK")
         return 0
@@ -121,9 +121,7 @@ def start_backend_daemon(args: argparse.Namespace) -> int:
             return 0
         BACKEND_PID.unlink(missing_ok=True)
 
-    cmd = [
-        get_python(),
-        str(REPO_ROOT / "main.py"),
+    cmd = backend_manager_command(
         "backend",
         "--host",
         args.host,
@@ -132,17 +130,21 @@ def start_backend_daemon(args: argparse.Namespace) -> int:
         "--no-reload",
         "--log-level",
         args.log_level,
-    ]
+    )
     BACKEND_LOG.parent.mkdir(parents=True, exist_ok=True)
     log_file = BACKEND_LOG.open("a", encoding="utf-8")
-    proc = subprocess.Popen(
-        cmd,
-        cwd=REPO_ROOT,
-        env=backend_env(),
-        stdout=log_file,
-        stderr=subprocess.STDOUT,
-        start_new_session=os.name != "nt",
-    )
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=REPO_ROOT,
+            env=backend_env(),
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            start_new_session=os.name != "nt",
+        )
+    except FileNotFoundError:
+        print("uv executable not found; install uv and run: uv sync", file=sys.stderr)
+        return 1
     BACKEND_PID.write_text(str(proc.pid), encoding="utf-8")
     print(f"backend: started pid {proc.pid}")
     print(f"log: {BACKEND_LOG}")

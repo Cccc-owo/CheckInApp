@@ -8,6 +8,8 @@ __pycache__/
 venv/
 env/
 ENV/
+*.egg-info/
+.pytest_cache/
 
 # 项目特定
 chromedriver
@@ -20,6 +22,7 @@ debug_screenshot.png
 # 运行时文件
 sessions/
 *.lock
+!/uv.lock
 *.log
 *.pid
 backend.pid

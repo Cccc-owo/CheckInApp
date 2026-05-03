@@ -1,0 +1,47 @@
+[project]
+name = "checkin-app-backend"
+version = "0.1.0"
+description = "FastAPI backend for CheckIn App"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "apscheduler>=3.10.4",
+    "bcrypt>=4.2.2",
+    "croniter>=5.0.3",
+    "fastapi>=0.115.12",
+    "filelock>=3.16.1",
+    "pydantic[email]>=2.10.6",
+    "pydantic-settings>=2.7.1",
+    "pyjwt>=2.10.1",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "selenium>=4.28.1",
+    "slowapi>=0.1.9",
+    "sqlalchemy>=2.0.36",
+    "uvicorn[standard]>=0.34.0",
+]
+
+[project.optional-dependencies]
+production = [
+    "gunicorn>=23.0.0",
+]
+redis = [
+    "redis>=5.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["apps"]
+include = ["backend*"]
+namespaces = true

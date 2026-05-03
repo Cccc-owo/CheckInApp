@@ -6,6 +6,7 @@
 
 - Ubuntu 20.04+ / CentOS 7+ / Windows Server
 - Python 3.9+
+- uv
 - Node.js 16+
 - Chrome / Chromium
 - 2GB+ RAM
@@ -16,9 +17,11 @@
 # Ubuntu
 sudo apt update
 sudo apt install -y python3 nodejs npm chromium-browser
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # CentOS
 sudo yum install -y python3 nodejs npm chromium
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ## 生产部署
@@ -32,15 +35,11 @@ sudo yum install -y python3 nodejs npm chromium
 git clone <repository>
 cd CheckInApp
 
-# 创建虚拟环境
-python3 -m venv venv
-source venv/bin/activate
-
 # 安装依赖
-pip install -r apps/backend/requirements.txt
+uv sync
 
 # 生产环境额外依赖
-pip install gunicorn
+uv sync --extra production
 
 # 配置环境变量
 cp .env.example .env
@@ -174,7 +173,7 @@ server {
 
 ```python
 # 安装 redis
-pip install redis
+uv sync --extra redis
 
 # 配置会话存储
 REDIS_URL=redis://localhost:6379/0

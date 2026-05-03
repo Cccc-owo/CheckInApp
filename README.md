@@ -27,6 +27,7 @@
 ### 环境要求
 
 - Python 3.9+
+- uv
 - Node.js 16+
 - Chrome 浏览器
 
@@ -34,11 +35,8 @@
 
 ```bash
 # 后端
-python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # Linux/Mac
-pip install -r apps/backend/requirements.txt
-python main.py backend
+uv sync
+uv run python main.py backend
 
 # 前端
 cd apps/frontend
@@ -46,7 +44,7 @@ npm install
 npm run dev
 
 # 创建管理员
-PYTHONPATH=apps python apps/backend/scripts/create_admin.py
+uv run python apps/backend/scripts/create_admin.py
 ```
 
 ### 访问地址
@@ -57,7 +55,7 @@ PYTHONPATH=apps python apps/backend/scripts/create_admin.py
 ## 进程管理
 
 ```bash
-python main.py backend-daemon
+uv run python main.py backend-daemon
 python main.py frontend-daemon
 python main.py status
 python main.py stop [all|backend|frontend]

@@ -36,8 +36,8 @@ User=username
 # Example: /home/username/CheckInApp
 WorkingDirectory=/path/to/CheckInApp
 
-# Start backend using the Python project manager
-ExecStart=/path/to/CheckInApp/venv/bin/python /path/to/CheckInApp/main.py backend --no-reload
+# Start backend using the uv-managed Python project manager
+ExecStart=/usr/bin/env uv run python /path/to/CheckInApp/main.py backend --no-reload
 
 # Restart policy
 Restart=on-failure

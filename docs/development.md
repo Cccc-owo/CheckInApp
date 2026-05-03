@@ -9,18 +9,10 @@
 git clone <repository>
 cd CheckInApp
 
-# 创建虚拟环境
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+# 安装后端依赖
+uv sync
 
-# 安装依赖
-pip install -r apps/backend/requirements.txt
-
-# 安装开发依赖
-pip install pytest pytest-asyncio black flake8
-
-python main.py backend
+uv run python main.py backend
 ```
 
 ### 前端开发
@@ -214,7 +206,7 @@ export const useTagStore = defineStore('tag', {
 # 手动创建脚本在 apps/backend/scripts/migrate_*.py
 
 # 执行迁移
-PYTHONPATH=apps python apps/backend/scripts/migrate_xxx.py
+uv run python apps/backend/scripts/migrate_xxx.py
 ```
 
 ### 测试
@@ -232,7 +224,7 @@ def test_create_task():
     assert task.is_active == True
 
 # 运行测试
-PYTHONPATH=apps pytest apps/backend/tests/
+uv run pytest tests/
 ```
 
 #### 前端测试
@@ -257,7 +249,7 @@ npm run test
 
 ### 后端规范
 
-- 使用 Black 格式化: `black apps/backend/`
+- 使用 Black 格式化: `uv run black apps/backend/`
 - 遵循 PEP 8
 - 函数添加类型注解
 - API 路由使用 Pydantic 模型验证

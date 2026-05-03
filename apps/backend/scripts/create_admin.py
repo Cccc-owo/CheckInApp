@@ -3,10 +3,7 @@
 创建管理员用户的脚本
 
 使用方法:
-    PYTHONPATH=apps python apps/backend/scripts/create_admin.py
-
-或使用虚拟环境:
-    PYTHONPATH=apps ./venv/bin/python apps/backend/scripts/create_admin.py
+    uv run python apps/backend/scripts/create_admin.py
 """
 import sys
 from pathlib import Path

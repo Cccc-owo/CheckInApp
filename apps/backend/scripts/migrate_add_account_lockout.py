@@ -7,8 +7,7 @@
 - last_failed_login: 最后一次登录失败时间
 
 运行方式：
-    PYTHONPATH=apps python -m backend.scripts.migrate_add_account_lockout
-    python -m backend.scripts.migrate_add_account_lockout
+    uv run python -m backend.scripts.migrate_add_account_lockout
 """
 
 import sys
