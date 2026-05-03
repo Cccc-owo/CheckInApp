@@ -5,7 +5,7 @@
 # This file defines a systemd service for running the CheckIn App backend
 #
 # Installation:
-#   1. Copy this file: sudo cp checkin-app.service.example /etc/systemd/system/checkin-app.service
+#   1. Copy this file: sudo cp deploy/systemd/checkin-app.service.example /etc/systemd/system/checkin-app.service
 #   2. Edit the file and replace placeholders with your actual values
 #   3. Reload systemd: sudo systemctl daemon-reload
 #   4. Enable service: sudo systemctl enable checkin-app.service
@@ -28,7 +28,7 @@ After=network.target
 Wants=network-online.target
 
 [Service]
-Type=forking
+Type=simple
 # CHANGE THIS: Replace with your actual username
 User=username
 
@@ -36,14 +36,8 @@ User=username
 # Example: /home/username/CheckInApp
 WorkingDirectory=/path/to/CheckInApp
 
-# PID file written by manage.sh
-PIDFile=/path/to/CheckInApp/backend.pid
-
-# Start backend using manage.sh script
-ExecStart=/path/to/CheckInApp/manage.sh start backend
-
-# Stop backend using manage.sh script
-ExecStop=/path/to/CheckInApp/manage.sh stop backend
+# Start backend using the Python project manager
+ExecStart=/path/to/CheckInApp/venv/bin/python /path/to/CheckInApp/main.py backend --no-reload
 
 # Restart policy
 Restart=on-failure

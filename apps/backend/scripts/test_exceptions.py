@@ -2,7 +2,10 @@
 测试新的异常处理系统
 """
 import sys
-sys.path.insert(0, '..')
+from pathlib import Path
+
+APPS_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(APPS_DIR))
 
 from backend.exceptions import (
     ValidationError,
@@ -94,7 +97,7 @@ def check_old_exception_patterns():
     for pattern_name, pattern in patterns.items():
         results[pattern_name] = []
 
-        for root, dirs, files in os.walk('../backend/api'):
+        for root, dirs, files in os.walk(APPS_DIR / 'backend' / 'api'):
             for file in files:
                 if file.endswith('.py'):
                     filepath = os.path.join(root, file)

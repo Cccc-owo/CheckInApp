@@ -7,15 +7,15 @@
 - last_failed_login: 最后一次登录失败时间
 
 运行方式：
+    PYTHONPATH=apps python -m backend.scripts.migrate_add_account_lockout
     python -m backend.scripts.migrate_add_account_lockout
 """
 
 import sys
 from pathlib import Path
 
-# 添加项目根目录到 Python 路径
-project_root = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root))
+APPS_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(APPS_DIR))
 
 from sqlalchemy import text
 from backend.models.database import engine

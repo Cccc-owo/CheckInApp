@@ -15,18 +15,18 @@ source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate     # Windows
 
 # 安装依赖
-pip install -r backend/requirements.txt
+pip install -r apps/backend/requirements.txt
 
 # 安装开发依赖
 pip install pytest pytest-asyncio black flake8
 
-python3 run.py
+python main.py backend
 ```
 
 ### 前端开发
 
 ```bash
-cd frontend
+cd apps/frontend
 
 # 安装依赖
 npm install
@@ -44,7 +44,7 @@ npm run format
 ### 后端目录说明
 
 ```
-backend/
+apps/backend/
 ├── main.py              # FastAPI 应用入口，CORS、路由注册
 ├── config.py            # Pydantic Settings 配置
 ├── dependencies.py      # 依赖注入（认证、权限）
@@ -89,7 +89,7 @@ backend/
 ### 前端目录说明
 
 ```
-frontend/src/
+apps/frontend/src/
 ├── main.js              # Vue 应用入口
 ├── App.vue              # 根组件
 │
@@ -162,8 +162,8 @@ def create_tag(db: Session, task_id: int, tag_data: TaskTagCreate):
 def add_tag(task_id: int, tag: TaskTagCreate, db: Session = Depends(get_db)):
     return tag_service.create_tag(db, task_id, tag)
 
-# main.py
-from api import tags
+# apps/backend/main.py
+from backend.api import tags
 app.include_router(tags.router, prefix="/api")
 ```
 
@@ -211,10 +211,10 @@ export const useTagStore = defineStore('tag', {
 
 ```bash
 # 修改模型后生成迁移脚本
-# 手动创建脚本在 backend/scripts/migrate_*.py
+# 手动创建脚本在 apps/backend/scripts/migrate_*.py
 
 # 执行迁移
-python backend/scripts/migrate_xxx.py
+PYTHONPATH=apps python apps/backend/scripts/migrate_xxx.py
 ```
 
 ### 测试
@@ -232,7 +232,7 @@ def test_create_task():
     assert task.is_active == True
 
 # 运行测试
-pytest backend/tests/
+PYTHONPATH=apps pytest apps/backend/tests/
 ```
 
 #### 前端测试
@@ -257,7 +257,7 @@ npm run test
 
 ### 后端规范
 
-- 使用 Black 格式化: `black backend/`
+- 使用 Black 格式化: `black apps/backend/`
 - 遵循 PEP 8
 - 函数添加类型注解
 - API 路由使用 Pydantic 模型验证

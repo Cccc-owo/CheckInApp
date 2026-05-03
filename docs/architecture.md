@@ -152,7 +152,7 @@ CheckIn App V2 采用用户-任务分离架构，一个用户可管理多个打�
 ### 后端分层
 
 ```
-backend/
+apps/backend/
 ├── api/          # 路由层（29 个端点）
 ├── services/     # 业务逻辑层
 ├── models/       # 数据模型层
@@ -164,7 +164,7 @@ backend/
 ### 前端分层
 
 ```
-frontend/src/
+apps/frontend/src/
 ├── api/          # API 调用封装
 ├── views/        # 页面组件
 ├── components/   # 可复用组件

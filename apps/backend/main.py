@@ -167,9 +167,10 @@ app.include_router(templates.router, prefix=f"{settings.API_PREFIX}/templates", 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "main:app",
+        "backend.main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
+        reload_dirs=[str(settings.BASE_DIR / "apps" / "backend")],
         log_level="info",
     )

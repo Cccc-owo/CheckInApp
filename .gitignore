@@ -47,9 +47,12 @@ logs/
 Thumbs.db
 
 # 前端
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
+apps/frontend/node_modules/
+apps/frontend/dist/
+apps/frontend/.vite/
+apps/new-frontend/node_modules/
+apps/new-frontend/dist/
+apps/new-frontend/.vite/
 
 .claude
 .codex

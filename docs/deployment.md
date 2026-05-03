@@ -37,7 +37,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # 安装依赖
-pip install -r backend/requirements.txt
+pip install -r apps/backend/requirements.txt
 
 # 生产环境额外依赖
 pip install gunicorn
@@ -50,7 +50,7 @@ vim .env  # 修改环境变量
 #### 2. 前端部署
 
 ```bash
-cd frontend
+cd apps/frontend
 
 # 安装依赖
 npm install
@@ -63,11 +63,11 @@ npm run build
 
 **使用 Nginx 托管**:
 
-[示例文件](../nginx.conf.example)
+[示例文件](../deploy/nginx/checkin-app.conf.example)
 
 #### 3. 使用 Systemd 管理
 
-[示例文件](../checkin-app.service.example)
+[示例文件](../deploy/systemd/checkin-app.service.example)
 
 ### 方式二：Docker 部署（推荐）
 

@@ -37,16 +37,16 @@
 python -m venv venv
 venv\Scripts\activate  # Windows
 source venv/bin/activate  # Linux/Mac
-pip install -r backend/requirements.txt
-python3 run.py
+pip install -r apps/backend/requirements.txt
+python main.py backend
 
 # 前端
-cd frontend
+cd apps/frontend
 npm install
 npm run dev
 
 # 创建管理员
-python backend/scripts/create_admin.py
+PYTHONPATH=apps python apps/backend/scripts/create_admin.py
 ```
 
 ### 访问地址
@@ -57,15 +57,11 @@ python backend/scripts/create_admin.py
 ## 进程管理
 
 ```bash
-# Windows
-manage.bat start [all/backend/fronted]
-manage.bat stop [all/backend/fronted]
-manage.bat status
-
-# Linux/Mac
-./manage.sh start [all/backend/fronted]
-./manage.sh stop [all/backend/fronted]
-./manage.sh status
+python main.py backend-daemon
+python main.py frontend-daemon
+python main.py status
+python main.py stop [all|backend|frontend]
+python main.py frontend-build
 ```
 
 ## 配置

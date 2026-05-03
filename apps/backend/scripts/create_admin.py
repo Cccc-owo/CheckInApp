@@ -3,18 +3,16 @@
 创建管理员用户的脚本
 
 使用方法:
-    python backend/scripts/create_admin.py
+    PYTHONPATH=apps python apps/backend/scripts/create_admin.py
 
 或使用虚拟环境:
-    ./venv/Scripts/python.exe backend/scripts/create_admin.py
+    PYTHONPATH=apps ./venv/bin/python apps/backend/scripts/create_admin.py
 """
 import sys
-import os
 from pathlib import Path
 
-# 添加项目根目录到路径
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(BASE_DIR))
+APPS_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(APPS_DIR))
 
 from backend.models import init_db, User
 from backend.models.database import SessionLocal
