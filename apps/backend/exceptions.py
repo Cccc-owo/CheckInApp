@@ -8,7 +8,7 @@
 class BaseAPIException(Exception):
     """API 异常基类"""
 
-    def __init__(self, message: str, status_code: int = 500, error_code: str = None):
+    def __init__(self, message: str, status_code: int = 500, error_code: str | None = None):
         self.message = message
         self.status_code = status_code
         self.error_code = error_code or self.__class__.__name__

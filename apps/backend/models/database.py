@@ -1,7 +1,8 @@
-from sqlalchemy import create_engine, event
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timezone
+
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
 from backend.config import settings
 
 # 创建数据库引擎
@@ -14,8 +15,9 @@ engine = create_engine(
 # 创建会话工厂
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# 创建基类
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 # SQLite timezone 修复：在加载对象后，将所有 naive datetime 转换为 UTC timezone-aware

@@ -41,7 +41,6 @@ class CheckInRecordResponse(BaseModel):
 class CheckInRecordWithTaskInfo(CheckInRecordResponse):
     """带任务信息的打卡记录响应 Schema"""
 
-    task_name: str
     task_signature: str
     user_alias: str
 

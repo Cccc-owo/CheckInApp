@@ -151,7 +151,7 @@ def _release_alias_if_needed(alias: str | None, session_id: str) -> None:
 
 
 def get_token_headless(
-    session_id: str, jwt_sub: str = None, alias: str = None, client_ip: str = ""
+    session_id: str, jwt_sub: str | None = None, alias: str | None = None, client_ip: str = ""
 ) -> None:
     """
     使用 Playwright 获取 QQ 扫码登录的 Token

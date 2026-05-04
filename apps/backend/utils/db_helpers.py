@@ -29,7 +29,7 @@ def get_or_404(
     Raises:
         HTTPException: 404 资源不存在
     """
-    obj = db.query(model).filter(model.id == model_id).first()
+    obj = db.query(model).filter(getattr(model, "id") == model_id).first()
     if not obj:
         default_message = f"{model.__name__}不存在"
         raise HTTPException(
@@ -57,11 +57,15 @@ def get_owned_or_403(
     Raises:
         HTTPException: 403 无权访问此资源
     """
-    obj = db.query(model).filter(model.id == model_id, model.user_id == user_id).first()
+    obj = (
+        db.query(model)
+        .filter(getattr(model, "id") == model_id, getattr(model, "user_id") == user_id)
+        .first()
+    )
 
     if not obj:
         # 先检查资源是否存在
-        exists = db.query(model).filter(model.id == model_id).first()
+        exists = db.query(model).filter(getattr(model, "id") == model_id).first()
         if not exists:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"{model.__name__}不存在"
