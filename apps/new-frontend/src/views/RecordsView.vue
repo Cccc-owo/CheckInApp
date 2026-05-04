@@ -48,7 +48,6 @@ onMounted(load)
     <div :class="[sectionHeaderClass, 'md:grid-cols-[1fr_180px_180px_auto]']">
       <div>
         <h2 class="font-semibold">个人打卡记录</h2>
-        <p class="mt-1 text-sm text-zinc-500">按状态和触发方式查看最近的打卡结果。</p>
       </div>
       <select v-model="filters.status" :class="inputClass">
         <option value="">全部状态</option>
@@ -77,31 +76,27 @@ onMounted(load)
       action-label="重试"
       @action="load"
     />
-    <StateBlock
-      v-else-if="records.length === 0"
-      title="暂无记录"
-      description="当前筛选条件下没有打卡记录。"
-    />
+    <StateBlock v-else-if="records.length === 0" title="暂无记录" />
     <div v-else>
-      <div class="divide-y divide-zinc-200">
+      <div class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <article
           v-for="record in records"
           :key="record.id"
-          class="grid gap-3 p-4 lg:grid-cols-[180px_minmax(0,1fr)_auto]"
+          class="grid gap-3 p-3 lg:grid-cols-[180px_minmax(0,1fr)_auto] lg:items-center"
         >
-          <div>
-            <div class="text-sm font-semibold">
+          <div class="min-w-0">
+            <div class="truncate text-sm font-semibold">
               {{ record.task_name || `任务 #${record.task_id}` }}
             </div>
-            <div class="mt-1 text-xs text-zinc-500">
+            <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               {{ formatFullDateTime(record.check_in_time) }}
             </div>
           </div>
           <div class="min-w-0">
-            <p class="truncate text-sm text-zinc-700">
+            <p class="truncate text-sm text-zinc-700 dark:text-zinc-200">
               {{ record.response_text || record.error_message || '无响应内容' }}
             </p>
-            <p class="mt-1 text-xs text-zinc-500">
+            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
               触发方式：{{ statusLabel(record.trigger_type) }}
             </p>
           </div>
@@ -113,7 +108,7 @@ onMounted(load)
         </article>
       </div>
       <div
-        class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm text-zinc-500"
+        class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-400"
       >
         <span
           >共 {{ total }} 条，当前 {{ filters.skip + 1 }} -

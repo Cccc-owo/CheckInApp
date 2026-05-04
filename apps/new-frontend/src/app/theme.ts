@@ -108,7 +108,7 @@ export function useTheme() {
     modeLabel: computed(() => {
       if (state.mode === 'light') return '亮色'
       if (state.mode === 'dark') return '暗色'
-      return state.resolved === 'dark' ? '跟随系统：暗色' : '跟随系统：亮色'
+      return '设备'
     }),
     setThemeMode,
     cycleThemeMode,

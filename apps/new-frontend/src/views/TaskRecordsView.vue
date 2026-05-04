@@ -83,23 +83,23 @@ onMounted(load)
       action-label="重试"
       @action="load"
     />
-    <StateBlock
-      v-else-if="records.length === 0"
-      title="暂无记录"
-      description="当前任务还没有符合条件的记录。"
-    />
+    <StateBlock v-else-if="records.length === 0" title="暂无记录" />
     <div v-else class="divide-y divide-zinc-200">
       <article
         v-for="record in records"
         :key="record.id"
-        class="grid gap-3 p-4 md:grid-cols-[180px_minmax(0,1fr)_auto]"
+        class="grid gap-3 p-3 md:grid-cols-[180px_minmax(0,1fr)_auto] md:items-center"
       >
-        <div class="text-sm text-zinc-500">{{ formatFullDateTime(record.check_in_time) }}</div>
-        <div>
-          <div class="text-sm text-zinc-700">
+        <div class="text-sm text-zinc-500 dark:text-zinc-400">
+          {{ formatFullDateTime(record.check_in_time) }}
+        </div>
+        <div class="min-w-0">
+          <div class="truncate text-sm text-zinc-700 dark:text-zinc-200">
             {{ record.response_text || record.error_message || '无响应内容' }}
           </div>
-          <div class="mt-1 text-xs text-zinc-500">触发：{{ statusLabel(record.trigger_type) }}</div>
+          <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            触发：{{ statusLabel(record.trigger_type) }}
+          </div>
         </div>
         <div class="md:text-right">
           <span :class="toneClass(statusTone(record.status))">{{
@@ -107,7 +107,9 @@ onMounted(load)
           }}</span>
         </div>
       </article>
-      <div class="border-t border-zinc-200 px-4 py-3 text-sm text-zinc-500">
+      <div
+        class="border-t border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-400"
+      >
         共 {{ total }} 条记录
       </div>
     </div>

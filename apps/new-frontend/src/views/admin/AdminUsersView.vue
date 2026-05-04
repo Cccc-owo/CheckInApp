@@ -12,6 +12,7 @@ import {
   sectionHeaderClass,
   toneClass,
 } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { extractErrorMessage, formatDateTime } from '@/utils/format'
 
 const loading = ref(true)
@@ -94,18 +95,19 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-    <section :class="[cardClass, 'overflow-hidden']">
+  <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+    <section :class="[cardClass, 'min-w-0 overflow-hidden']">
       <div :class="sectionHeaderClass">
         <div>
           <h2 class="font-semibold">用户审批与管理</h2>
-          <p class="mt-1 text-sm text-zinc-500">优先处理待审批用户，再维护角色、邮箱和密码。</p>
         </div>
         <span :class="toneClass(users.some((user) => !user.is_approved) ? 'warning' : 'success')">
           {{ users.filter((user) => !user.is_approved).length }} 个待审批
         </span>
       </div>
-      <div class="flex flex-wrap items-center gap-3 border-b border-zinc-200 bg-zinc-50/70 p-4">
+      <div
+        class="grid gap-3 border-b border-zinc-200 bg-zinc-50/70 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] dark:border-zinc-800 dark:bg-zinc-950/50"
+      >
         <input v-model="search" :class="inputClass" class="max-w-sm" placeholder="搜索别名" />
         <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
           <Search class="size-4" />
@@ -125,15 +127,16 @@ onMounted(load)
         action-label="重试"
         @action="load"
       />
-      <div v-else class="divide-y divide-zinc-200">
+      <StateBlock v-else-if="users.length === 0" title="暂无用户" />
+      <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <article
           v-for="user in users"
           :key="user.id"
-          class="flex flex-wrap items-center justify-between gap-3 p-4"
+          class="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4"
         >
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <h3 class="font-semibold">{{ user.alias }}</h3>
+              <h3 class="truncate font-semibold">{{ user.alias }}</h3>
               <span :class="toneClass(user.is_approved ? 'success' : 'warning')">{{
                 user.is_approved ? '已审批' : '待审批'
               }}</span>
@@ -141,9 +144,12 @@ onMounted(load)
                 user.role
               }}</span>
             </div>
-            <p class="mt-1 text-sm text-zinc-500">
-              {{ user.email || '未设置邮箱' }} · {{ formatDateTime(user.created_at) }}
-            </p>
+            <div
+              class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400"
+            >
+              <span>{{ user.email || '未设置邮箱' }}</span>
+              <span>{{ formatDateTime(user.created_at) }}</span>
+            </div>
           </div>
           <div class="flex flex-wrap gap-2">
             <button
@@ -172,33 +178,61 @@ onMounted(load)
       </div>
     </section>
 
+    <aside
+      v-if="!editingId"
+      :class="[
+        cardClass,
+        'grid h-fit min-h-72 min-w-0 place-items-center border-dashed p-6 text-center xl:sticky xl:top-20',
+      ]"
+    >
+      <div class="grid justify-items-center gap-4">
+        <span
+          class="inline-flex size-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300"
+        >
+          <UserPlus class="size-5" />
+        </span>
+        <div class="grid gap-1">
+          <h2 class="font-semibold">未选择用户</h2>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400">创建或从列表编辑</p>
+        </div>
+        <Button type="button" @click="startCreate">
+          <UserPlus class="size-4" />
+          创建用户
+        </Button>
+      </div>
+    </aside>
+
     <form
-      v-if="editingId"
-      :class="[cardClass, 'grid h-fit gap-4 overflow-hidden']"
+      v-else
+      :class="[
+        cardClass,
+        'grid h-fit min-w-0 gap-4 overflow-hidden xl:sticky xl:top-20 xl:self-start',
+      ]"
       @submit.prevent="save"
     >
-      <div class="border-b border-zinc-200 bg-zinc-50/70 px-5 py-4">
+      <div
+        class="border-b border-zinc-200 bg-zinc-50/70 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/50"
+      >
         <h2 class="font-semibold">{{ editingId === 'new' ? '创建用户' : '编辑用户' }}</h2>
-        <p class="mt-1 text-sm text-zinc-500">保存后会刷新用户列表。</p>
       </div>
-      <div class="grid gap-4 p-5">
+      <div class="grid gap-4 p-4">
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">别名</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">别名</span>
           <input v-model="form.alias" :class="inputClass" required />
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">邮箱</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">邮箱</span>
           <input v-model="form.email" :class="inputClass" type="email" />
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">角色</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">角色</span>
           <select v-model="form.role" :class="inputClass">
             <option value="user">user</option>
             <option value="admin">admin</option>
           </select>
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">密码</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">密码</span>
           <input
             v-model="form.password"
             :class="inputClass"

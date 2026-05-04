@@ -56,6 +56,7 @@ const activeTasks = computed(() => tasks.value.filter((task) => task.is_active).
 const inactiveTasks = computed(() => Math.max(0, tasks.value.length - activeTasks.value))
 const selectedTask = computed(() => tasks.value.find((task) => task.id === selectedTaskId.value))
 const lastRecord = computed(() => records.value[0] ?? null)
+const nextActiveTask = computed(() => tasks.value.find((task) => task.is_active) ?? null)
 const successToday = computed(
   () => records.value.filter((record) => record.status === 'success').length,
 )
@@ -150,176 +151,175 @@ onMounted(load)
     @action="load"
   />
   <div v-else class="grid gap-5">
-    <div class="grid gap-3">
-      <div v-if="needsEmail" :class="alertClass.info">
-        您还未设置邮箱地址，设置后可以接收打卡任务通知。
+    <div
+      v-if="
+        needsEmail || needsPassword || (tokenStatus && !tokenStatus.is_valid) || tasks.length === 0
+      "
+      class="grid gap-2"
+    >
+      <div
+        v-if="needsEmail"
+        :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
+      >
+        <span>未设置邮箱</span>
         <button
-          class="ml-2 font-semibold hover:text-sky-950"
+          class="font-semibold hover:text-sky-950 dark:hover:text-sky-100"
           type="button"
           @click="router.navigate('/settings')"
         >
-          立即前往设置
+          设置
         </button>
       </div>
-      <div v-if="needsPassword" :class="alertClass.info">
-        您还未设置登录密码，设置后可以使用用户名和密码快速登录。
+      <div
+        v-if="needsPassword"
+        :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
+      >
+        <span>未设置登录密码</span>
         <button
-          class="ml-2 font-semibold hover:text-sky-950"
+          class="font-semibold hover:text-sky-950 dark:hover:text-sky-100"
           type="button"
           @click="router.navigate('/settings')"
         >
-          立即前往设置
+          设置
         </button>
       </div>
       <div
         v-if="tokenStatus && !tokenStatus.is_valid"
-        :class="[alertClass.warning, 'flex items-start gap-2']"
+        :class="[alertClass.warning, 'flex flex-wrap items-center justify-between gap-2']"
       >
-        <AlertTriangle class="mt-0.5 size-4 shrink-0" />
-        <div>
-          打卡凭证已过期，无法自动打卡。请回到登录页使用扫码登录刷新 Token。
-          <button
-            class="ml-2 font-semibold hover:text-amber-950"
-            type="button"
-            @click="router.navigate('/login')"
-          >
-            立即刷新
-          </button>
-        </div>
-      </div>
-      <div v-if="tasks.length === 0" :class="alertClass.info">
-        您还没有打卡任务。
+        <span class="inline-flex items-center gap-2">
+          <AlertTriangle class="size-4 shrink-0" />
+          打卡凭证已过期
+        </span>
         <button
-          class="ml-2 font-semibold hover:text-sky-950"
+          class="font-semibold hover:text-amber-950 dark:hover:text-amber-100"
+          type="button"
+          @click="router.navigate('/login')"
+        >
+          刷新
+        </button>
+      </div>
+      <div
+        v-if="tasks.length === 0"
+        :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
+      >
+        <span>暂无打卡任务</span>
+        <button
+          class="font-semibold hover:text-sky-950 dark:hover:text-sky-100"
           type="button"
           @click="router.navigate('/tasks')"
         >
-          立即创建
+          创建
         </button>
       </div>
     </div>
 
-    <section :class="[cardClass, 'overflow-hidden']">
-      <div :class="sectionHeaderClass">
-        <div class="flex items-center gap-2">
-          <KeyRound class="size-4 text-emerald-700" />
-          <h2 class="font-semibold">Token 状态</h2>
+    <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div :class="[cardClass, 'overflow-hidden']">
+        <div :class="sectionHeaderClass">
+          <div class="flex items-center gap-2">
+            <CalendarDays class="size-4 text-emerald-700" />
+            <h2 class="font-semibold">手动打卡</h2>
+          </div>
+          <span class="text-sm text-zinc-500">{{ activeTasks }} 个启用</span>
         </div>
-        <span :class="toneClass(tokenTone)">{{ tokenLabel }}</span>
+        <div class="p-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <select v-model.number="selectedTaskId" :class="[inputClass, 'sm:max-w-md']">
+              <option v-for="task in tasks" :key="task.id" :value="task.id">
+                {{ task.name || `任务 #${task.id}` }} · {{ task.is_active ? '启用' : '停用' }}
+              </option>
+            </select>
+            <button
+              :class="[buttonBase, buttonTone.primary]"
+              :disabled="!selectedTaskId || checkInLoading"
+              type="button"
+              @click="manualCheckIn"
+            >
+              <CalendarDays class="size-4" />
+              {{ checkInLoading ? '打卡中' : '立即打卡' }}
+            </button>
+          </div>
+          <div
+            v-if="selectedTask"
+            class="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+          >
+            <div class="font-medium text-zinc-900 dark:text-zinc-100">
+              {{ selectedTask.name || `任务 #${selectedTask.id}` }}
+            </div>
+            <div class="mt-1 text-zinc-500 dark:text-zinc-400">
+              ThreadId: {{ selectedTask.thread_id || '未解析' }} ·
+              {{ cronLabel(selectedTask.cron_expression) }}
+            </div>
+          </div>
+          <div v-if="message" :class="[alertClass.success, 'mt-4']">{{ message }}</div>
+          <div v-if="error" :class="[alertClass.danger, 'mt-4']">{{ error }}</div>
+          <div
+            v-if="latestStatus"
+            class="mt-4 rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-semibold text-zinc-900 dark:text-zinc-100">本次打卡</span>
+              <span :class="toneClass(statusTone(latestStatus.status))">{{
+                statusLabel(latestStatus.status)
+              }}</span>
+            </div>
+            <p class="mt-2 text-zinc-500 dark:text-zinc-400">
+              {{
+                latestStatus.response_text || latestStatus.error_message || '正在等待后端返回结果。'
+              }}
+            </p>
+          </div>
+          <div
+            v-else-if="lastRecord"
+            class="mt-4 rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-semibold text-zinc-900 dark:text-zinc-100">上次打卡</span>
+              <span :class="toneClass(statusTone(lastRecord.status))">{{
+                statusLabel(lastRecord.status)
+              }}</span>
+            </div>
+            <p class="mt-2 text-zinc-500 dark:text-zinc-400">
+              {{ formatDateTime(lastRecord.check_in_time) }} ·
+              {{ lastRecord.response_text || lastRecord.error_message || '无响应内容' }}
+            </p>
+          </div>
+        </div>
       </div>
-      <div class="grid gap-4 p-5 md:grid-cols-2">
-        <div class="grid gap-3 text-sm">
-          <div
-            class="flex items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2"
-          >
-            <span class="text-zinc-500">Token 状态</span>
-            <span :class="toneClass(tokenTone)">{{ tokenLabel }}</span>
+
+      <div :class="[cardClass, 'overflow-hidden']">
+        <div :class="sectionHeaderClass">
+          <div class="flex items-center gap-2">
+            <KeyRound class="size-4 text-emerald-700" />
+            <h2 class="font-semibold">授权</h2>
           </div>
-          <div
-            class="flex items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2"
-          >
-            <span class="text-zinc-500">剩余时间</span>
-            <span>{{
-              tokenStatus?.days_until_expiry == null
-                ? '未知'
-                : `${tokenStatus.days_until_expiry} 天`
-            }}</span>
+          <span :class="toneClass(tokenTone)">{{ tokenLabel }}</span>
+        </div>
+        <div class="grid gap-3 p-4 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-zinc-500">剩余</span>
+            <span class="font-medium">
+              {{
+                tokenStatus?.days_until_expiry == null
+                  ? '未知'
+                  : `${tokenStatus.days_until_expiry} 天`
+              }}
+            </span>
           </div>
-          <div
-            class="flex items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2"
-          >
-            <span class="text-zinc-500">即将过期</span>
+          <div class="flex items-center justify-between">
+            <span class="text-zinc-500">预警</span>
             <span>{{ tokenStatus?.expiring_soon ? '是' : '否' }}</span>
           </div>
-        </div>
-        <div class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
-          <p>{{ tokenDetail }}</p>
+          <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ tokenDetail }}</div>
           <button
-            :class="[
-              buttonBase,
-              tokenStatus?.is_valid ? buttonTone.secondary : buttonTone.primary,
-              'mt-4',
-            ]"
+            :class="[buttonBase, tokenStatus?.is_valid ? buttonTone.secondary : buttonTone.primary]"
             type="button"
             @click="router.navigate('/login')"
           >
             <QrCode class="size-4" />
-            扫码刷新 Token
+            扫码刷新
           </button>
-        </div>
-      </div>
-    </section>
-
-    <section :class="[cardClass, 'overflow-hidden']">
-      <div :class="sectionHeaderClass">
-        <div class="flex items-center gap-2">
-          <CalendarDays class="size-4 text-emerald-700" />
-          <h2 class="font-semibold">手动打卡</h2>
-        </div>
-        <span class="text-sm text-zinc-500">{{ activeTasks }} 个启用任务</span>
-      </div>
-      <div class="p-5">
-        <p class="text-sm text-zinc-500">选择任务并点击下方按钮立即执行打卡操作。</p>
-        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <select v-model.number="selectedTaskId" :class="[inputClass, 'sm:max-w-md']">
-            <option v-for="task in tasks" :key="task.id" :value="task.id">
-              {{ task.name || `任务 #${task.id}` }} · {{ task.is_active ? '启用' : '停用' }}
-            </option>
-          </select>
-          <button
-            :class="[buttonBase, buttonTone.primary]"
-            :disabled="!selectedTaskId || checkInLoading"
-            type="button"
-            @click="manualCheckIn"
-          >
-            <CalendarDays class="size-4" />
-            {{ checkInLoading ? '打卡中' : '立即打卡' }}
-          </button>
-        </div>
-        <div
-          v-if="selectedTask"
-          class="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm"
-        >
-          <div class="font-medium text-zinc-900">
-            {{ selectedTask.name || `任务 #${selectedTask.id}` }}
-          </div>
-          <div class="mt-1 text-zinc-500">
-            ThreadId: {{ selectedTask.thread_id || '未解析' }} ·
-            {{ cronLabel(selectedTask.cron_expression) }}
-          </div>
-        </div>
-        <div v-if="message" :class="[alertClass.success, 'mt-4']">{{ message }}</div>
-        <div v-if="error" :class="[alertClass.danger, 'mt-4']">{{ error }}</div>
-        <div
-          v-if="latestStatus"
-          class="mt-4 rounded-lg border border-zinc-200 bg-white p-4 text-sm"
-        >
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-semibold text-zinc-900">本次打卡</span>
-            <span :class="toneClass(statusTone(latestStatus.status))">{{
-              statusLabel(latestStatus.status)
-            }}</span>
-          </div>
-          <p class="mt-2 text-zinc-500">
-            {{
-              latestStatus.response_text || latestStatus.error_message || '正在等待后端返回结果。'
-            }}
-          </p>
-        </div>
-        <div
-          v-else-if="lastRecord"
-          class="mt-4 rounded-lg border border-zinc-200 bg-white p-4 text-sm"
-        >
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-semibold text-zinc-900">上次打卡</span>
-            <span :class="toneClass(statusTone(lastRecord.status))">{{
-              statusLabel(lastRecord.status)
-            }}</span>
-          </div>
-          <p class="mt-2 text-zinc-500">
-            {{ formatDateTime(lastRecord.check_in_time) }} ·
-            {{ lastRecord.response_text || lastRecord.error_message || '无响应内容' }}
-          </p>
         </div>
       </div>
     </section>
@@ -338,12 +338,18 @@ onMounted(load)
           个人设置
         </button>
       </div>
-      <div class="grid gap-3 p-5 text-sm md:grid-cols-2">
-        <div class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+      <div class="grid gap-3 p-4 text-sm md:grid-cols-4">
+        <div
+          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
+        >
           <div class="text-zinc-500">用户名</div>
-          <div class="mt-1 font-medium text-zinc-900">{{ auth.state.user?.alias || '未登录' }}</div>
+          <div class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+            {{ auth.state.user?.alias || '未登录' }}
+          </div>
         </div>
-        <div class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+        <div
+          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
+        >
           <div class="text-zinc-500">角色</div>
           <div class="mt-1">
             <span :class="toneClass(auth.state.user?.role === 'admin' ? 'danger' : 'info')">
@@ -351,13 +357,19 @@ onMounted(load)
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+        <div
+          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
+        >
           <div class="text-zinc-500">邮箱</div>
-          <div class="mt-1 font-medium text-zinc-900">{{ auth.state.user?.email || '未设置' }}</div>
+          <div class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+            {{ auth.state.user?.email || '未设置' }}
+          </div>
         </div>
-        <div class="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2">
+        <div
+          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
+        >
           <div class="text-zinc-500">注册时间</div>
-          <div class="mt-1 font-medium text-zinc-900">
+          <div class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
             {{ formatDateTime(auth.state.user?.created_at) }}
           </div>
         </div>
@@ -368,10 +380,6 @@ onMounted(load)
       <div :class="sectionHeaderClass">
         <div>
           <h2 class="font-semibold">任务概览</h2>
-          <p class="mt-1 text-sm text-zinc-500">
-            {{ activeTasks }} 个启用，{{ inactiveTasks }} 个停用，最近记录成功
-            {{ successToday }} 条。
-          </p>
         </div>
         <button
           :class="[buttonBase, buttonTone.secondary]"
@@ -381,32 +389,40 @@ onMounted(load)
           管理任务
         </button>
       </div>
-      <div class="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-4">
-        <div :class="[cardClass, 'p-4']">
+      <div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
+        <div
+          class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950"
+        >
           <div class="flex items-center justify-between">
             <span class="text-sm text-zinc-500">任务总数</span>
             <CheckCircle2 class="size-4 text-emerald-600" />
           </div>
           <div class="mt-3 text-3xl font-semibold">{{ tasks.length }}</div>
-          <p class="mt-1 text-sm text-zinc-500">{{ activeTasks }} 个启用</p>
+          <p class="mt-1 text-sm text-zinc-500">
+            {{ activeTasks }} 启用 · {{ inactiveTasks }} 停用
+          </p>
         </div>
-        <div :class="[cardClass, 'p-4']">
+        <div
+          class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950"
+        >
           <div class="flex items-center justify-between">
             <span class="text-sm text-zinc-500">最近成功</span>
             <Activity class="size-4 text-zinc-700" />
           </div>
           <div class="mt-3 text-3xl font-semibold">{{ successToday }}</div>
-          <p class="mt-1 text-sm text-zinc-500">最近记录中的成功数</p>
+          <p class="mt-1 text-sm text-zinc-500">最近记录</p>
         </div>
-        <div :class="[cardClass, 'p-4 md:col-span-2']">
+        <div
+          class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 md:col-span-2 dark:border-zinc-800 dark:bg-zinc-950"
+        >
           <div class="flex items-center justify-between">
             <span class="text-sm text-zinc-500">下次定时</span>
             <Clock class="size-4 text-amber-600" />
           </div>
           <div class="mt-3 text-lg font-semibold">
-            {{ cronLabel(tasks.find((task) => task.is_active)?.cron_expression) }}
+            {{ cronLabel(nextActiveTask?.cron_expression) }}
           </div>
-          <p class="mt-1 text-sm text-zinc-500">来自首个启用任务</p>
+          <p class="mt-1 text-sm text-zinc-500">{{ nextActiveTask?.name || '无启用任务' }}</p>
         </div>
       </div>
     </section>
@@ -415,7 +431,6 @@ onMounted(load)
       <div :class="sectionHeaderClass">
         <div>
           <h2 class="font-semibold">最近记录</h2>
-          <p class="mt-1 text-sm text-zinc-500">最近的打卡结果和状态变化会先出现在这里。</p>
         </div>
         <button
           :class="[buttonBase, buttonTone.secondary]"
@@ -425,12 +440,8 @@ onMounted(load)
           查看全部
         </button>
       </div>
-      <StateBlock
-        v-if="records.length === 0"
-        title="暂无记录"
-        description="手动或定时打卡后会生成记录。"
-      />
-      <div v-else class="divide-y divide-zinc-200">
+      <StateBlock v-if="records.length === 0" title="暂无记录" />
+      <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <div v-for="record in records" :key="record.id" class="px-4 py-3">
           <div class="flex items-center justify-between gap-3">
             <span class="font-medium">{{ record.task_name || `任务 #${record.task_id}` }}</span>

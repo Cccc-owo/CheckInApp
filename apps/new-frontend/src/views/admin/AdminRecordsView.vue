@@ -40,10 +40,9 @@ onMounted(load)
 
 <template>
   <section :class="[cardClass, 'overflow-hidden']">
-    <div :class="[sectionHeaderClass, 'md:grid-cols-[1fr_160px_160px_auto]']">
+    <div :class="[sectionHeaderClass, 'lg:grid-cols-[1fr_120px_160px_120px_auto]']">
       <div>
         <h2 class="font-semibold">全量记录</h2>
-        <p class="mt-1 text-sm text-zinc-500">按任务和状态快速定位系统记录。</p>
       </div>
       <input v-model="filters.task_id" :class="inputClass" placeholder="任务 ID" />
       <select v-model="filters.status" :class="inputClass">
@@ -52,6 +51,7 @@ onMounted(load)
         <option value="failure">失败</option>
         <option value="out_of_time">超出时间</option>
       </select>
+      <input v-model.number="filters.limit" :class="inputClass" type="number" min="1" max="200" />
       <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
         <Search class="size-4" />
         筛选
@@ -66,18 +66,20 @@ onMounted(load)
       action-label="重试"
       @action="load"
     />
-    <div v-else class="divide-y divide-zinc-200">
+    <StateBlock v-else-if="records.length === 0" title="暂无记录" />
+    <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
       <article
         v-for="record in records"
         :key="record.id"
-        class="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
+        class="grid gap-3 p-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
       >
-        <div>
-          <div class="font-medium">
+        <div class="min-w-0">
+          <div class="truncate font-medium">
             {{ record.user_alias || record.user_email || `任务 #${record.task_id}` }}
           </div>
-          <div class="mt-1 text-sm text-zinc-500">
-            {{ formatFullDateTime(record.check_in_time) }}
+          <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
+            <span>{{ formatFullDateTime(record.check_in_time) }}</span>
+            <span>{{ record.response_text || record.error_message || '无响应内容' }}</span>
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2 md:justify-end">

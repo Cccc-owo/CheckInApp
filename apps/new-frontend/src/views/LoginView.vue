@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info, KeyRound, QrCode, RotateCw, UserRound } from 'lucide-vue-next'
+import { KeyRound, QrCode, RotateCw, UserRound } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { authApi } from '@/api'
 import { useAuth } from '@/app/auth'
@@ -20,9 +20,6 @@ const qrSessionId = ref('')
 const loginMode = ref<'qrcode' | 'password'>('qrcode')
 let pollTimer: number | undefined
 
-const currentSubtitle = computed(() =>
-  loginMode.value === 'qrcode' ? 'QQ 扫码登录/注册' : '用户名密码登录',
-)
 const canSubmitPassword = computed(
   () => Boolean(alias.value.trim()) && Boolean(password.value) && !loading.value,
 )
@@ -119,25 +116,24 @@ onBeforeUnmount(() => {
   >
     <section class="w-full max-w-md">
       <div :class="[cardClass, 'overflow-hidden']">
-        <div class="border-b border-zinc-200 px-6 py-5 text-center dark:border-zinc-800">
+        <div class="border-b border-zinc-200 px-4 py-3 text-center dark:border-zinc-800">
           <div
-            class="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm"
+            class="mx-auto mb-3 flex size-10 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm"
           >
             <QrCode class="size-5" />
           </div>
           <h1 class="text-xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
             接龙自动打卡系统
           </h1>
-          <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ currentSubtitle }}</p>
         </div>
 
-        <div class="p-6">
+        <div class="p-4">
           <div
-            class="grid grid-cols-2 rounded-md border border-zinc-200 bg-zinc-50 p-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+            class="grid grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-50 p-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
           >
             <button
               type="button"
-              class="rounded px-3 py-2 text-center font-medium transition"
+              class="rounded-md px-3 py-2 text-center font-medium transition"
               :class="
                 loginMode === 'qrcode'
                   ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-50'
@@ -149,7 +145,7 @@ onBeforeUnmount(() => {
             </button>
             <button
               type="button"
-              class="rounded px-3 py-2 text-center font-medium transition"
+              class="rounded-md px-3 py-2 text-center font-medium transition"
               :class="
                 loginMode === 'password'
                   ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-50'
@@ -163,7 +159,7 @@ onBeforeUnmount(() => {
 
           <form
             v-if="loginMode === 'password'"
-            class="mt-6 grid gap-4"
+            class="mt-5 grid gap-4"
             @submit.prevent="loginWithPassword"
           >
             <label class="grid gap-2">
@@ -212,16 +208,9 @@ onBeforeUnmount(() => {
               <KeyRound class="size-4" />
               {{ loading ? '登录中' : '登录' }}
             </button>
-            <button
-              class="text-center text-sm font-medium text-zinc-600 transition hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50"
-              type="button"
-              @click="switchMode('qrcode')"
-            >
-              没有密码？使用扫码登录
-            </button>
           </form>
 
-          <div v-else class="mt-6 grid gap-4">
+          <div v-else class="mt-5 grid gap-4">
             <label class="grid gap-2">
               <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">用户名</span>
               <div class="relative">
@@ -273,26 +262,6 @@ onBeforeUnmount(() => {
                 <RotateCw class="size-4" />
                 刷新会话
               </button>
-            </div>
-          </div>
-
-          <div :class="[alertClass.info, 'mt-5 flex items-start gap-2']">
-            <Info class="mt-0.5 size-4 shrink-0" />
-            <div>
-              <div class="font-semibold">
-                {{ loginMode === 'qrcode' ? '扫码登录提示' : '密码登录提示' }}
-              </div>
-              <div v-if="loginMode === 'qrcode'" class="mt-1 space-y-1 text-sm">
-                <p>1. 输入您的用户名用于标识身份</p>
-                <p>2. 点击扫码登录/注册按钮</p>
-                <p>3. 使用手机 QQ 扫描二维码</p>
-                <p>4. 新用户首次扫码会自动注册账户</p>
-              </div>
-              <div v-else class="mt-1 space-y-1 text-sm">
-                <p>1. 输入您的用户名和密码</p>
-                <p>2. 点击登录按钮直接进入系统</p>
-                <p>3. 首次使用请先扫码登录/注册，然后在设置中设置密码</p>
-              </div>
             </div>
           </div>
         </div>

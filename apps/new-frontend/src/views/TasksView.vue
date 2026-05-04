@@ -213,7 +213,6 @@ onMounted(load)
       <div :class="sectionHeaderClass">
         <div>
           <h2 class="font-semibold">从模板创建任务</h2>
-          <p class="mt-1 text-sm text-zinc-500">选择启用模板，填写接龙 ID 和字段值后创建任务。</p>
         </div>
         <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
           <RefreshCw class="size-4" />
@@ -221,10 +220,10 @@ onMounted(load)
         </button>
       </div>
 
-      <form class="grid gap-4 p-5" @submit.prevent="createTask">
-        <div class="grid gap-4 md:grid-cols-3">
+      <form class="grid gap-4 p-4" @submit.prevent="createTask">
+        <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)_220px]">
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">模板</span>
+            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">模板</span>
             <select v-model.number="selectedTemplateId" :class="inputClass">
               <option v-for="template in templates" :key="template.id" :value="template.id">
                 {{ template.name }}
@@ -232,25 +231,37 @@ onMounted(load)
             </select>
           </label>
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">任务名称</span>
+            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">任务名称</span>
             <input v-model="createForm.task_name" :class="inputClass" placeholder="可选" />
           </label>
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">接龙 ThreadId</span>
+            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400"
+              >接龙 ThreadId</span
+            >
             <input v-model="createForm.thread_id" :class="inputClass" required />
           </label>
         </div>
-        <label class="grid gap-2 md:max-w-xs">
-          <span class="text-xs font-semibold text-zinc-500">Cron 表达式</span>
-          <input
-            v-model="createForm.cron_expression"
-            :class="inputClass"
-            placeholder="0 20 * * *"
-          />
-        </label>
-        <div v-if="fieldEntries.length" class="grid gap-4 md:grid-cols-2">
+        <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
+          <label class="grid gap-2">
+            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Cron 表达式</span>
+            <input
+              v-model="createForm.cron_expression"
+              :class="inputClass"
+              placeholder="0 20 * * *"
+            />
+          </label>
+          <button
+            :class="[buttonBase, buttonTone.primary, 'w-full md:w-fit']"
+            :disabled="creating || !selectedTemplateId || !createForm.thread_id"
+            type="submit"
+          >
+            <Plus class="size-4" />
+            {{ creating ? '创建中' : '创建任务' }}
+          </button>
+        </div>
+        <div v-if="fieldEntries.length" class="grid gap-3 md:grid-cols-2">
           <label v-for="[key, field] in fieldEntries" :key="key" class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">{{
+            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{
               field?.display_name ?? key
             }}</span>
             <select
@@ -290,14 +301,6 @@ onMounted(load)
         <div v-if="message" :class="alertClass.success">
           {{ message }}
         </div>
-        <button
-          :class="[buttonBase, buttonTone.primary, 'w-fit']"
-          :disabled="creating || !selectedTemplateId || !createForm.thread_id"
-          type="submit"
-        >
-          <Plus class="size-4" />
-          {{ creating ? '创建中' : '创建任务' }}
-        </button>
       </form>
     </section>
 
@@ -310,29 +313,24 @@ onMounted(load)
       action-label="重试"
       @action="load"
     />
-    <StateBlock
-      v-else-if="tasks.length === 0"
-      title="暂无任务"
-      description="先从模板创建一个任务。"
-    />
+    <StateBlock v-else-if="tasks.length === 0" title="暂无任务" />
     <section v-else :class="[cardClass, 'overflow-hidden']">
       <div :class="sectionHeaderClass">
         <div>
           <h2 class="font-semibold">任务列表</h2>
-          <p class="mt-1 text-sm text-zinc-500">查看启停、最近状态，并执行手动打卡或维护操作。</p>
         </div>
         <span
-          class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600"
+          class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300"
         >
           {{ tasks.length }} 个任务
         </span>
       </div>
-      <div class="divide-y divide-zinc-200">
-        <article v-for="task in tasks" :key="task.id" class="p-4">
+      <div class="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <article v-for="task in tasks" :key="task.id" class="p-3 sm:p-4">
           <div class="grid gap-3 lg:grid-cols-[1fr_auto]">
-            <div>
+            <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
-                <h3 class="font-semibold">{{ task.name || `任务 #${task.id}` }}</h3>
+                <h3 class="truncate font-semibold">{{ task.name || `任务 #${task.id}` }}</h3>
                 <span :class="toneClass(task.is_active ? 'success' : 'neutral')">{{
                   task.is_active ? '启用' : '停用'
                 }}</span>
@@ -352,9 +350,12 @@ onMounted(load)
                   {{ statusLabel(status.status) }}
                 </span>
               </div>
-              <p class="mt-1 text-sm text-zinc-500">
-                ThreadId: {{ task.thread_id || '未解析' }} · {{ cronLabel(task.cron_expression) }}
-              </p>
+              <div
+                class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400"
+              >
+                <span>ThreadId: {{ task.thread_id || '未解析' }}</span>
+                <span>{{ cronLabel(task.cron_expression) }}</span>
+              </div>
             </div>
             <div class="flex flex-wrap gap-2 lg:justify-end">
               <button
@@ -404,25 +405,26 @@ onMounted(load)
 
           <form
             v-if="editingTaskId === task.id"
-            class="mt-4 grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4"
+            class="mt-4 grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-900/70 dark:bg-emerald-950/30"
             @submit.prevent="saveEdit(task.id)"
           >
             <div>
-              <h4 class="text-sm font-semibold text-zinc-900">编辑任务</h4>
-              <p class="mt-1 text-xs text-zinc-500">保存前会校验 Payload JSON。</p>
+              <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">编辑任务</h4>
             </div>
             <div class="grid gap-3 md:grid-cols-2">
               <label class="grid gap-2">
-                <span class="text-xs font-semibold text-zinc-500">任务名称</span>
+                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">任务名称</span>
                 <input v-model="editForm.name" :class="inputClass" />
               </label>
               <label class="grid gap-2">
-                <span class="text-xs font-semibold text-zinc-500">Cron</span>
+                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Cron</span>
                 <input v-model="editForm.cron_expression" :class="inputClass" />
               </label>
             </div>
             <label class="grid gap-2">
-              <span class="text-xs font-semibold text-zinc-500">Payload JSON</span>
+              <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400"
+                >Payload JSON</span
+              >
               <textarea v-model="editForm.payload_config" :class="textareaClass" />
             </label>
             <div class="flex flex-wrap gap-2">

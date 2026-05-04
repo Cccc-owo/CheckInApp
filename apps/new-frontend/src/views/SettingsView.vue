@@ -86,20 +86,19 @@ onMounted(load)
     <form :class="[cardClass, 'overflow-hidden']" @submit.prevent="save">
       <div :class="sectionHeaderClass">
         <h2 class="font-semibold">个人资料</h2>
-        <p class="mt-1 text-sm text-zinc-500">更新别名、邮箱和登录密码。</p>
       </div>
-      <div class="grid gap-4 p-5">
+      <div class="grid gap-4 p-4">
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">别名</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">别名</span>
           <input v-model="form.alias" :class="inputClass" required />
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">邮箱</span>
+          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">邮箱</span>
           <input v-model="form.email" :class="inputClass" type="email" placeholder="用于打卡通知" />
         </label>
         <div class="grid gap-4 md:grid-cols-2">
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">当前密码</span>
+            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">当前密码</span>
             <input
               v-model="form.current_password"
               :class="inputClass"
@@ -108,7 +107,7 @@ onMounted(load)
             />
           </label>
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">新密码</span>
+            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">新密码</span>
             <input
               v-model="form.new_password"
               :class="inputClass"
@@ -132,16 +131,22 @@ onMounted(load)
 
     <aside :class="[cardClass, 'h-fit overflow-hidden']">
       <div
-        class="border-b px-5 py-4"
+        class="grid gap-2 border-b px-4 py-3"
         :class="
-          token?.is_valid ? 'border-emerald-200 bg-emerald-50/70' : 'border-rose-200 bg-rose-50/70'
+          token?.is_valid
+            ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/70 dark:bg-emerald-950/30'
+            : 'border-rose-200 bg-rose-50/70 dark:border-rose-900/70 dark:bg-rose-950/30'
         "
       >
-        <h2 class="font-semibold">授权状态</h2>
-        <p class="mt-1 text-sm text-zinc-600">这里检查的是打卡业务 token，不是网站登录状态。</p>
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="font-semibold">授权状态</h2>
+          <span :class="toneClass(token?.is_valid ? 'success' : 'danger')">{{
+            token?.is_valid ? '可用' : '不可用'
+          }}</span>
+        </div>
       </div>
-      <div class="p-5">
-        <div class="mt-4 grid gap-3 text-sm">
+      <div class="p-4">
+        <div class="grid gap-3 text-sm">
           <div class="flex items-center justify-between">
             <span class="text-zinc-500">状态</span>
             <span :class="toneClass(token?.is_valid ? 'success' : 'danger')">{{

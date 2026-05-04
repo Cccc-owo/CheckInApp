@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Braces, Eye, Plus, TreePine } from 'lucide-vue-next'
+import { Braces, Plus, TreePine } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import TemplateFieldNode from './TemplateFieldNode.vue'
 import {
@@ -124,10 +124,10 @@ function handleNodeError(message: string) {
 <template>
   <div class="grid gap-4">
     <div
-      class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950"
+      class="rounded-lg border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-800 dark:bg-zinc-950"
     >
       <div
-        class="inline-grid grid-cols-2 rounded-md border border-zinc-200 bg-white p-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        class="grid grid-cols-2 rounded-md border border-zinc-200 bg-white p-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
       >
         <button
           type="button"
@@ -155,10 +155,6 @@ function handleNodeError(message: string) {
           <Braces class="size-4" />
           JSON
         </button>
-      </div>
-      <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-        <Eye class="size-3.5" />
-        预览使用当前有效配置
       </div>
     </div>
 
@@ -208,9 +204,9 @@ function handleNodeError(message: string) {
       </div>
       <div
         v-else
-        class="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-6 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400"
+        class="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400"
       >
-        暂无字段配置，先添加根字段。
+        暂无字段配置
       </div>
     </div>
 

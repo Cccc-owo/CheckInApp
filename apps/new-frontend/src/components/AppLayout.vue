@@ -13,6 +13,7 @@ import {
   ScrollText,
   Settings,
   Shield,
+  Sun,
   UserRound,
   Users,
   X,
@@ -20,7 +21,9 @@ import {
 import { computed, ref } from 'vue'
 import { useAuth } from '@/app/auth'
 import { useRouter } from '@/app/router'
-import { useTheme } from '@/app/theme'
+import { type ThemeMode, useTheme } from '@/app/theme'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 const { state: authState, isAdmin, logout } = useAuth()
 const router = useRouter()
@@ -47,6 +50,18 @@ const isAdminRoute = computed(() => router.state.path.startsWith('/admin'))
 const approvalLabel = computed(() => (authState.user?.is_approved ? '已审批' : '待审批'))
 const roleLabel = computed(() => (isAdmin.value ? '管理员' : '普通用户'))
 const themeLabel = computed(() => theme.modeLabel.value)
+const themeModes = [
+  { mode: 'light', label: '亮色', icon: Sun },
+  { mode: 'dark', label: '暗色', icon: MoonStar },
+  { mode: 'system', label: '设备', icon: Monitor },
+] as const
+
+function themeModeButtonClass(mode: ThemeMode) {
+  if (theme.state.mode === mode) {
+    return 'bg-zinc-900 text-white shadow-sm hover:bg-zinc-900 hover:text-white dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-100 dark:hover:text-zinc-950'
+  }
+  return 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50'
+}
 
 function go(path: string) {
   mobileOpen.value = false
@@ -64,16 +79,18 @@ function signOut() {
     <header
       class="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90"
     >
-      <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+      <div class="flex h-14 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-3">
-          <button
+          <Button
             type="button"
-            class="inline-flex size-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 shadow-sm lg:hidden dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+            variant="outline"
+            size="icon"
+            class="lg:hidden"
             @click="mobileOpen = !mobileOpen"
           >
             <X v-if="mobileOpen" class="size-4" />
             <Menu v-else class="size-4" />
-          </button>
+          </Button>
           <button class="flex items-center gap-3 text-left" type="button" @click="go('/dashboard')">
             <span
               class="hidden size-9 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm sm:inline-flex"
@@ -94,31 +111,44 @@ function signOut() {
               {{ roleLabel }} · {{ approvalLabel }}
             </div>
           </div>
-          <button
-            type="button"
-            class="inline-flex size-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:translate-y-px dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-            :aria-label="`切换主题，当前${themeLabel}`"
-            :title="`切换主题，当前${themeLabel}`"
-            @click="theme.cycleThemeMode"
-          >
-            <MoonStar v-if="theme.state.resolved === 'dark'" class="size-4" />
-            <Monitor v-else class="size-4" />
-          </button>
-          <button
-            type="button"
-            class="inline-flex min-h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:translate-y-px dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
-            @click="signOut"
-          >
+          <TooltipProvider>
+            <div
+              class="inline-flex items-center rounded-lg border border-zinc-200 bg-white p-0.5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+              :aria-label="`主题模式，当前${themeLabel}`"
+            >
+              <Tooltip v-for="item in themeModes" :key="item.mode">
+                <TooltipTrigger as-child>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    :class="themeModeButtonClass(item.mode)"
+                    :aria-label="`切换为${item.label}模式`"
+                    :aria-pressed="theme.state.mode === item.mode"
+                    @click="theme.setThemeMode(item.mode)"
+                  >
+                    <component :is="item.icon" class="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {{ item.label }}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+          <Button type="button" variant="outline" @click="signOut">
             <LogOut class="size-4" />
             <span class="hidden sm:inline">退出</span>
-          </button>
+          </Button>
         </div>
       </div>
     </header>
 
-    <div class="mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
+    <div
+      class="grid min-h-[calc(100dvh-3.5rem)] w-full grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]"
+    >
       <aside
-        class="border-b border-zinc-200 bg-white px-4 py-3 shadow-sm lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r lg:shadow-none dark:border-zinc-800 dark:bg-zinc-950"
+        class="border-b border-zinc-200 bg-white px-3 py-3 shadow-sm lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r lg:shadow-none dark:border-zinc-800 dark:bg-zinc-950"
         :class="mobileOpen ? 'block' : 'hidden lg:block'"
       >
         <div
@@ -179,14 +209,14 @@ function signOut() {
         </div>
       </aside>
 
-      <main class="min-w-0 px-4 py-5 sm:px-6 lg:px-8">
+      <main class="min-w-0 px-4 py-4 sm:px-6 lg:px-8">
         <div
-          class="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none"
+          class="mb-5 grid gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none"
           :class="{
             'border-sky-200 bg-sky-50/70 dark:border-sky-900/70 dark:bg-sky-950/30': isAdminRoute,
           }"
         >
-          <div>
+          <div class="min-w-0">
             <div
               v-if="isAdminRoute"
               class="mb-1 inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-medium text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/70 dark:text-sky-200"
@@ -194,27 +224,31 @@ function signOut() {
               <Shield class="size-3" />
               管理员
             </div>
-            <h1 class="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+            <h1
+              class="truncate text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50"
+            >
               {{ title }}
             </h1>
-            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              {{
-                isAdminRoute
-                  ? '管理用户、模板、记录、日志和系统统计。'
-                  : '管理打卡任务、授权状态和系统记录。'
-              }}
-            </p>
           </div>
-          <div
-            class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium dark:bg-zinc-950"
-            :class="
-              authState.user?.is_approved
-                ? 'border-emerald-200 text-emerald-700 dark:border-emerald-900/70 dark:text-emerald-300'
-                : 'border-amber-200 text-amber-700 dark:border-amber-900/70 dark:text-amber-300'
-            "
-          >
-            <UserRound class="size-3.5" />
-            {{ approvalLabel }}
+          <div class="flex flex-wrap items-center gap-2">
+            <div
+              class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium dark:bg-zinc-950"
+              :class="
+                authState.user?.is_approved
+                  ? 'border-emerald-200 text-emerald-700 dark:border-emerald-900/70 dark:text-emerald-300'
+                  : 'border-amber-200 text-amber-700 dark:border-amber-900/70 dark:text-amber-300'
+              "
+            >
+              <UserRound class="size-3.5" />
+              {{ approvalLabel }}
+            </div>
+            <div
+              v-if="isAdminRoute"
+              class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-medium text-sky-700 dark:border-sky-900/70 dark:bg-zinc-950 dark:text-sky-300"
+            >
+              <Shield class="size-3.5" />
+              管理员工作区
+            </div>
           </div>
         </div>
         <slot />

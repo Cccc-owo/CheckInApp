@@ -31,7 +31,6 @@ onMounted(load)
     <div :class="sectionHeaderClass">
       <div>
         <h2 class="font-semibold">系统日志</h2>
-        <p class="mt-1 text-sm text-zinc-500">查看最近运行日志，适合排查打卡和后台任务状态。</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <input
@@ -56,6 +55,7 @@ onMounted(load)
       action-label="重试"
       @action="load"
     />
+    <StateBlock v-else-if="!logs" title="暂无日志" />
     <pre
       v-else
       class="max-h-[70vh] overflow-auto bg-zinc-950 p-4 font-mono text-xs leading-5 text-zinc-100"

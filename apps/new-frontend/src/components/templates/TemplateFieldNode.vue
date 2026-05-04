@@ -343,37 +343,42 @@ function removeOption(index: number) {
           </label>
         </div>
 
-        <label class="grid gap-1.5">
-          <span :class="labelClass">占位提示</span>
-          <input
-            :class="inputClass"
-            :value="fieldNode.placeholder ?? ''"
-            placeholder="用户填写时看到的提示"
-            @input="updateField('placeholder', ($event.target as HTMLInputElement).value)"
-          />
-        </label>
-
-        <div
-          class="grid gap-2 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm sm:grid-cols-2 dark:border-zinc-800 dark:bg-zinc-950"
+        <details
+          class="rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950"
         >
-          <label class="flex items-center gap-2">
-            <input
-              :checked="Boolean(fieldNode.required)"
-              :disabled="Boolean(fieldNode.hidden)"
-              type="checkbox"
-              @change="updateField('required', ($event.target as HTMLInputElement).checked)"
-            />
-            必填
-          </label>
-          <label class="flex items-center gap-2">
-            <input
-              :checked="Boolean(fieldNode.hidden)"
-              type="checkbox"
-              @change="updateField('hidden', ($event.target as HTMLInputElement).checked)"
-            />
-            隐藏
-          </label>
-        </div>
+          <summary class="cursor-pointer text-sm font-medium">更多字段属性</summary>
+          <div class="mt-3 grid gap-3">
+            <label class="grid gap-1.5">
+              <span :class="labelClass">占位提示</span>
+              <input
+                :class="inputClass"
+                :value="fieldNode.placeholder ?? ''"
+                placeholder="表单占位文字"
+                @input="updateField('placeholder', ($event.target as HTMLInputElement).value)"
+              />
+            </label>
+
+            <div class="grid gap-2 text-sm sm:grid-cols-2">
+              <label class="flex items-center gap-2">
+                <input
+                  :checked="Boolean(fieldNode.required)"
+                  :disabled="Boolean(fieldNode.hidden)"
+                  type="checkbox"
+                  @change="updateField('required', ($event.target as HTMLInputElement).checked)"
+                />
+                必填
+              </label>
+              <label class="flex items-center gap-2">
+                <input
+                  :checked="Boolean(fieldNode.hidden)"
+                  type="checkbox"
+                  @change="updateField('hidden', ($event.target as HTMLInputElement).checked)"
+                />
+                隐藏
+              </label>
+            </div>
+          </div>
+        </details>
 
         <div v-if="fieldNode.field_type === 'select'" class="grid gap-2">
           <div class="flex items-center justify-between gap-2">
@@ -435,7 +440,7 @@ function removeOption(index: number) {
         </div>
         <div
           v-else
-          class="rounded-md border border-dashed border-zinc-200 bg-zinc-50 p-4 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400"
+          class="rounded-md border border-dashed border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400"
         >
           当前{{ kindBadge }}为空
         </div>

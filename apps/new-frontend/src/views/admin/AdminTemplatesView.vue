@@ -11,13 +11,20 @@ import {
 } from '@/components/templates/template-config'
 import {
   alertClass,
-  buttonBase,
-  buttonTone,
   cardClass,
   inputClass,
+  labelClass,
   sectionHeaderClass,
   toneClass,
 } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { extractErrorMessage, formatDateTime, stringifyJson } from '@/utils/format'
 
 const loading = ref(true)
@@ -40,6 +47,13 @@ const localPreviewPayload = computed(() => {
   if (!result.ok) return null
   return buildTemplatePreviewPayload(result.config)
 })
+const editorOpen = computed({
+  get: () => editingId.value !== null,
+  set: (open: boolean) => {
+    if (!open) editingId.value = null
+  },
+})
+const editorTitle = computed(() => (editingId.value === 'new' ? '新建模板' : '编辑模板'))
 
 async function load() {
   loading.value = true
@@ -127,17 +141,16 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+  <div class="grid gap-5">
     <section :class="[cardClass, 'overflow-hidden']">
       <div :class="sectionHeaderClass">
         <div>
           <h2 class="font-semibold">模板管理</h2>
-          <p class="mt-1 text-sm text-zinc-500">维护创建任务时可选择的字段配置和模板状态。</p>
         </div>
-        <button :class="[buttonBase, buttonTone.primary]" type="button" @click="startCreate">
+        <Button type="button" @click="startCreate">
           <Plus class="size-4" />
           新建模板
-        </button>
+        </Button>
       </div>
       <StateBlock v-if="loading" title="正在加载模板" type="loading" />
       <StateBlock
@@ -148,121 +161,127 @@ onMounted(load)
         action-label="重试"
         @action="load"
       />
-      <div v-else class="divide-y divide-zinc-200">
+      <StateBlock
+        v-else-if="templates.length === 0"
+        title="暂无模板"
+        action-label="新建模板"
+        @action="startCreate"
+      />
+      <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
         <article
           v-for="template in templates"
           :key="template.id"
-          class="flex flex-wrap items-center justify-between gap-3 p-4"
+          class="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4"
         >
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <h3 class="font-semibold">{{ template.name }}</h3>
+              <h3 class="truncate font-semibold">{{ template.name }}</h3>
               <span :class="toneClass(template.is_active ? 'success' : 'neutral')">{{
                 template.is_active ? '启用' : '停用'
               }}</span>
             </div>
-            <p class="mt-1 text-sm text-zinc-500">
-              {{ template.description || '无描述' }} · {{ formatDateTime(template.created_at) }}
-            </p>
+            <div
+              class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400"
+            >
+              <span>{{ template.description || '无描述' }}</span>
+              <span>{{ formatDateTime(template.created_at) }}</span>
+            </div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button
-              :class="[buttonBase, buttonTone.secondary]"
-              type="button"
-              @click="showPreview(template)"
-            >
+            <Button type="button" variant="outline" @click="showPreview(template)">
               <Eye class="size-4" />
               预览
-            </button>
-            <button
-              :class="[buttonBase, buttonTone.secondary]"
+            </Button>
+            <Button type="button" variant="outline" @click="startEdit(template)"> 编辑 </Button>
+            <Button
               type="button"
-              @click="startEdit(template)"
-            >
-              编辑
-            </button>
-            <button
-              :class="[buttonBase, buttonTone.danger]"
-              type="button"
+              variant="outline"
+              class="border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:border-rose-800 dark:hover:bg-rose-900/40"
               @click="remove(template)"
             >
               <Trash2 class="size-4" />
               删除
-            </button>
+            </Button>
           </div>
         </article>
       </div>
     </section>
 
-    <aside class="grid gap-5">
-      <form
-        v-if="editingId"
-        :class="[cardClass, 'grid gap-4 overflow-hidden']"
-        @submit.prevent="save"
-      >
-        <div
-          class="border-b border-zinc-200 bg-zinc-50/70 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950/50"
-        >
-          <h2 class="font-semibold">{{ editingId === 'new' ? '新建模板' : '编辑模板' }}</h2>
-          <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            使用结构化字段编辑器维护配置，必要时切换 JSON 修复。
-          </p>
-        </div>
-        <div class="grid gap-4 p-5">
-          <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">名称</span>
-            <input v-model="form.name" :class="inputClass" required />
-          </label>
-          <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">描述</span>
-            <input v-model="form.description" :class="inputClass" />
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            <input v-model="form.is_active" type="checkbox" />
-            启用模板
-          </label>
-          <TemplateConfigEditor v-model="form.field_config" @valid="editorValid = $event" />
-          <div v-if="error" :class="alertClass.danger">
-            {{ error }}
-          </div>
-          <div v-if="message" :class="alertClass.success">
-            {{ message }}
-          </div>
-          <div class="flex gap-2">
-            <button
-              :class="[buttonBase, buttonTone.primary]"
-              :disabled="!editorValid"
-              type="submit"
-            >
-              <Save class="size-4" />
-              保存
-            </button>
-            <button
-              :class="[buttonBase, buttonTone.secondary]"
-              type="button"
-              @click="editingId = null"
-            >
-              取消
-            </button>
-          </div>
-        </div>
-      </form>
-
-      <section v-if="preview" :class="[cardClass, 'p-5']">
-        <h2 class="font-semibold">{{ preview.template_name }} 预览</h2>
+    <section v-if="preview" :class="[cardClass, 'p-5']">
+      <details open>
+        <summary class="cursor-pointer text-sm font-semibold">
+          {{ preview.template_name }} 预览
+        </summary>
         <pre
           class="mt-3 max-h-96 overflow-auto rounded-md bg-zinc-950 p-3 text-xs leading-5 text-zinc-100"
           >{{ stringifyJson(preview.preview_payload) }}</pre
         >
-      </section>
+      </details>
+    </section>
 
-      <section v-else-if="editingId && localPreviewPayload" :class="[cardClass, 'p-5']">
-        <h2 class="font-semibold">当前配置预览</h2>
-        <pre
-          class="mt-3 max-h-96 overflow-auto rounded-md bg-zinc-950 p-3 text-xs leading-5 text-zinc-100"
-          >{{ stringifyJson(localPreviewPayload) }}</pre
+    <Dialog v-model:open="editorOpen">
+      <DialogContent
+        class="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-[min(960px,calc(100vw-2rem))] lg:max-w-[min(1120px,calc(100vw-3rem))]"
+      >
+        <DialogHeader
+          class="border-b border-zinc-200 bg-zinc-50/70 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950/50"
         >
-      </section>
-    </aside>
+          <DialogTitle>{{ editorTitle }}</DialogTitle>
+        </DialogHeader>
+
+        <form class="min-h-0 overflow-y-auto" @submit.prevent="save">
+          <div class="grid gap-4 p-4 sm:p-5">
+            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+              <label class="grid gap-2">
+                <span :class="labelClass">名称</span>
+                <input v-model="form.name" :class="inputClass" required />
+              </label>
+              <label class="grid gap-2">
+                <span :class="labelClass">描述</span>
+                <input v-model="form.description" :class="inputClass" />
+              </label>
+              <label
+                class="flex min-h-9 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+              >
+                <input v-model="form.is_active" type="checkbox" />
+                启用模板
+              </label>
+            </div>
+
+            <TemplateConfigEditor v-model="form.field_config" @valid="editorValid = $event" />
+
+            <div
+              v-if="localPreviewPayload"
+              class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+            >
+              <details>
+                <summary class="cursor-pointer text-sm font-semibold">当前配置预览</summary>
+                <pre
+                  class="mt-3 max-h-64 overflow-auto rounded-md bg-zinc-950 p-3 text-xs leading-5 text-zinc-100"
+                  >{{ stringifyJson(localPreviewPayload) }}</pre
+                >
+              </details>
+            </div>
+
+            <div v-if="error" :class="alertClass.danger">
+              {{ error }}
+            </div>
+            <div v-if="message" :class="alertClass.success">
+              {{ message }}
+            </div>
+          </div>
+
+          <DialogFooter
+            class="sticky bottom-0 border-t border-zinc-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95"
+          >
+            <Button type="button" variant="outline" @click="editingId = null">取消</Button>
+            <Button :disabled="!editorValid" type="submit">
+              <Save class="size-4" />
+              保存
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
