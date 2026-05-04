@@ -3,7 +3,14 @@ import { Search } from 'lucide-vue-next'
 import { onMounted, reactive, ref } from 'vue'
 import { checkInApi, type CheckInRecord } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
-import { buttonBase, buttonTone, cardClass, inputClass, toneClass } from '@/components/ui'
+import {
+  buttonBase,
+  buttonTone,
+  cardClass,
+  inputClass,
+  sectionHeaderClass,
+  toneClass,
+} from '@/components/ui'
 import { extractErrorMessage, formatFullDateTime, statusLabel, statusTone } from '@/utils/format'
 
 const loading = ref(true)
@@ -38,7 +45,7 @@ onMounted(load)
 
 <template>
   <section :class="[cardClass, 'overflow-hidden']">
-    <div class="grid gap-3 border-b border-zinc-200 p-4 md:grid-cols-[1fr_180px_180px_auto]">
+    <div :class="[sectionHeaderClass, 'md:grid-cols-[1fr_180px_180px_auto]']">
       <div>
         <h2 class="font-semibold">个人打卡记录</h2>
         <p class="mt-1 text-sm text-zinc-500">按状态和触发方式查看最近的打卡结果。</p>
@@ -80,7 +87,7 @@ onMounted(load)
         <article
           v-for="record in records"
           :key="record.id"
-          class="grid gap-3 p-4 lg:grid-cols-[180px_1fr_auto]"
+          class="grid gap-3 p-4 lg:grid-cols-[180px_minmax(0,1fr)_auto]"
         >
           <div>
             <div class="text-sm font-semibold">
@@ -98,13 +105,15 @@ onMounted(load)
               触发方式：{{ statusLabel(record.trigger_type) }}
             </p>
           </div>
-          <span :class="toneClass(statusTone(record.status))">{{
-            statusLabel(record.status)
-          }}</span>
+          <div class="lg:text-right">
+            <span :class="toneClass(statusTone(record.status))">{{
+              statusLabel(record.status)
+            }}</span>
+          </div>
         </article>
       </div>
       <div
-        class="flex items-center justify-between border-t border-zinc-200 px-4 py-3 text-sm text-zinc-500"
+        class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm text-zinc-500"
       >
         <span
           >共 {{ total }} 条，当前 {{ filters.skip + 1 }} -

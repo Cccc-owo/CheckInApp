@@ -4,10 +4,12 @@ import { onMounted, reactive, ref } from 'vue'
 import { templateApi, type Template, type TemplatePreview } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
 import {
+  alertClass,
   buttonBase,
   buttonTone,
   cardClass,
   inputClass,
+  sectionHeaderClass,
   textareaClass,
   toneClass,
 } from '@/components/ui'
@@ -112,8 +114,11 @@ onMounted(load)
 <template>
   <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
     <section :class="[cardClass, 'overflow-hidden']">
-      <div class="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
-        <h2 class="font-semibold">模板管理</h2>
+      <div :class="sectionHeaderClass">
+        <div>
+          <h2 class="font-semibold">模板管理</h2>
+          <p class="mt-1 text-sm text-zinc-500">维护创建任务时可选择的字段配置和模板状态。</p>
+        </div>
         <button :class="[buttonBase, buttonTone.primary]" type="button" @click="startCreate">
           <Plus class="size-4" />
           新建模板
@@ -145,7 +150,7 @@ onMounted(load)
               {{ template.description || '无描述' }} · {{ formatDateTime(template.created_at) }}
             </p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             <button
               :class="[buttonBase, buttonTone.secondary]"
               type="button"
@@ -175,48 +180,51 @@ onMounted(load)
     </section>
 
     <aside class="grid gap-5">
-      <form v-if="editingId" :class="[cardClass, 'grid gap-4 p-5']" @submit.prevent="save">
-        <h2 class="font-semibold">{{ editingId === 'new' ? '新建模板' : '编辑模板' }}</h2>
-        <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">名称</span>
-          <input v-model="form.name" :class="inputClass" required />
-        </label>
-        <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">描述</span>
-          <input v-model="form.description" :class="inputClass" />
-        </label>
-        <label class="flex items-center gap-2 text-sm">
-          <input v-model="form.is_active" type="checkbox" />
-          启用模板
-        </label>
-        <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">字段配置 JSON</span>
-          <textarea v-model="form.field_config" :class="textareaClass" class="min-h-64" />
-        </label>
-        <div
-          v-if="error"
-          class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
-        >
-          {{ error }}
+      <form
+        v-if="editingId"
+        :class="[cardClass, 'grid gap-4 overflow-hidden']"
+        @submit.prevent="save"
+      >
+        <div class="border-b border-zinc-200 bg-zinc-50/70 px-5 py-4">
+          <h2 class="font-semibold">{{ editingId === 'new' ? '新建模板' : '编辑模板' }}</h2>
+          <p class="mt-1 text-sm text-zinc-500">字段配置必须是合法 JSON。</p>
         </div>
-        <div
-          v-if="message"
-          class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-        >
-          {{ message }}
-        </div>
-        <div class="flex gap-2">
-          <button :class="[buttonBase, buttonTone.primary]" type="submit">
-            <Save class="size-4" />
-            保存
-          </button>
-          <button
-            :class="[buttonBase, buttonTone.secondary]"
-            type="button"
-            @click="editingId = null"
-          >
-            取消
-          </button>
+        <div class="grid gap-4 p-5">
+          <label class="grid gap-2">
+            <span class="text-xs font-semibold text-zinc-500">名称</span>
+            <input v-model="form.name" :class="inputClass" required />
+          </label>
+          <label class="grid gap-2">
+            <span class="text-xs font-semibold text-zinc-500">描述</span>
+            <input v-model="form.description" :class="inputClass" />
+          </label>
+          <label class="flex items-center gap-2 text-sm">
+            <input v-model="form.is_active" type="checkbox" />
+            启用模板
+          </label>
+          <label class="grid gap-2">
+            <span class="text-xs font-semibold text-zinc-500">字段配置 JSON</span>
+            <textarea v-model="form.field_config" :class="textareaClass" class="min-h-64" />
+          </label>
+          <div v-if="error" :class="alertClass.danger">
+            {{ error }}
+          </div>
+          <div v-if="message" :class="alertClass.success">
+            {{ message }}
+          </div>
+          <div class="flex gap-2">
+            <button :class="[buttonBase, buttonTone.primary]" type="submit">
+              <Save class="size-4" />
+              保存
+            </button>
+            <button
+              :class="[buttonBase, buttonTone.secondary]"
+              type="button"
+              @click="editingId = null"
+            >
+              取消
+            </button>
+          </div>
         </div>
       </form>
 

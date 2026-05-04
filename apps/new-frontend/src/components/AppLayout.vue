@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   BarChart3,
+  CheckCircle2,
   CheckSquare,
   ClipboardList,
   FileText,
@@ -38,6 +39,9 @@ const adminLinks = [
 ]
 
 const title = computed(() => router.current.value.title)
+const isAdminRoute = computed(() => router.state.path.startsWith('/admin'))
+const approvalLabel = computed(() => (authState.user?.is_approved ? '已审批' : '待审批'))
+const roleLabel = computed(() => (isAdmin.value ? '管理员' : '普通用户'))
 
 function go(path: string) {
   mobileOpen.value = false
@@ -57,26 +61,33 @@ function signOut() {
         <div class="flex items-center gap-3">
           <button
             type="button"
-            class="inline-flex size-9 items-center justify-center rounded-md border border-zinc-200 text-zinc-700 lg:hidden"
+            class="inline-flex size-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 shadow-sm lg:hidden"
             @click="mobileOpen = !mobileOpen"
           >
             <X v-if="mobileOpen" class="size-4" />
             <Menu v-else class="size-4" />
           </button>
-          <button class="text-left" type="button" @click="go('/dashboard')">
-            <div class="text-sm font-semibold leading-4">接龙自动打卡</div>
-            <div class="text-xs text-zinc-500">CheckIn workspace</div>
+          <button class="flex items-center gap-3 text-left" type="button" @click="go('/dashboard')">
+            <span
+              class="hidden size-9 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm sm:inline-flex"
+            >
+              <CheckCircle2 class="size-5" />
+            </span>
+            <span>
+              <div class="text-sm font-semibold leading-4">接龙自动打卡</div>
+              <div class="text-xs text-zinc-500">CheckIn workspace</div>
+            </span>
           </button>
         </div>
 
         <div class="flex items-center gap-3">
           <div class="hidden text-right sm:block">
             <div class="text-sm font-medium">{{ authState.user?.alias ?? '未登录' }}</div>
-            <div class="text-xs text-zinc-500">{{ isAdmin ? '管理员' : '普通用户' }}</div>
+            <div class="text-xs text-zinc-500">{{ roleLabel }} · {{ approvalLabel }}</div>
           </div>
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-md border border-zinc-200 px-3 py-2 text-sm text-zinc-700 transition hover:bg-zinc-50"
+            class="inline-flex min-h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:translate-y-px"
             @click="signOut"
           >
             <LogOut class="size-4" />
@@ -88,18 +99,25 @@ function signOut() {
 
     <div class="mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
       <aside
-        class="border-b border-zinc-200 bg-white px-4 py-3 lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r"
+        class="border-b border-zinc-200 bg-white px-4 py-3 shadow-sm lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r lg:shadow-none"
         :class="mobileOpen ? 'block' : 'hidden lg:block'"
       >
+        <div class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 lg:hidden">
+          <div class="text-sm font-semibold">{{ authState.user?.alias ?? '未登录' }}</div>
+          <div class="mt-1 text-xs text-zinc-500">{{ roleLabel }} · {{ approvalLabel }}</div>
+        </div>
+        <div class="mb-2 px-3 text-xs font-semibold uppercase tracking-normal text-zinc-500">
+          工作台
+        </div>
         <nav class="grid gap-1">
           <button
             v-for="link in userLinks"
             :key="link.path"
             type="button"
-            class="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition hover:bg-zinc-100"
+            class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-emerald-50 hover:text-emerald-900"
             :class="
               router.state.path === link.path
-                ? 'bg-zinc-900 text-white hover:bg-zinc-900'
+                ? 'bg-emerald-700 text-white shadow-sm hover:bg-emerald-700 hover:text-white'
                 : 'text-zinc-700'
             "
             @click="go(link.path)"
@@ -110,18 +128,21 @@ function signOut() {
         </nav>
 
         <div v-if="isAdmin" class="mt-5 border-t border-zinc-200 pt-4">
-          <div class="mb-2 px-3 text-xs font-semibold uppercase tracking-normal text-zinc-500">
-            管理员
+          <div
+            class="mb-2 flex items-center justify-between rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800"
+          >
+            <span>管理员工作区</span>
+            <Shield class="size-3.5" />
           </div>
           <nav class="grid gap-1">
             <button
               v-for="link in adminLinks"
               :key="link.path"
               type="button"
-              class="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition hover:bg-zinc-100"
+              class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-sky-50 hover:text-sky-900"
               :class="
                 router.state.path === link.path
-                  ? 'bg-zinc-900 text-white hover:bg-zinc-900'
+                  ? 'bg-sky-700 text-white shadow-sm hover:bg-sky-700 hover:text-white'
                   : 'text-zinc-700'
               "
               @click="go(link.path)"
@@ -134,16 +155,37 @@ function signOut() {
       </aside>
 
       <main class="min-w-0 px-4 py-5 sm:px-6 lg:px-8">
-        <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div
+          class="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm"
+          :class="{ 'border-sky-200 bg-sky-50/70': isAdminRoute }"
+        >
           <div>
+            <div
+              v-if="isAdminRoute"
+              class="mb-1 inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-medium text-sky-700"
+            >
+              <Shield class="size-3" />
+              管理员
+            </div>
             <h1 class="text-2xl font-semibold tracking-normal text-zinc-950">{{ title }}</h1>
-            <p class="mt-1 text-sm text-zinc-500">管理打卡任务、授权状态和系统记录。</p>
+            <p class="mt-1 text-sm text-zinc-500">
+              {{
+                isAdminRoute
+                  ? '管理用户、模板、记录、日志和系统统计。'
+                  : '管理打卡任务、授权状态和系统记录。'
+              }}
+            </p>
           </div>
           <div
-            class="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-600"
+            class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium"
+            :class="
+              authState.user?.is_approved
+                ? 'border-emerald-200 text-emerald-700'
+                : 'border-amber-200 text-amber-700'
+            "
           >
             <UserRound class="size-3.5" />
-            {{ authState.user?.is_approved ? '已审批' : '待审批' }}
+            {{ approvalLabel }}
           </div>
         </div>
         <slot />

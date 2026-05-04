@@ -14,10 +14,12 @@ import {
 import { useRouter } from '@/app/router'
 import StateBlock from '@/components/StateBlock.vue'
 import {
+  alertClass,
   buttonBase,
   buttonTone,
   cardClass,
   inputClass,
+  sectionHeaderClass,
   textareaClass,
   toneClass,
 } from '@/components/ui'
@@ -207,8 +209,8 @@ onMounted(load)
 
 <template>
   <div class="grid gap-5">
-    <section :class="[cardClass, 'p-5']">
-      <div class="flex flex-wrap items-start justify-between gap-3">
+    <section :class="[cardClass, 'overflow-hidden']">
+      <div :class="sectionHeaderClass">
         <div>
           <h2 class="font-semibold">从模板创建任务</h2>
           <p class="mt-1 text-sm text-zinc-500">选择启用模板，填写接龙 ID 和字段值后创建任务。</p>
@@ -219,7 +221,7 @@ onMounted(load)
         </button>
       </div>
 
-      <form class="mt-4 grid gap-4" @submit.prevent="createTask">
+      <form class="grid gap-4 p-5" @submit.prevent="createTask">
         <div class="grid gap-4 md:grid-cols-3">
           <label class="grid gap-2">
             <span class="text-xs font-semibold text-zinc-500">模板</span>
@@ -282,16 +284,10 @@ onMounted(load)
             />
           </label>
         </div>
-        <div
-          v-if="error"
-          class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
-        >
+        <div v-if="error" :class="alertClass.danger">
           {{ error }}
         </div>
-        <div
-          v-if="message"
-          class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-        >
+        <div v-if="message" :class="alertClass.success">
           {{ message }}
         </div>
         <button
@@ -320,8 +316,16 @@ onMounted(load)
       description="先从模板创建一个任务。"
     />
     <section v-else :class="[cardClass, 'overflow-hidden']">
-      <div class="border-b border-zinc-200 px-4 py-3">
-        <h2 class="font-semibold">任务列表</h2>
+      <div :class="sectionHeaderClass">
+        <div>
+          <h2 class="font-semibold">任务列表</h2>
+          <p class="mt-1 text-sm text-zinc-500">查看启停、最近状态，并执行手动打卡或维护操作。</p>
+        </div>
+        <span
+          class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600"
+        >
+          {{ tasks.length }} 个任务
+        </span>
       </div>
       <div class="divide-y divide-zinc-200">
         <article v-for="task in tasks" :key="task.id" class="p-4">
@@ -338,12 +342,21 @@ onMounted(load)
                 >
                   {{ statusLabel(task.last_check_in_status) }}
                 </span>
+                <span
+                  v-for="status in Object.values(polling).filter(
+                    (item) => item.task_id === task.id,
+                  )"
+                  :key="status.record_id"
+                  :class="toneClass(statusTone(status.status))"
+                >
+                  {{ statusLabel(status.status) }}
+                </span>
               </div>
               <p class="mt-1 text-sm text-zinc-500">
                 ThreadId: {{ task.thread_id || '未解析' }} · {{ cronLabel(task.cron_expression) }}
               </p>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2 lg:justify-end">
               <button
                 :class="[buttonBase, buttonTone.secondary]"
                 type="button"
@@ -391,9 +404,13 @@ onMounted(load)
 
           <form
             v-if="editingTaskId === task.id"
-            class="mt-4 grid gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4"
+            class="mt-4 grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4"
             @submit.prevent="saveEdit(task.id)"
           >
+            <div>
+              <h4 class="text-sm font-semibold text-zinc-900">编辑任务</h4>
+              <p class="mt-1 text-xs text-zinc-500">保存前会校验 Payload JSON。</p>
+            </div>
             <div class="grid gap-3 md:grid-cols-2">
               <label class="grid gap-2">
                 <span class="text-xs font-semibold text-zinc-500">任务名称</span>
@@ -408,7 +425,7 @@ onMounted(load)
               <span class="text-xs font-semibold text-zinc-500">Payload JSON</span>
               <textarea v-model="editForm.payload_config" :class="textareaClass" />
             </label>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               <button :class="[buttonBase, buttonTone.primary]" type="submit">保存</button>
               <button
                 :class="[buttonBase, buttonTone.secondary]"

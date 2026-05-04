@@ -4,7 +4,14 @@ import { onMounted, reactive, ref } from 'vue'
 import { checkInApi, taskApi, type CheckInRecord, type Task } from '@/api'
 import { useRouter } from '@/app/router'
 import StateBlock from '@/components/StateBlock.vue'
-import { buttonBase, buttonTone, cardClass, inputClass, toneClass } from '@/components/ui'
+import {
+  buttonBase,
+  buttonTone,
+  cardClass,
+  inputClass,
+  sectionHeaderClass,
+  toneClass,
+} from '@/components/ui'
 import { extractErrorMessage, formatFullDateTime, statusLabel, statusTone } from '@/utils/format'
 
 const router = useRouter()
@@ -39,7 +46,7 @@ onMounted(load)
 
 <template>
   <section :class="[cardClass, 'overflow-hidden']">
-    <div class="grid gap-3 border-b border-zinc-200 p-4 lg:grid-cols-[1fr_180px_180px_auto]">
+    <div :class="[sectionHeaderClass, 'lg:grid-cols-[1fr_180px_180px_auto]']">
       <div>
         <button
           class="mb-2 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
@@ -85,7 +92,7 @@ onMounted(load)
       <article
         v-for="record in records"
         :key="record.id"
-        class="grid gap-3 p-4 md:grid-cols-[180px_1fr_auto]"
+        class="grid gap-3 p-4 md:grid-cols-[180px_minmax(0,1fr)_auto]"
       >
         <div class="text-sm text-zinc-500">{{ formatFullDateTime(record.check_in_time) }}</div>
         <div>
@@ -94,7 +101,11 @@ onMounted(load)
           </div>
           <div class="mt-1 text-xs text-zinc-500">触发：{{ statusLabel(record.trigger_type) }}</div>
         </div>
-        <span :class="toneClass(statusTone(record.status))">{{ statusLabel(record.status) }}</span>
+        <div class="md:text-right">
+          <span :class="toneClass(statusTone(record.status))">{{
+            statusLabel(record.status)
+          }}</span>
+        </div>
       </article>
       <div class="border-t border-zinc-200 px-4 py-3 text-sm text-zinc-500">
         共 {{ total }} 条记录

@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { adminApi } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
-import { buttonBase, buttonTone, cardClass, inputClass } from '@/components/ui'
+import { buttonBase, buttonTone, cardClass, inputClass, sectionHeaderClass } from '@/components/ui'
 import { extractErrorMessage } from '@/utils/format'
 
 const loading = ref(true)
@@ -28,18 +28,24 @@ onMounted(load)
 
 <template>
   <section :class="[cardClass, 'overflow-hidden']">
-    <div class="flex flex-wrap items-center gap-3 border-b border-zinc-200 p-4">
-      <input
-        v-model.number="lines"
-        :class="inputClass"
-        type="number"
-        min="1"
-        max="2000"
-        class="max-w-40"
-      />
-      <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
-        刷新日志
-      </button>
+    <div :class="sectionHeaderClass">
+      <div>
+        <h2 class="font-semibold">系统日志</h2>
+        <p class="mt-1 text-sm text-zinc-500">查看最近运行日志，适合排查打卡和后台任务状态。</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <input
+          v-model.number="lines"
+          :class="inputClass"
+          type="number"
+          min="1"
+          max="2000"
+          class="max-w-40"
+        />
+        <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
+          刷新日志
+        </button>
+      </div>
     </div>
     <StateBlock v-if="loading" title="正在加载日志" type="loading" />
     <StateBlock
@@ -52,7 +58,7 @@ onMounted(load)
     />
     <pre
       v-else
-      class="max-h-[70vh] overflow-auto bg-zinc-950 p-4 text-xs leading-5 text-zinc-100"
+      class="max-h-[70vh] overflow-auto bg-zinc-950 p-4 font-mono text-xs leading-5 text-zinc-100"
       >{{ logs || '无日志' }}</pre
     >
   </section>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { KeyRound, QrCode, RotateCw } from 'lucide-vue-next'
-import { onBeforeUnmount, ref } from 'vue'
+import { Info, KeyRound, QrCode, RotateCw, UserRound } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { authApi } from '@/api'
 import { useAuth } from '@/app/auth'
 import { useRouter } from '@/app/router'
-import { buttonBase, buttonTone, inputClass } from '@/components/ui'
+import { alertClass, buttonBase, buttonTone, cardClass, inputClass } from '@/components/ui'
 import { extractErrorMessage } from '@/utils/format'
 
 const router = useRouter()
@@ -17,7 +17,23 @@ const error = ref('')
 const info = ref('')
 const qrImage = ref('')
 const qrSessionId = ref('')
+const loginMode = ref<'qrcode' | 'password'>('qrcode')
 let pollTimer: number | undefined
+
+const currentSubtitle = computed(() =>
+  loginMode.value === 'qrcode' ? 'QQ 扫码登录/注册' : '用户名密码登录',
+)
+const canSubmitPassword = computed(
+  () => Boolean(alias.value.trim()) && Boolean(password.value) && !loading.value,
+)
+const canRequestQr = computed(() => Boolean(alias.value.trim()) && !loading.value)
+
+function switchMode(mode: 'qrcode' | 'password') {
+  loginMode.value = mode
+  error.value = ''
+  info.value = ''
+  if (mode === 'password' && qrSessionId.value) void cancelQr()
+}
 
 function loginRedirect() {
   const redirect = router.query.value.get('redirect') || '/dashboard'
@@ -25,6 +41,7 @@ function loginRedirect() {
 }
 
 async function loginWithPassword() {
+  if (!canSubmitPassword.value) return
   error.value = ''
   info.value = ''
   loading.value = true
@@ -40,6 +57,7 @@ async function loginWithPassword() {
 }
 
 async function requestQrCode() {
+  if (!canRequestQr.value) return
   error.value = ''
   info.value = '正在创建扫码会话'
   loading.value = true
@@ -64,7 +82,7 @@ function startPolling() {
     if (!qrSessionId.value) return
     try {
       const status = await authApi.getQRCodeStatus(qrSessionId.value)
-      if (status.qrcode_image) qrImage.value = status.qrcode_image
+      qrImage.value = status.qrcode_image ?? qrImage.value
       if (status.status === 'success') {
         window.clearInterval(pollTimer)
         auth.applyLogin(status)
@@ -96,107 +114,180 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main
-    class="grid min-h-[100dvh] bg-zinc-50 px-4 py-8 text-zinc-950 lg:grid-cols-[minmax(0,1fr)_440px] lg:p-0"
-  >
-    <section
-      class="hidden border-r border-zinc-200 bg-white p-10 lg:flex lg:flex-col lg:justify-between"
-    >
-      <div>
-        <div class="text-sm font-semibold text-zinc-500">CheckIn App</div>
-        <h1 class="mt-6 max-w-xl text-4xl font-semibold leading-tight tracking-normal">
-          接龙自动打卡系统的新前端工作台
-        </h1>
-        <p class="mt-4 max-w-lg text-base text-zinc-600">
-          使用账号密码或 QQ 扫码登录，管理任务、模板、记录和系统状态。
-        </p>
-      </div>
-      <div class="grid grid-cols-3 gap-3 text-sm">
-        <div class="rounded-lg border border-zinc-200 p-4">
-          <div class="text-2xl font-semibold">1</div>
-          <div class="mt-1 text-zinc-500">用户审批</div>
-        </div>
-        <div class="rounded-lg border border-zinc-200 p-4">
-          <div class="text-2xl font-semibold">N</div>
-          <div class="mt-1 text-zinc-500">多任务</div>
-        </div>
-        <div class="rounded-lg border border-zinc-200 p-4">
-          <div class="text-2xl font-semibold">24h</div>
-          <div class="mt-1 text-zinc-500">自动调度</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="mx-auto flex w-full max-w-md flex-col justify-center lg:px-8">
-      <div class="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-        <h2 class="text-xl font-semibold">登录</h2>
-        <p class="mt-1 text-sm text-zinc-500">输入别名登录；没有或需要更新授权时使用 QQ 扫码。</p>
-
-        <form class="mt-6 grid gap-4" @submit.prevent="loginWithPassword">
-          <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">别名</span>
-            <input v-model="alias" :class="inputClass" required placeholder="例如 zhangsan" />
-          </label>
-          <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500">密码</span>
-            <input
-              v-model="password"
-              :class="inputClass"
-              type="password"
-              placeholder="已设置密码时可用"
-            />
-          </label>
-
+  <main class="flex min-h-[100dvh] items-center justify-center bg-zinc-50 px-4 py-8 text-zinc-950">
+    <section class="w-full max-w-md">
+      <div :class="[cardClass, 'overflow-hidden']">
+        <div class="border-b border-zinc-200 px-6 py-5 text-center">
           <div
-            v-if="error"
-            class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+            class="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm"
           >
-            {{ error }}
+            <QrCode class="size-5" />
           </div>
-          <div
-            v-if="info"
-            class="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-700"
-          >
-            {{ info }}
-          </div>
+          <h1 class="text-xl font-semibold tracking-normal text-zinc-950">接龙自动打卡系统</h1>
+          <p class="mt-1 text-sm text-zinc-500">{{ currentSubtitle }}</p>
+        </div>
 
-          <button
-            :class="[buttonBase, buttonTone.primary]"
-            :disabled="loading || !alias || !password"
-            type="submit"
-          >
-            <KeyRound class="size-4" />
-            {{ loading ? '处理中' : '密码登录' }}
-          </button>
-        </form>
-
-        <div class="mt-5 border-t border-zinc-200 pt-5">
-          <button
-            :class="[buttonBase, buttonTone.secondary, 'w-full']"
-            :disabled="loading || !alias"
-            type="button"
-            @click="requestQrCode"
-          >
-            <QrCode class="size-4" />
-            请求 QQ 扫码
-          </button>
-          <div
-            v-if="qrImage"
-            class="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-center"
-          >
-            <img
-              :src="qrImage.startsWith('data:') ? qrImage : `data:image/png;base64,${qrImage}`"
-              alt="QQ 登录二维码"
-              class="mx-auto size-48 rounded-md bg-white object-contain"
-            />
+        <div class="p-6">
+          <div class="grid grid-cols-2 rounded-md border border-zinc-200 bg-zinc-50 p-1 text-sm">
             <button
-              class="mt-3 inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900"
+              type="button"
+              class="rounded px-3 py-2 text-center font-medium transition"
+              :class="
+                loginMode === 'qrcode'
+                  ? 'bg-white text-zinc-900 shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-900'
+              "
+              @click="switchMode('qrcode')"
+            >
+              扫码登录
+            </button>
+            <button
+              type="button"
+              class="rounded px-3 py-2 text-center font-medium transition"
+              :class="
+                loginMode === 'password'
+                  ? 'bg-white text-zinc-900 shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-900'
+              "
+              @click="switchMode('password')"
+            >
+              密码登录
+            </button>
+          </div>
+
+          <form
+            v-if="loginMode === 'password'"
+            class="mt-6 grid gap-4"
+            @submit.prevent="loginWithPassword"
+          >
+            <label class="grid gap-2">
+              <span class="text-xs font-semibold text-zinc-500">用户名</span>
+              <div class="relative">
+                <UserRound
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
+                />
+                <input
+                  v-model="alias"
+                  :class="[inputClass, 'pl-9']"
+                  autocomplete="username"
+                  required
+                  placeholder="请输入您的用户名"
+                />
+              </div>
+            </label>
+            <label class="grid gap-2">
+              <span class="text-xs font-semibold text-zinc-500">密码</span>
+              <div class="relative">
+                <KeyRound
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
+                />
+                <input
+                  v-model="password"
+                  :class="[inputClass, 'pl-9']"
+                  autocomplete="current-password"
+                  type="password"
+                  placeholder="请输入密码"
+                />
+              </div>
+            </label>
+
+            <div v-if="error" :class="alertClass.danger">
+              {{ error }}
+            </div>
+            <div v-if="info" :class="alertClass.info">
+              {{ info }}
+            </div>
+
+            <button
+              :class="[buttonBase, buttonTone.primary, 'w-full']"
+              :disabled="!canSubmitPassword"
+              type="submit"
+            >
+              <KeyRound class="size-4" />
+              {{ loading ? '登录中' : '登录' }}
+            </button>
+            <button
+              class="text-center text-sm font-medium text-zinc-600 transition hover:text-zinc-950"
+              type="button"
+              @click="switchMode('qrcode')"
+            >
+              没有密码？使用扫码登录
+            </button>
+          </form>
+
+          <div v-else class="mt-6 grid gap-4">
+            <label class="grid gap-2">
+              <span class="text-xs font-semibold text-zinc-500">用户名</span>
+              <div class="relative">
+                <UserRound
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
+                />
+                <input
+                  v-model="alias"
+                  :class="[inputClass, 'pl-9']"
+                  autocomplete="username"
+                  required
+                  placeholder="请输入您的用户名"
+                  @keyup.enter="requestQrCode"
+                />
+              </div>
+            </label>
+
+            <div v-if="error" :class="alertClass.danger">
+              {{ error }}
+            </div>
+            <div v-if="info" :class="alertClass.info">
+              {{ info }}
+            </div>
+
+            <button
+              :class="[buttonBase, buttonTone.primary, 'w-full']"
+              :disabled="!canRequestQr"
               type="button"
               @click="requestQrCode"
             >
-              <RotateCw class="size-4" />
-              刷新会话
+              <QrCode class="size-4" />
+              {{ loading ? '正在登录' : '扫码登录/注册' }}
             </button>
+
+            <div
+              v-if="qrImage"
+              class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-center"
+            >
+              <img
+                :src="qrImage.startsWith('data:') ? qrImage : `data:image/png;base64,${qrImage}`"
+                alt="QQ 登录二维码"
+                class="mx-auto size-48 rounded-md bg-white object-contain"
+              />
+              <button
+                class="mt-3 inline-flex items-center gap-2 text-sm font-medium text-zinc-600 transition hover:text-zinc-900"
+                type="button"
+                @click="requestQrCode"
+              >
+                <RotateCw class="size-4" />
+                刷新会话
+              </button>
+            </div>
+          </div>
+
+          <div :class="[alertClass.info, 'mt-5 flex items-start gap-2']">
+            <Info class="mt-0.5 size-4 shrink-0" />
+            <div>
+              <div class="font-semibold">
+                {{ loginMode === 'qrcode' ? '扫码登录提示' : '密码登录提示' }}
+              </div>
+              <div v-if="loginMode === 'qrcode'" class="mt-1 space-y-1 text-sm">
+                <p>1. 输入您的用户名用于标识身份</p>
+                <p>2. 点击扫码登录/注册按钮</p>
+                <p>3. 使用手机 QQ 扫描二维码</p>
+                <p>4. 新用户首次扫码会自动注册账户</p>
+              </div>
+              <div v-else class="mt-1 space-y-1 text-sm">
+                <p>1. 输入您的用户名和密码</p>
+                <p>2. 点击登录按钮直接进入系统</p>
+                <p>3. 首次使用请先扫码登录/注册，然后在设置中设置密码</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

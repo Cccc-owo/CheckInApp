@@ -4,7 +4,15 @@ import { onMounted, reactive, ref } from 'vue'
 import { userApi, type TokenStatus } from '@/api'
 import { useAuth } from '@/app/auth'
 import StateBlock from '@/components/StateBlock.vue'
-import { buttonBase, buttonTone, cardClass, inputClass, toneClass } from '@/components/ui'
+import {
+  alertClass,
+  buttonBase,
+  buttonTone,
+  cardClass,
+  inputClass,
+  sectionHeaderClass,
+  toneClass,
+} from '@/components/ui'
 import { extractErrorMessage } from '@/utils/format'
 
 const auth = useAuth()
@@ -75,74 +83,79 @@ onMounted(load)
     @action="load"
   />
   <div v-else class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-    <form :class="[cardClass, 'grid gap-4 p-5']" @submit.prevent="save">
-      <div>
+    <form :class="[cardClass, 'overflow-hidden']" @submit.prevent="save">
+      <div :class="sectionHeaderClass">
         <h2 class="font-semibold">个人资料</h2>
         <p class="mt-1 text-sm text-zinc-500">更新别名、邮箱和登录密码。</p>
       </div>
-      <label class="grid gap-2">
-        <span class="text-xs font-semibold text-zinc-500">别名</span>
-        <input v-model="form.alias" :class="inputClass" required />
-      </label>
-      <label class="grid gap-2">
-        <span class="text-xs font-semibold text-zinc-500">邮箱</span>
-        <input v-model="form.email" :class="inputClass" type="email" placeholder="用于打卡通知" />
-      </label>
-      <div class="grid gap-4 md:grid-cols-2">
+      <div class="grid gap-4 p-5">
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">当前密码</span>
-          <input
-            v-model="form.current_password"
-            :class="inputClass"
-            type="password"
-            placeholder="修改密码时填写"
-          />
+          <span class="text-xs font-semibold text-zinc-500">别名</span>
+          <input v-model="form.alias" :class="inputClass" required />
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500">新密码</span>
-          <input
-            v-model="form.new_password"
-            :class="inputClass"
-            type="password"
-            placeholder="至少 6 位"
-          />
+          <span class="text-xs font-semibold text-zinc-500">邮箱</span>
+          <input v-model="form.email" :class="inputClass" type="email" placeholder="用于打卡通知" />
         </label>
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="grid gap-2">
+            <span class="text-xs font-semibold text-zinc-500">当前密码</span>
+            <input
+              v-model="form.current_password"
+              :class="inputClass"
+              type="password"
+              placeholder="修改密码时填写"
+            />
+          </label>
+          <label class="grid gap-2">
+            <span class="text-xs font-semibold text-zinc-500">新密码</span>
+            <input
+              v-model="form.new_password"
+              :class="inputClass"
+              type="password"
+              placeholder="至少 6 位"
+            />
+          </label>
+        </div>
+        <div v-if="error" :class="alertClass.danger">
+          {{ error }}
+        </div>
+        <div v-if="message" :class="alertClass.success">
+          {{ message }}
+        </div>
+        <button :class="[buttonBase, buttonTone.primary, 'w-fit']" :disabled="saving" type="submit">
+          <Save class="size-4" />
+          {{ saving ? '保存中' : '保存设置' }}
+        </button>
       </div>
-      <div
-        v-if="error"
-        class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
-      >
-        {{ error }}
-      </div>
-      <div
-        v-if="message"
-        class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-      >
-        {{ message }}
-      </div>
-      <button :class="[buttonBase, buttonTone.primary, 'w-fit']" :disabled="saving" type="submit">
-        <Save class="size-4" />
-        {{ saving ? '保存中' : '保存设置' }}
-      </button>
     </form>
 
-    <aside :class="[cardClass, 'h-fit p-5']">
-      <h2 class="font-semibold">授权状态</h2>
-      <p class="mt-1 text-sm text-zinc-500">这里检查的是打卡业务 token，不是网站登录状态。</p>
-      <div class="mt-4 grid gap-3 text-sm">
-        <div class="flex items-center justify-between">
-          <span class="text-zinc-500">状态</span>
-          <span :class="toneClass(token?.is_valid ? 'success' : 'danger')">{{
-            token?.is_valid ? '可用' : '不可用'
-          }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-zinc-500">即将过期</span>
-          <span>{{ token?.expiring_soon ? '是' : '否' }}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <span class="text-zinc-500">剩余天数</span>
-          <span>{{ token?.days_until_expiry ?? '未知' }}</span>
+    <aside :class="[cardClass, 'h-fit overflow-hidden']">
+      <div
+        class="border-b px-5 py-4"
+        :class="
+          token?.is_valid ? 'border-emerald-200 bg-emerald-50/70' : 'border-rose-200 bg-rose-50/70'
+        "
+      >
+        <h2 class="font-semibold">授权状态</h2>
+        <p class="mt-1 text-sm text-zinc-600">这里检查的是打卡业务 token，不是网站登录状态。</p>
+      </div>
+      <div class="p-5">
+        <div class="mt-4 grid gap-3 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-zinc-500">状态</span>
+            <span :class="toneClass(token?.is_valid ? 'success' : 'danger')">{{
+              token?.is_valid ? '可用' : '不可用'
+            }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-zinc-500">即将过期</span>
+            <span>{{ token?.expiring_soon ? '是' : '否' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-zinc-500">剩余天数</span>
+            <span>{{ token?.days_until_expiry ?? '未知' }}</span>
+          </div>
         </div>
       </div>
     </aside>

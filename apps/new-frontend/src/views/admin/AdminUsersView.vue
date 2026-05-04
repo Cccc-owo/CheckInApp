@@ -3,7 +3,15 @@ import { Check, Save, Search, Trash2, UserPlus } from 'lucide-vue-next'
 import { onMounted, reactive, ref } from 'vue'
 import { adminApi, userApi, type User } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
-import { buttonBase, buttonTone, cardClass, inputClass, toneClass } from '@/components/ui'
+import {
+  alertClass,
+  buttonBase,
+  buttonTone,
+  cardClass,
+  inputClass,
+  sectionHeaderClass,
+  toneClass,
+} from '@/components/ui'
 import { extractErrorMessage, formatDateTime } from '@/utils/format'
 
 const loading = ref(true)
@@ -88,7 +96,16 @@ onMounted(load)
 <template>
   <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
     <section :class="[cardClass, 'overflow-hidden']">
-      <div class="flex flex-wrap items-center gap-3 border-b border-zinc-200 p-4">
+      <div :class="sectionHeaderClass">
+        <div>
+          <h2 class="font-semibold">用户审批与管理</h2>
+          <p class="mt-1 text-sm text-zinc-500">优先处理待审批用户，再维护角色、邮箱和密码。</p>
+        </div>
+        <span :class="toneClass(users.some((user) => !user.is_approved) ? 'warning' : 'success')">
+          {{ users.filter((user) => !user.is_approved).length }} 个待审批
+        </span>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 border-b border-zinc-200 bg-zinc-50/70 p-4">
         <input v-model="search" :class="inputClass" class="max-w-sm" placeholder="搜索别名" />
         <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
           <Search class="size-4" />
@@ -128,7 +145,7 @@ onMounted(load)
               {{ user.email || '未设置邮箱' }} · {{ formatDateTime(user.created_at) }}
             </p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
             <button
               v-if="!user.is_approved"
               :class="[buttonBase, buttonTone.primary]"
@@ -155,50 +172,60 @@ onMounted(load)
       </div>
     </section>
 
-    <form v-if="editingId" :class="[cardClass, 'grid h-fit gap-4 p-5']" @submit.prevent="save">
-      <h2 class="font-semibold">{{ editingId === 'new' ? '创建用户' : '编辑用户' }}</h2>
-      <label class="grid gap-2">
-        <span class="text-xs font-semibold text-zinc-500">别名</span>
-        <input v-model="form.alias" :class="inputClass" required />
-      </label>
-      <label class="grid gap-2">
-        <span class="text-xs font-semibold text-zinc-500">邮箱</span>
-        <input v-model="form.email" :class="inputClass" type="email" />
-      </label>
-      <label class="grid gap-2">
-        <span class="text-xs font-semibold text-zinc-500">角色</span>
-        <select v-model="form.role" :class="inputClass">
-          <option value="user">user</option>
-          <option value="admin">admin</option>
-        </select>
-      </label>
-      <label class="grid gap-2">
-        <span class="text-xs font-semibold text-zinc-500">密码</span>
-        <input
-          v-model="form.password"
-          :class="inputClass"
-          type="password"
-          placeholder="留空不修改"
-        />
-      </label>
-      <label class="flex items-center gap-2 text-sm">
-        <input v-model="form.is_approved" type="checkbox" />
-        已审批
-      </label>
-      <div
-        v-if="error"
-        class="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
-      >
-        {{ error }}
+    <form
+      v-if="editingId"
+      :class="[cardClass, 'grid h-fit gap-4 overflow-hidden']"
+      @submit.prevent="save"
+    >
+      <div class="border-b border-zinc-200 bg-zinc-50/70 px-5 py-4">
+        <h2 class="font-semibold">{{ editingId === 'new' ? '创建用户' : '编辑用户' }}</h2>
+        <p class="mt-1 text-sm text-zinc-500">保存后会刷新用户列表。</p>
       </div>
-      <div class="flex gap-2">
-        <button :class="[buttonBase, buttonTone.primary]" type="submit">
-          <Save class="size-4" />
-          保存
-        </button>
-        <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="editingId = null">
-          取消
-        </button>
+      <div class="grid gap-4 p-5">
+        <label class="grid gap-2">
+          <span class="text-xs font-semibold text-zinc-500">别名</span>
+          <input v-model="form.alias" :class="inputClass" required />
+        </label>
+        <label class="grid gap-2">
+          <span class="text-xs font-semibold text-zinc-500">邮箱</span>
+          <input v-model="form.email" :class="inputClass" type="email" />
+        </label>
+        <label class="grid gap-2">
+          <span class="text-xs font-semibold text-zinc-500">角色</span>
+          <select v-model="form.role" :class="inputClass">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+          </select>
+        </label>
+        <label class="grid gap-2">
+          <span class="text-xs font-semibold text-zinc-500">密码</span>
+          <input
+            v-model="form.password"
+            :class="inputClass"
+            type="password"
+            placeholder="留空不修改"
+          />
+        </label>
+        <label class="flex items-center gap-2 text-sm">
+          <input v-model="form.is_approved" type="checkbox" />
+          已审批
+        </label>
+        <div v-if="error" :class="alertClass.danger">
+          {{ error }}
+        </div>
+        <div class="flex gap-2">
+          <button :class="[buttonBase, buttonTone.primary]" type="submit">
+            <Save class="size-4" />
+            保存
+          </button>
+          <button
+            :class="[buttonBase, buttonTone.secondary]"
+            type="button"
+            @click="editingId = null"
+          >
+            取消
+          </button>
+        </div>
       </div>
     </form>
   </div>

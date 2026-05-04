@@ -3,7 +3,14 @@ import { Search } from 'lucide-vue-next'
 import { onMounted, reactive, ref } from 'vue'
 import { checkInApi, type CheckInRecord } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
-import { buttonBase, buttonTone, cardClass, inputClass, toneClass } from '@/components/ui'
+import {
+  buttonBase,
+  buttonTone,
+  cardClass,
+  inputClass,
+  sectionHeaderClass,
+  toneClass,
+} from '@/components/ui'
 import { extractErrorMessage, formatFullDateTime, statusLabel, statusTone } from '@/utils/format'
 
 const loading = ref(true)
@@ -33,8 +40,11 @@ onMounted(load)
 
 <template>
   <section :class="[cardClass, 'overflow-hidden']">
-    <div class="grid gap-3 border-b border-zinc-200 p-4 md:grid-cols-[1fr_160px_160px_auto]">
-      <h2 class="font-semibold">全量记录</h2>
+    <div :class="[sectionHeaderClass, 'md:grid-cols-[1fr_160px_160px_auto]']">
+      <div>
+        <h2 class="font-semibold">全量记录</h2>
+        <p class="mt-1 text-sm text-zinc-500">按任务和状态快速定位系统记录。</p>
+      </div>
       <input v-model="filters.task_id" :class="inputClass" placeholder="任务 ID" />
       <select v-model="filters.status" :class="inputClass">
         <option value="">全部状态</option>
@@ -60,7 +70,7 @@ onMounted(load)
       <article
         v-for="record in records"
         :key="record.id"
-        class="grid gap-2 p-4 md:grid-cols-[1fr_auto] md:items-center"
+        class="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center"
       >
         <div>
           <div class="font-medium">
@@ -70,7 +80,7 @@ onMounted(load)
             {{ formatFullDateTime(record.check_in_time) }}
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2 md:justify-end">
           <span :class="toneClass(statusTone(record.status))">{{
             statusLabel(record.status)
           }}</span>
