@@ -8,6 +8,8 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Monitor,
+  MoonStar,
   ScrollText,
   Settings,
   Shield,
@@ -18,9 +20,11 @@ import {
 import { computed, ref } from 'vue'
 import { useAuth } from '@/app/auth'
 import { useRouter } from '@/app/router'
+import { useTheme } from '@/app/theme'
 
 const { state: authState, isAdmin, logout } = useAuth()
 const router = useRouter()
+const theme = useTheme()
 const mobileOpen = ref(false)
 
 const userLinks = [
@@ -42,6 +46,7 @@ const title = computed(() => router.current.value.title)
 const isAdminRoute = computed(() => router.state.path.startsWith('/admin'))
 const approvalLabel = computed(() => (authState.user?.is_approved ? '已审批' : '待审批'))
 const roleLabel = computed(() => (isAdmin.value ? '管理员' : '普通用户'))
+const themeLabel = computed(() => theme.modeLabel.value)
 
 function go(path: string) {
   mobileOpen.value = false
@@ -55,13 +60,15 @@ function signOut() {
 </script>
 
 <template>
-  <div class="min-h-[100dvh] bg-zinc-50 text-zinc-950">
-    <header class="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur">
+  <div class="min-h-[100dvh] bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+    <header
+      class="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90"
+    >
       <div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
         <div class="flex items-center gap-3">
           <button
             type="button"
-            class="inline-flex size-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 shadow-sm lg:hidden"
+            class="inline-flex size-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 shadow-sm lg:hidden dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
             @click="mobileOpen = !mobileOpen"
           >
             <X v-if="mobileOpen" class="size-4" />
@@ -75,7 +82,7 @@ function signOut() {
             </span>
             <span>
               <div class="text-sm font-semibold leading-4">接龙自动打卡</div>
-              <div class="text-xs text-zinc-500">CheckIn workspace</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400">CheckIn workspace</div>
             </span>
           </button>
         </div>
@@ -83,11 +90,23 @@ function signOut() {
         <div class="flex items-center gap-3">
           <div class="hidden text-right sm:block">
             <div class="text-sm font-medium">{{ authState.user?.alias ?? '未登录' }}</div>
-            <div class="text-xs text-zinc-500">{{ roleLabel }} · {{ approvalLabel }}</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-400">
+              {{ roleLabel }} · {{ approvalLabel }}
+            </div>
           </div>
           <button
             type="button"
-            class="inline-flex min-h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:translate-y-px"
+            class="inline-flex size-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:translate-y-px dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            :aria-label="`切换主题，当前${themeLabel}`"
+            :title="`切换主题，当前${themeLabel}`"
+            @click="theme.cycleThemeMode"
+          >
+            <MoonStar v-if="theme.state.resolved === 'dark'" class="size-4" />
+            <Monitor v-else class="size-4" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:translate-y-px dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
             @click="signOut"
           >
             <LogOut class="size-4" />
@@ -99,14 +118,20 @@ function signOut() {
 
     <div class="mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]">
       <aside
-        class="border-b border-zinc-200 bg-white px-4 py-3 shadow-sm lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r lg:shadow-none"
+        class="border-b border-zinc-200 bg-white px-4 py-3 shadow-sm lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r lg:shadow-none dark:border-zinc-800 dark:bg-zinc-950"
         :class="mobileOpen ? 'block' : 'hidden lg:block'"
       >
-        <div class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 lg:hidden">
+        <div
+          class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 lg:hidden dark:border-zinc-700 dark:bg-zinc-900"
+        >
           <div class="text-sm font-semibold">{{ authState.user?.alias ?? '未登录' }}</div>
-          <div class="mt-1 text-xs text-zinc-500">{{ roleLabel }} · {{ approvalLabel }}</div>
+          <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            {{ roleLabel }} · {{ approvalLabel }}
+          </div>
         </div>
-        <div class="mb-2 px-3 text-xs font-semibold uppercase tracking-normal text-zinc-500">
+        <div
+          class="mb-2 px-3 text-xs font-semibold uppercase tracking-normal text-zinc-500 dark:text-zinc-400"
+        >
           工作台
         </div>
         <nav class="grid gap-1">
@@ -114,11 +139,11 @@ function signOut() {
             v-for="link in userLinks"
             :key="link.path"
             type="button"
-            class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-emerald-50 hover:text-emerald-900"
+            class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-emerald-50 hover:text-emerald-900 dark:hover:bg-zinc-900 dark:hover:text-emerald-300"
             :class="
               router.state.path === link.path
-                ? 'bg-emerald-700 text-white shadow-sm hover:bg-emerald-700 hover:text-white'
-                : 'text-zinc-700'
+                ? 'bg-emerald-700 text-white shadow-sm hover:bg-emerald-700 hover:text-white dark:bg-emerald-600 dark:text-white'
+                : 'text-zinc-700 dark:text-zinc-300'
             "
             @click="go(link.path)"
           >
@@ -127,9 +152,9 @@ function signOut() {
           </button>
         </nav>
 
-        <div v-if="isAdmin" class="mt-5 border-t border-zinc-200 pt-4">
+        <div v-if="isAdmin" class="mt-5 border-t border-zinc-200 pt-4 dark:border-zinc-800">
           <div
-            class="mb-2 flex items-center justify-between rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800"
+            class="mb-2 flex items-center justify-between rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800 dark:border-sky-900/70 dark:bg-sky-950/50 dark:text-sky-200"
           >
             <span>管理员工作区</span>
             <Shield class="size-3.5" />
@@ -139,11 +164,11 @@ function signOut() {
               v-for="link in adminLinks"
               :key="link.path"
               type="button"
-              class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-sky-50 hover:text-sky-900"
+              class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-sky-50 hover:text-sky-900 dark:hover:bg-zinc-900 dark:hover:text-sky-300"
               :class="
                 router.state.path === link.path
-                  ? 'bg-sky-700 text-white shadow-sm hover:bg-sky-700 hover:text-white'
-                  : 'text-zinc-700'
+                  ? 'bg-sky-700 text-white shadow-sm hover:bg-sky-700 hover:text-white dark:bg-sky-600 dark:text-white'
+                  : 'text-zinc-700 dark:text-zinc-300'
               "
               @click="go(link.path)"
             >
@@ -156,19 +181,23 @@ function signOut() {
 
       <main class="min-w-0 px-4 py-5 sm:px-6 lg:px-8">
         <div
-          class="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm"
-          :class="{ 'border-sky-200 bg-sky-50/70': isAdminRoute }"
+          class="mb-5 flex flex-wrap items-end justify-between gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none"
+          :class="{
+            'border-sky-200 bg-sky-50/70 dark:border-sky-900/70 dark:bg-sky-950/30': isAdminRoute,
+          }"
         >
           <div>
             <div
               v-if="isAdminRoute"
-              class="mb-1 inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-medium text-sky-700"
+              class="mb-1 inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-medium text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/70 dark:text-sky-200"
             >
               <Shield class="size-3" />
               管理员
             </div>
-            <h1 class="text-2xl font-semibold tracking-normal text-zinc-950">{{ title }}</h1>
-            <p class="mt-1 text-sm text-zinc-500">
+            <h1 class="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+              {{ title }}
+            </h1>
+            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               {{
                 isAdminRoute
                   ? '管理用户、模板、记录、日志和系统统计。'
@@ -177,11 +206,11 @@ function signOut() {
             </p>
           </div>
           <div
-            class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium"
+            class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium dark:bg-zinc-950"
             :class="
               authState.user?.is_approved
-                ? 'border-emerald-200 text-emerald-700'
-                : 'border-amber-200 text-amber-700'
+                ? 'border-emerald-200 text-emerald-700 dark:border-emerald-900/70 dark:text-emerald-300'
+                : 'border-amber-200 text-amber-700 dark:border-amber-900/70 dark:text-amber-300'
             "
           >
             <UserRound class="size-3.5" />

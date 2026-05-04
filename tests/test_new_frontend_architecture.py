@@ -62,3 +62,10 @@ def test_new_frontend_replaces_starter_component() -> None:
 
     assert "HelloWorld" not in app
     assert not (SRC_ROOT / "components" / "HelloWorld.vue").exists()
+
+
+def test_theme_switch_is_icon_only_but_accessible() -> None:
+    layout = (SRC_ROOT / "components" / "AppLayout.vue").read_text(encoding="utf-8")
+
+    assert "切换主题，当前${themeLabel}" in layout
+    assert "{{ themeLabel }}" not in layout

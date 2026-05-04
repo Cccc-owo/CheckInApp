@@ -114,28 +114,34 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main class="flex min-h-[100dvh] items-center justify-center bg-zinc-50 px-4 py-8 text-zinc-950">
+  <main
+    class="flex min-h-[100dvh] items-center justify-center bg-zinc-50 px-4 py-8 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50"
+  >
     <section class="w-full max-w-md">
       <div :class="[cardClass, 'overflow-hidden']">
-        <div class="border-b border-zinc-200 px-6 py-5 text-center">
+        <div class="border-b border-zinc-200 px-6 py-5 text-center dark:border-zinc-800">
           <div
             class="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm"
           >
             <QrCode class="size-5" />
           </div>
-          <h1 class="text-xl font-semibold tracking-normal text-zinc-950">接龙自动打卡系统</h1>
-          <p class="mt-1 text-sm text-zinc-500">{{ currentSubtitle }}</p>
+          <h1 class="text-xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+            接龙自动打卡系统
+          </h1>
+          <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ currentSubtitle }}</p>
         </div>
 
         <div class="p-6">
-          <div class="grid grid-cols-2 rounded-md border border-zinc-200 bg-zinc-50 p-1 text-sm">
+          <div
+            class="grid grid-cols-2 rounded-md border border-zinc-200 bg-zinc-50 p-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+          >
             <button
               type="button"
               class="rounded px-3 py-2 text-center font-medium transition"
               :class="
                 loginMode === 'qrcode'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900'
+                  ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-50'
+                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
               "
               @click="switchMode('qrcode')"
             >
@@ -146,8 +152,8 @@ onBeforeUnmount(() => {
               class="rounded px-3 py-2 text-center font-medium transition"
               :class="
                 loginMode === 'password'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900'
+                  ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-50'
+                  : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100'
               "
               @click="switchMode('password')"
             >
@@ -161,10 +167,10 @@ onBeforeUnmount(() => {
             @submit.prevent="loginWithPassword"
           >
             <label class="grid gap-2">
-              <span class="text-xs font-semibold text-zinc-500">用户名</span>
+              <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">用户名</span>
               <div class="relative">
                 <UserRound
-                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"
                 />
                 <input
                   v-model="alias"
@@ -176,10 +182,10 @@ onBeforeUnmount(() => {
               </div>
             </label>
             <label class="grid gap-2">
-              <span class="text-xs font-semibold text-zinc-500">密码</span>
+              <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">密码</span>
               <div class="relative">
                 <KeyRound
-                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"
                 />
                 <input
                   v-model="password"
@@ -207,7 +213,7 @@ onBeforeUnmount(() => {
               {{ loading ? '登录中' : '登录' }}
             </button>
             <button
-              class="text-center text-sm font-medium text-zinc-600 transition hover:text-zinc-950"
+              class="text-center text-sm font-medium text-zinc-600 transition hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50"
               type="button"
               @click="switchMode('qrcode')"
             >
@@ -217,10 +223,10 @@ onBeforeUnmount(() => {
 
           <div v-else class="mt-6 grid gap-4">
             <label class="grid gap-2">
-              <span class="text-xs font-semibold text-zinc-500">用户名</span>
+              <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">用户名</span>
               <div class="relative">
                 <UserRound
-                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"
                 />
                 <input
                   v-model="alias"
@@ -252,15 +258,15 @@ onBeforeUnmount(() => {
 
             <div
               v-if="qrImage"
-              class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-center"
+              class="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-center dark:border-zinc-700 dark:bg-zinc-950"
             >
               <img
                 :src="qrImage.startsWith('data:') ? qrImage : `data:image/png;base64,${qrImage}`"
                 alt="QQ 登录二维码"
-                class="mx-auto size-48 rounded-md bg-white object-contain"
+                class="mx-auto size-48 rounded-md bg-white object-contain dark:bg-zinc-100"
               />
               <button
-                class="mt-3 inline-flex items-center gap-2 text-sm font-medium text-zinc-600 transition hover:text-zinc-900"
+                class="mt-3 inline-flex items-center gap-2 text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
                 type="button"
                 @click="requestQrCode"
               >
