@@ -287,7 +287,7 @@ class CheckInService:
             }
 
         # 执行打卡（传递 task 对象和用户 token）
-        logger.info(f"🤖 调用 Selenium Worker 执行打卡...")
+        logger.info(f"🤖 调用 Playwright Worker 执行打卡...")
         result = perform_check_in(task, user.authorization)
 
         # 如果是 Token 过期导致的失败，处理 Token 过期情况

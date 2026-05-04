@@ -60,9 +60,8 @@ class Settings(BaseSettings):
     TOKEN_CHECK_INTERVAL_MINUTES: int = 30  # Token 检查间隔（分钟）
     SESSION_CLEANUP_INTERVAL_HOURS: int = 24  # 会话清理间隔（小时）
 
-    # Selenium / Chrome 配置（从 .env 读取）
-    CHROME_BINARY_PATH: str = ""
-    CHROMEDRIVER_PATH: str = ""
+    # Playwright / browser 配置（从 .env 读取）
+    BROWSER_EXECUTABLE_PATH: str = ""
 
 
 settings = Settings()

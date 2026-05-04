@@ -72,7 +72,7 @@ apps/backend/
 │   ├── template_service.py
 │   └── registration_manager.py
 │
-└── workers/             # Selenium 自动化
+└── workers/             # Playwright 自动化
     ├── token_refresher.py    # QQ 登录
     ├── check_in_worker.py    # 打卡执行
     └── email_notifier.py     # 邮件发送
@@ -337,7 +337,7 @@ engine = create_engine(
 )
 ```
 
-### Selenium 超时
+### Playwright 超时
 
 增加等待时间:
 

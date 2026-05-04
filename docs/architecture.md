@@ -68,7 +68,7 @@ CheckIn App V2 采用用户-任务分离架构，一个用户可管理多个打�
 - **FastAPI**: Web 框架，自动生成 API 文档
 - **SQLAlchemy**: ORM，支持多数据库
 - **APScheduler**: 任务调度，动态加载 cron 任务
-- **Selenium**: 浏览器自动化，获取 QQ Token 和打卡 payload
+- **Playwright**: 浏览器自动化，获取 QQ Token 和打卡 payload
 - **JWT**: 身份认证
 - **SMTP**: 邮件通知
 
@@ -86,10 +86,10 @@ CheckIn App V2 采用用户-任务分离架构，一个用户可管理多个打�
 
 1. 用户输入 alias
 2. 后端检查 alias 可用性和频率限制
-3. Selenium 启动 headless Chrome，打开接龙登录页
+3. Playwright 启动 headless Chromium，打开接龙登录页
 4. 生成 QR code，返回给前端
 5. 用户手机 QQ 扫码
-6. Selenium 检测登录成功，提取 authorization token 和 jwt
+6. Playwright 检测登录成功，提取 authorization token 和 jwt
 7. 存储用户信息（待审批状态）
 8. 管理员审批后用户可登录
 
@@ -104,7 +104,7 @@ CheckIn App V2 采用用户-任务分离架构，一个用户可管理多个打�
 
 1. 用户点击任务的"立即打卡"按钮
 2. 后端异步执行打卡任务
-3. Selenium 获取最新 x-api-request-payload
+3. Playwright 获取最新 x-api-request-payload
 4. 使用用户的 authorization token 调用接龙 API
 5. 解析响应，存储记录
 6. 返回结果
@@ -128,7 +128,7 @@ CheckIn App V2 采用用户-任务分离架构，一个用户可管理多个打�
 ### 会话清理
 
 - 间隔: 24 小时
-- 功能: 删除旧的 Selenium 会话文件
+- 功能: 删除旧的 Playwright 会话文件
 
 ### 用户清理
 
@@ -158,7 +158,7 @@ apps/backend/
 ├── services/     # 业务逻辑层
 ├── models/       # 数据模型层
 ├── schemas/      # 请求响应模型
-├── workers/      # Selenium 工作模块
+├── workers/      # Playwright 工作模块
 └── scripts/      # 工具脚本
 ```
 

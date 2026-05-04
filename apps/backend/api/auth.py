@@ -108,7 +108,7 @@ async def cancel_qrcode_session(session_id: str):
 
     - **session_id**: 会话 ID
 
-    用于用户关闭二维码对话框时,终止后台的 Selenium 进程
+    用于用户关闭二维码对话框时,终止后台的 Playwright 进程
     """
     try:
         result = AuthService.cancel_qrcode_session(session_id)

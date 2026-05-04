@@ -50,7 +50,7 @@ class AuthService:
             # 老用户：刷新 Token
             logger.info(f"老用户 {alias} 请求刷新 Token，会话: {session_id}")
 
-            # 在后台线程启动 Selenium，传入 jwt_sub
+            # 在后台线程启动 Playwright，传入 jwt_sub
             thread = threading.Thread(
                 target=get_token_headless,
                 args=(session_id, existing_user.jwt_sub, alias, client_ip),
@@ -69,7 +69,7 @@ class AuthService:
 
             logger.info(f"新用户 {alias} 请求注册，会话: {session_id}，已预占用户名")
 
-            # 在后台线程启动 Selenium，不传入 jwt_sub（新用户）
+            # 在后台线程启动 Playwright，不传入 jwt_sub（新用户）
             thread = threading.Thread(
                 target=get_token_headless, args=(session_id, None, alias, client_ip), daemon=True
             )

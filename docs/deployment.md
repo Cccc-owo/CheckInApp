@@ -5,7 +5,7 @@
 ### 系统要求
 
 - Ubuntu 20.04+ / CentOS 7+ / Windows Server
-- Python 3.9+
+- Python 3.12+
 - uv
 - Node.js 20+
 - pnpm
@@ -191,14 +191,15 @@ sudo lsof -i :8000
 sudo kill -9 <PID>
 ```
 
-### Selenium 问题
+### Playwright 问题
 
 ```bash
-# 检查 Chrome 版本
-chromium --version
-chromedriver --version
+# 安装浏览器
+uv run playwright install chromium
 
-# 确保版本匹配
+# 检查系统浏览器（可选）
+chromium --version
+google-chrome --version
 ```
 
 ### 权限问题

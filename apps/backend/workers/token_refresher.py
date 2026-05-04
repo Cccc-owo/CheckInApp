@@ -1,34 +1,32 @@
-import os
-import logging
+from __future__ import annotations
+
+import base64
 import json
-from pathlib import Path
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+import logging
+import time
+
 from filelock import FileLock
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright
 
 from backend.config import settings
+from backend.services.registration_manager import registration_manager
+from backend.workers.browser_automation import (
+    PlaywrightLaunchConfig,
+    extract_cookie_value,
+    save_page_debug_artifacts,
+)
 
 logger = logging.getLogger(__name__)
 
-# Chrome 配置路径
 BASE_DIR = settings.BASE_DIR
-
-# 调试文件路径
-DEBUG_SCREENSHOT_PATH = os.path.join(BASE_DIR, "debug_screenshot.png")
-DEBUG_PAGE_SOURCE_PATH = os.path.join(BASE_DIR, "debug_page_source.html")
+DEBUG_SCREENSHOT_PATH = BASE_DIR / "debug_screenshot.png"
+DEBUG_PAGE_SOURCE_PATH = BASE_DIR / "debug_page_source.html"
 
 
-def get_chrome_config():
-    """获取 Chrome 配置（从 settings 读取）"""
-    return {
-        "chrome_binary": settings.CHROME_BINARY_PATH,
-        "chromedriver": settings.CHROMEDRIVER_PATH,
-    }
+def get_browser_config() -> PlaywrightLaunchConfig:
+    """获取 Playwright 浏览器配置（从 settings 读取）"""
+    return PlaywrightLaunchConfig(executable_path=settings.BROWSER_EXECUTABLE_PATH)
 
 
 def update_session_file(session_id: str, data: dict) -> None:
@@ -44,7 +42,7 @@ def update_session_file(session_id: str, data: dict) -> None:
         logger.error(f"写入会话文件 {filepath} 失败: {e}")
 
 
-def get_session_status(session_id: str) -> str:
+def get_session_status(session_id: str) -> str | None:
     """安全地读取会话文件的状态"""
     filepath = settings.SESSION_DIR / f"{session_id}.json"
     lock_path = settings.SESSION_DIR / f"{session_id}.json.lock"
@@ -67,7 +65,7 @@ def get_session_status(session_id: str) -> str:
         return None
 
 
-def get_session_data(session_id: str) -> dict:
+def get_session_data(session_id: str) -> dict | None:
     """读取完整的会话数据"""
     filepath = settings.SESSION_DIR / f"{session_id}.json"
     lock_path = settings.SESSION_DIR / f"{session_id}.json.lock"
@@ -108,7 +106,6 @@ def cancel_session(session_id: str) -> bool:
 
     try:
         with FileLock(lock_path, timeout=5):
-            # 读取当前会话数据
             from backend.utils.json_helpers import safe_parse_json
 
             with open(filepath, "r", encoding="utf-8") as f:
@@ -117,16 +114,13 @@ def cancel_session(session_id: str) -> bool:
                     return False
                 data = safe_parse_json(content, {})
 
-            # 如果已经成功,不允许取消
             if data.get("status") == "success":
                 logger.info(f"会话 {session_id} 已成功,无法取消")
                 return False
 
-            # 标记为已取消
             data["status"] = "cancelled"
             data["message"] = "用户取消登录"
 
-            # 写回文件
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
 
@@ -138,11 +132,29 @@ def cancel_session(session_id: str) -> bool:
         return False
 
 
+def _close_quietly(resource, label: str) -> None:
+    if not resource:
+        return
+
+    try:
+        resource.close()
+    except Exception as e:
+        logger.warning(f"关闭 {label} 时出现警告: {e}")
+
+
+def _release_alias_if_needed(alias: str | None, session_id: str) -> None:
+    if not alias:
+        return
+
+    registration_manager.release_alias(alias, session_id)
+    logger.info(f"释放用户名预占: {alias}")
+
+
 def get_token_headless(
     session_id: str, jwt_sub: str = None, alias: str = None, client_ip: str = ""
 ) -> None:
     """
-    使用 Selenium 获取 QQ 扫码登录的 Token
+    使用 Playwright 获取 QQ 扫码登录的 Token
 
     Args:
         session_id: 会话 ID
@@ -150,177 +162,119 @@ def get_token_headless(
         alias: 用户别名（用于新用户注册）
         client_ip: 客户端 IP 地址
     """
-    driver = None
     current_step = "初始化"
+    browser = None
+    context = None
+    page = None
 
+    playwright = None
     try:
-        # 获取 Chrome 配置
-        chrome_config = get_chrome_config()
-        chrome_binary_path = chrome_config["chrome_binary"]
-        chromedriver_path = chrome_config["chromedriver"]
+        browser_config = get_browser_config()
+        logger.info(f"Playwright ({session_id}): {current_step}...")
 
-        # 配置 Chrome 选项
-        current_step = "配置 ChromeDriver"
-        logger.info(f"Selenium ({session_id}): {current_step}...")
+        playwright = sync_playwright().start()
+        current_step = "启动浏览器"
+        logger.info(f"Playwright ({session_id}): {current_step}...")
+        browser = playwright.chromium.launch(**browser_config.to_launch_kwargs())
+        logger.info(f"Playwright ({session_id}): 浏览器启动成功")
 
-        chrome_options = Options()
+        current_step = "创建上下文"
+        context = browser.new_context(**browser_config.to_context_kwargs())
+        page = context.new_page()
 
-        # 如果指定了自定义 Chrome 路径，则使用
-        if chrome_binary_path:
-            chrome_options.binary_location = chrome_binary_path
-            logger.info(f"Selenium ({session_id}): 使用自定义 Chrome 路径: {chrome_binary_path}")
-        else:
-            logger.info(f"Selenium ({session_id}): 使用系统默认 Chrome")
-
-        # Headless 模式配置
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-        chrome_options.add_argument(f"user-agent={user_agent}")
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--ignore-certificate-errors")
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-
-        # 启动浏览器
-        current_step = "启动 Chrome 浏览器"
-        logger.info(f"Selenium ({session_id}): {current_step}...")
-
-        # 如果指定了 ChromeDriver 路径，则使用 Service；否则让 Selenium 自动管理
-        if chromedriver_path:
-            service = Service(executable_path=chromedriver_path)
-            driver = webdriver.Chrome(service=service, options=chrome_options)
-            logger.info(f"Selenium ({session_id}): 使用自定义 ChromeDriver: {chromedriver_path}")
-        else:
-            driver = webdriver.Chrome(options=chrome_options)
-            logger.info(f"Selenium ({session_id}): 使用 Selenium Manager 自动管理 ChromeDriver")
-
-        logger.info(f"Selenium ({session_id}): Chrome 浏览器启动成功")
         current_step = "导航到登录页面"
-        logger.info(f"Selenium ({session_id}): {current_step}...")
-        driver.get("https://i.jielong.com/login?redirectTo=https%3A%2F%2Fi.jielong.com%2F")
+        logger.info(f"Playwright ({session_id}): {current_step}...")
+        page.goto(
+            "https://i.jielong.com/login?redirectTo=https%3A%2F%2Fi.jielong.com%2F",
+            wait_until="domcontentloaded",
+            timeout=60000,
+        )
 
-        wait = WebDriverWait(driver, 60)
-
-        # --- 步骤 1: 点击切换到 QQ 登录 ---
         current_step = "查找并点击切换按钮"
-        toggle_button_selector = "div.login-wrap .toggle"
-        logger.info(f"Selenium ({session_id}): {current_step} ({toggle_button_selector})...")
-        toggle_button = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, toggle_button_selector))
-        )
-        toggle_button.click()
+        toggle_button = page.locator("div.login-wrap .toggle")
+        logger.info(f"Playwright ({session_id}): {current_step}...")
+        toggle_button.click(timeout=60000)
 
-        # --- 步骤 2: 勾选同意服务协议 ---
         current_step = "勾选同意服务协议"
-        checkbox_selector = "input.ant-checkbox-input[type='checkbox']"
-        logger.info(f"Selenium ({session_id}): {current_step} ({checkbox_selector})...")
-        checkbox = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, checkbox_selector)))
-        if not checkbox.is_selected():
-            checkbox.click()
-            logger.info(f"Selenium ({session_id}): 已勾选服务协议")
+        checkbox = page.locator("input.ant-checkbox-input[type='checkbox']")
+        logger.info(f"Playwright ({session_id}): {current_step}...")
+        if not checkbox.is_checked():
+            checkbox.click(timeout=60000)
+            logger.info(f"Playwright ({session_id}): 已勾选服务协议")
 
-        # --- 步骤 3: 点击"立即登录"按钮 ---
         current_step = "点击立即登录按钮"
-        login_button_selector = "button.css-1wli0ry.ant-btn.ant-btn-default.login-btn"
-        logger.info(f"Selenium ({session_id}): {current_step} ({login_button_selector})...")
-        login_button = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, login_button_selector))
-        )
-        login_button.click()
+        login_button = page.locator("button.css-1wli0ry.ant-btn.ant-btn-default.login-btn")
+        logger.info(f"Playwright ({session_id}): {current_step}...")
+        login_button.click(timeout=60000)
 
-        # --- 步骤 4: 等待二维码加载 ---
-        import time
-
-        time.sleep(3)  # 等待几秒让二维码刷新出来
+        current_step = "等待二维码刷新"
+        page.wait_for_timeout(3000)
 
         current_step = "等待QQ二维码图片加载"
-        qq_qr_image_selector = "#login_container img"
-        logger.info(f"Selenium ({session_id}): {current_step} ({qq_qr_image_selector})...")
-        qr_element = wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, qq_qr_image_selector))
-        )
+        qr_locator = page.locator("#login_container img").first
+        logger.info(f"Playwright ({session_id}): {current_step}...")
+        qr_locator.wait_for(state="visible", timeout=60000)
 
-        logger.info(f"Selenium ({session_id}): 成功找到QQ二维码元素，正在截图...")
-        qr_base64 = qr_element.screenshot_as_base64
+        logger.info(f"Playwright ({session_id}): 成功找到QQ二维码元素，正在截图...")
+        qr_base64 = base64.b64encode(qr_locator.screenshot(timeout=60000)).decode("ascii")
         update_session_file(
             session_id,
             {
                 "status": "waiting_scan",
                 "qr_image_data": qr_base64,
                 "jwt_sub": jwt_sub,
-                "alias": alias,  # 新增：保存 alias
-                "client_ip": client_ip,  # 新增：保存 IP
+                "alias": alias,
+                "client_ip": client_ip,
             },
         )
 
         current_step = "等待用户扫描登录 (Cookie 'token' 出现)"
-        cookie_name_to_find = "token"
-        logger.info(f"Selenium ({session_id}): {current_step}...")
+        logger.info(f"Playwright ({session_id}): {current_step}...")
 
-        # 自定义等待逻辑:每秒检查cookie和session状态
         max_wait_seconds = 120
-        import time
-
-        for i in range(max_wait_seconds):
-            # 检查session是否被取消
+        for _ in range(max_wait_seconds):
             status = get_session_status(session_id)
             if status == "cancelled":
-                logger.info(f"Selenium ({session_id}): 用户取消了登录,终止会话")
-                raise Exception("用户取消登录")
+                logger.info(f"Playwright ({session_id}): 用户取消了登录,终止会话")
+                _release_alias_if_needed(alias, session_id)
+                return
 
-            # 检查cookie是否出现
-            cookie = driver.get_cookie(cookie_name_to_find)
-            if cookie:
-                break
+            token = extract_cookie_value(context.cookies(), "token")
+            if token:
+                logger.info(f"Playwright ({session_id}): 成功在Cookie中捕获到Token！")
+                update_session_file(
+                    session_id,
+                    {
+                        "status": "success",
+                        "token": token,
+                        "alias": alias,
+                        "client_ip": client_ip,
+                    },
+                )
+                return
 
             time.sleep(1)
-        else:
-            # 超时未获取到cookie
-            raise TimeoutException("等待扫码超时")
 
-        cookie = driver.get_cookie(cookie_name_to_find)
-        if cookie:
-            logger.info(f"Selenium ({session_id}): 成功在Cookie中捕获到Token！")
-            update_session_file(
-                session_id,
-                {
-                    "status": "success",
-                    "token": cookie["value"],
-                    "alias": alias,  # 保存 alias
-                    "client_ip": client_ip,  # 保存 IP
-                },
-            )
-        else:
-            raise Exception("等待Cookie成功但获取失败")
+        raise PlaywrightTimeoutError("等待扫码超时")
 
-    except TimeoutException:
+    except PlaywrightTimeoutError:
         if get_session_status(session_id) == "success":
             logger.warning(
-                f"Selenium ({session_id}): 一个并发线程超时，但会话已成功，将忽略此超时。"
+                f"Playwright ({session_id}): 一个并发线程超时，但会话已成功，将忽略此超时。"
             )
         else:
-            # 释放预占的用户名
-            if alias:
-                from backend.services.registration_manager import registration_manager
+            _release_alias_if_needed(alias, session_id)
+            error_message = f"操作超时！卡在了步骤: '{current_step}'。请检查页面选择器或网络。"
+            logger.error(f"Playwright ({session_id}): {error_message}")
 
-                registration_manager.release_alias(alias, session_id)
-                logger.info(f"超时释放用户名预占: {alias}")
-
-            error_message = f"操作超时！卡在了步骤: '{current_step}'。请检查CSS选择器或网络。"
-            logger.error(f"Selenium ({session_id}): {error_message}")
-
-            # 保存调试信息（仅当 driver 已创建时）
-            if driver:
+            if page:
                 try:
-                    driver.save_screenshot(DEBUG_SCREENSHOT_PATH)
-                    with open(DEBUG_PAGE_SOURCE_PATH, "w", encoding="utf-8") as f:
-                        f.write(driver.page_source)
+                    save_page_debug_artifacts(page, DEBUG_SCREENSHOT_PATH, DEBUG_PAGE_SOURCE_PATH)
                     logger.error(
-                        f"Selenium ({session_id}): 调试截图和源码已保存。当前URL: {driver.current_url}"
+                        f"Playwright ({session_id}): 调试截图和源码已保存。当前URL: {page.url}"
                     )
                 except Exception as debug_error:
-                    logger.error(f"Selenium ({session_id}): 保存调试信息失败: {debug_error}")
+                    logger.error(f"Playwright ({session_id}): 保存调试信息失败: {debug_error}")
 
             update_session_file(
                 session_id, {"status": "error", "message": error_message, "jwt_sub": jwt_sub}
@@ -329,25 +283,29 @@ def get_token_headless(
     except Exception as e:
         if get_session_status(session_id) == "success":
             logger.warning(
-                f"Selenium ({session_id}): 一个并发线程出错 ({e})，但会话已成功，将忽略此错误。"
+                f"Playwright ({session_id}): 一个并发线程出错 ({e})，但会话已成功，将忽略此错误。"
             )
         else:
-            # 释放预占的用户名
-            if alias:
-                from backend.services.registration_manager import registration_manager
+            _release_alias_if_needed(alias, session_id)
+            logger.error(f"Playwright ({session_id}): 发生未知错误: {e}", exc_info=True)
 
-                registration_manager.release_alias(alias, session_id)
-                logger.info(f"异常释放用户名预占: {alias}")
+            if page:
+                try:
+                    save_page_debug_artifacts(page, DEBUG_SCREENSHOT_PATH, DEBUG_PAGE_SOURCE_PATH)
+                except Exception as debug_error:
+                    logger.error(f"Playwright ({session_id}): 保存调试信息失败: {debug_error}")
 
-            logger.error(f"Selenium ({session_id}): 发生未知错误: {e}", exc_info=True)
             update_session_file(
                 session_id, {"status": "error", "message": str(e), "jwt_sub": jwt_sub}
             )
 
     finally:
-        if driver:
+        _close_quietly(page, "页面")
+        _close_quietly(context, "浏览器上下文")
+        _close_quietly(browser, "浏览器")
+        if playwright:
             try:
-                driver.quit()
-                logger.info(f"Selenium ({session_id}): 浏览器已关闭")
-            except Exception as quit_error:
-                logger.error(f"Selenium ({session_id}): 关闭浏览器失败: {quit_error}")
+                playwright.stop()
+            except Exception as e:
+                logger.warning(f"关闭 Playwright runtime 时出现警告: {e}")
+        logger.info(f"Playwright ({session_id}): 浏览器已关闭")

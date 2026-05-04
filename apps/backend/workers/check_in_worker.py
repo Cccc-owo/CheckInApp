@@ -1,23 +1,33 @@
-import requests
+from __future__ import annotations
+
 import json
-import time
-import os
 import logging
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+import requests
+import time
 from typing import Dict, Any
 
+from playwright.sync_api import sync_playwright
+
 from backend.config import settings
+from backend.workers.browser_automation import (
+    PlaywrightLaunchConfig,
+    extract_payload_header,
+    save_page_debug_artifacts,
+)
 
 logger = logging.getLogger(__name__)
 
-# Chrome 配置路径 - 从设置中读取
-CHROME_BINARY_PATH = settings.CHROME_BINARY_PATH
-CHROMEDRIVER_PATH = settings.CHROMEDRIVER_PATH
+BASE_DIR = settings.BASE_DIR
+DEBUG_SCREENSHOT_PATH = BASE_DIR / "payload_debug.png"
+DEBUG_PAGE_SOURCE_PATH = BASE_DIR / "payload_debug_page_source.html"
 
 
-def get_live_x_api_payload(auth_token: str) -> str:
+def get_browser_config() -> PlaywrightLaunchConfig:
+    """获取 Playwright 浏览器配置（从 settings 读取）"""
+    return PlaywrightLaunchConfig(executable_path=settings.BROWSER_EXECUTABLE_PATH)
+
+
+def get_live_x_api_payload(auth_token: str) -> str | None:
     """
     启动一个临时的无头浏览器会话，获取新鲜的 x-api-request-payload
 
@@ -27,89 +37,89 @@ def get_live_x_api_payload(auth_token: str) -> str:
     Returns:
         x-api-request-payload 值，失败返回 None
     """
-    logger.info("正在启动临时浏览器会话以监听网络日志...")
+    logger.info("正在启动临时 Playwright 会话以监听网络请求...")
 
-    # 根据配置创建 Service
-    if CHROMEDRIVER_PATH:
-        service = Service(executable_path=CHROMEDRIVER_PATH)
-    else:
-        service = Service()  # 使用 Selenium Manager 自动管理
-
-    chrome_options = Options()
-
-    # 如果配置了 Chrome 路径，则使用配置的路径
-    if CHROME_BINARY_PATH:
-        chrome_options.binary_location = CHROME_BINARY_PATH
-
-    # 开启性能日志记录功能
-    logging_prefs = {"performance": "ALL"}
-    chrome_options.set_capability("goog:loggingPrefs", logging_prefs)
-
-    # Headless 模式配置
-    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
-    chrome_options.add_argument(f"user-agent={user_agent}")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--ignore-certificate-errors")
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
+    browser = None
+    context = None
+    page = None
     payload_signature = None
+
+    playwright = None
     try:
-        # 导航到同源空白页，用于设置 Cookie
-        driver.get("https://i.jielong.com/my-class")
+        browser_config = get_browser_config()
 
-        # 注入长期 Token
-        driver.add_cookie({"name": "token", "value": auth_token, "domain": ".jielong.com"})
+        playwright = sync_playwright().start()
+        browser = playwright.chromium.launch(**browser_config.to_launch_kwargs())
+        context = browser.new_context(**browser_config.to_context_kwargs())
+        page = context.new_page()
 
-        # 导航到触发 API 的页面
-        driver.get("https://i.jielong.com/my-form")
+        def on_request(request) -> None:
+            nonlocal payload_signature
+            if payload_signature:
+                return
 
-        # 等待并捕获 x-api-request-payload
-        max_wait_time = 20  # 最多等待20秒
+            payload = extract_payload_header(request.headers)
+            if payload:
+                payload_signature = payload
+                logger.info("成功通过 Playwright 捕获到现场的 x-api-request-payload！")
+
+        page.on("request", on_request)
+
+        page.goto("https://i.jielong.com/my-class", wait_until="domcontentloaded", timeout=60000)
+        context.add_cookies(
+            [
+                {
+                    "name": "token",
+                    "value": auth_token,
+                    "domain": ".jielong.com",
+                    "path": "/",
+                }
+            ]
+        )
+
+        page.goto("https://i.jielong.com/my-form", wait_until="domcontentloaded", timeout=60000)
+
+        max_wait_time = 20
         start_time = time.time()
-        found = False
-
         while time.time() - start_time < max_wait_time:
-            logs = driver.get_log("performance")
-            for entry in logs:
-                log = json.loads(entry["message"])["message"]
-                if log["method"] == "Network.requestWillBeSent":
-                    headers = log.get("params", {}).get("request", {}).get("headers", {})
-                    headers_lower = {k.lower(): v for k, v in headers.items()}
-                    if "x-api-request-payload" in headers_lower:
-                        payload_signature = headers_lower["x-api-request-payload"]
-                        logger.info("成功通过网络日志捕获到现场的 x-api-request-payload！")
-                        found = True
-                        break
-            if found:
+            if payload_signature:
                 break
-            time.sleep(1)
+            page.wait_for_timeout(500)
 
         if not payload_signature:
             raise Exception(
-                f"在 {max_wait_time} 秒内未能通过网络日志捕获到 x-api-request-payload。"
+                f"在 {max_wait_time} 秒内未能通过网络请求捕获到 x-api-request-payload。"
             )
 
     except Exception as e:
         logger.error(f"获取现场 x-api-request-payload 时失败: {e}")
         try:
-            debug_screenshot = os.path.join(settings.BASE_DIR, "payload_debug.png")
-            driver.save_screenshot(debug_screenshot)
+            if page:
+                save_page_debug_artifacts(page, DEBUG_SCREENSHOT_PATH, DEBUG_PAGE_SOURCE_PATH)
         except Exception as screenshot_error:
             logger.warning(f"保存调试截图失败: {screenshot_error}")
 
     finally:
-        # 优雅关闭 WebDriver，避免 Windows asyncio ConnectionResetError
-        try:
-            driver.quit()
-        except Exception as e:
-            # 忽略 WebDriver 关闭时的连接错误（Windows 平台常见问题）
-            if "WinError 10054" not in str(e) and "ConnectionResetError" not in str(e):
-                logger.warning(f"关闭 WebDriver 时出现警告: {e}")
+        if page:
+            try:
+                page.close()
+            except Exception:
+                pass
+        if context:
+            try:
+                context.close()
+            except Exception:
+                pass
+        if browser:
+            try:
+                browser.close()
+            except Exception as e:
+                logger.warning(f"关闭 Playwright 浏览器时出现警告: {e}")
+        if playwright:
+            try:
+                playwright.stop()
+            except Exception as e:
+                logger.warning(f"关闭 Playwright runtime 时出现警告: {e}")
 
     return payload_signature
 
@@ -129,13 +139,12 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             - response_text: 响应文本
             - error_message: 错误信息
     """
-    # 从 payload_config 中提取 Signature 用于日志
     from backend.utils.json_helpers import safe_parse_payload, extract_signature
 
     payload_dict = safe_parse_payload(task.payload_config)
     signature = extract_signature(task.payload_config) or "Unknown"
 
-    logger.info(f"Selenium打卡: 正在为任务 ID: {task.id} (Signature: {signature}) 执行打卡...")
+    logger.info(f"Playwright打卡: 正在为任务 ID: {task.id} (Signature: {signature}) 执行打卡...")
 
     if not user_token:
         error_msg = f"任务 ID: {task.id} (Signature: {signature}) 的 Token 为空，跳过。"
@@ -147,7 +156,6 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             "error_message": error_msg,
         }
 
-    # 获取 x-api-request-payload
     payload_signature = get_live_x_api_payload(user_token)
     if not payload_signature:
         error_msg = f"任务 ID: {task.id} (Signature: {signature}) 未能获取到现场签名，打卡中止。"
@@ -160,7 +168,6 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
         }
 
     try:
-        # 使用任务的 payload_config（从模板生成的完整配置，包含 ThreadId）
         from backend.utils.json_helpers import safe_parse_payload, extract_thread_id
 
         payload = safe_parse_payload(task.payload_config)
@@ -190,7 +197,6 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
 
         url = "https://api.jielong.com/api/CheckIn/EditRecord"
 
-        # 打印请求详情用于调试
         payload_json = json.dumps(payload, ensure_ascii=False)
         logger.info(f"📤 打卡请求详情 - 任务 ID: {task.id} (Signature: {signature})")
         logger.info(f"📍 URL: {url}")
@@ -205,11 +211,8 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             f"✉️ 任务 ID: {task.id} (Signature: {signature}) 打卡请求完成！响应: {response_text}"
         )
 
-        # 判断响应内容（参考 V1 实现逻辑）
-        # 情况1: 明确包含"打卡成功" → 成功
         if "打卡成功" in response_text:
             logger.info(f"✅ 检测到成功关键字 '打卡成功'，打卡成功")
-            # 发送成功邮件通知
             if task.user and task.user.email:
                 try:
                     from backend.services.email_service import EmailService
@@ -229,8 +232,6 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "error_message": "",
             }
 
-        # 情况2: 已经提交过了（重复提交）→ 视为成功，但不发送邮件
-        # 匹配 "已被提交" 或 "已经打卡"
         elif (
             "已被提交" in response_text
             or "已经打卡" in response_text
@@ -244,8 +245,6 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "error_message": "",
             }
 
-        # 情况3: 不在打卡时间范围 → 标记为时间范围外
-        # 匹配 Data 或 Description 中的内容
         elif "不在打卡时间范围" in response_text or "不在打卡时间" in response_text:
             logger.warning(f"⏰ 检测到'不在打卡时间范围'，打卡时间不符")
             return {
@@ -255,8 +254,6 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
                 "error_message": "不在打卡时间范围内",
             }
 
-        # 情况4: Token 失效的特征标识 → 失败
-        # 扩展检测条件：检测多种 Token 失效的响应特征
         elif (
             "登录" in response_text
             or "授权" in response_text
@@ -266,16 +263,13 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
             or response.status_code == 401
         ):
             logger.warning(f"⚠️ 检测到Token失效特征，Token 可能已失效")
-            # 发送打卡失败邮件通知（邮件内容已包含Token失效提醒和刷新指引）
             if task.user and task.user.email:
                 try:
                     from backend.services.email_service import EmailService
                     from backend.utils.json_helpers import build_task_info
 
-                    # 使用辅助函数构建 task_info（从 task 对象提取信息）
                     task_info = build_task_info(task)
 
-                    # 只发送打卡失败通知（内容已说明Token失效）
                     EmailService.notify_check_in_result(
                         task.user, task_info, False, "Token 已失效，需要重新授权"
                     )
@@ -284,15 +278,13 @@ def perform_check_in(task, user_token: str) -> Dict[str, Any]:
 
             return {
                 "success": False,
-                "status": "token_expired",  # 特殊状态，用于标识 Token 过期
+                "status": "token_expired",
                 "response_text": response_text,
                 "error_message": "Token 已失效，需要重新授权",
             }
 
-        # 情况5: 其他响应 → 需要人工确认（标记为异常）
         else:
             logger.warning(f"⚠️ 未识别的响应内容，请检查: {response_text[:200]}...")
-            # 标记为未知状态，记录完整响应供后续分析
             return {
                 "success": False,
                 "status": "unknown",

@@ -2,7 +2,7 @@
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
 [![Vue 3](https://img.shields.io/badge/Vue-3.5+-brightgreen.svg)](https://vuejs.org/)
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
 
 接龙自动打卡系统，通过 QQ 登录实现每日自动考勤提交。
 
@@ -18,7 +18,7 @@
 
 ## 技术栈
 
-**后端**: FastAPI + SQLAlchemy + APScheduler + Selenium  
+**后端**: FastAPI + SQLAlchemy + APScheduler + Playwright  
 **前端**: Vue 3 + TypeScript + shadcn-vue + Tailwind  
 **数据库**: SQLite  
 
@@ -26,7 +26,7 @@
 
 ### 环境要求
 
-- Python 3.9+
+- Python 3.12+
 - uv
 - Node.js 20+
 - pnpm
@@ -37,6 +37,7 @@
 ```bash
 # 后端
 uv sync
+uv run playwright install chromium
 uv run python main.py backend
 
 # 前端
