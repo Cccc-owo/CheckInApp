@@ -1,547 +1,432 @@
-<template>
-  <Layout>
-    <div class="dashboard-container">
-      <!-- 邮箱未设置提醒 -->
-      <a-alert
-        v-if="!authStore.user?.email"
-        message="您还未设置邮箱地址"
-        type="info"
-        :closable="true"
-        show-icon
-        style="margin-bottom: 20px"
-      >
-        <template #description>
-          <div>
-            设置邮箱后可以接收打卡任务的通知和提醒。
-            <a style="margin-left: 8px; cursor: pointer" @click="goToSettings"> 立即前往设置 → </a>
-          </div>
-        </template>
-      </a-alert>
+<script setup lang="ts">
+import {
+  Activity,
+  AlertTriangle,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  KeyRound,
+  QrCode,
+  UserRound,
+} from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import {
+  checkInApi,
+  taskApi,
+  userApi,
+  type CheckInRecord,
+  type CheckInRecordStatus,
+  type Task,
+  type TokenStatus,
+} from '@/api'
+import { useAuth } from '@/app/auth'
+import { useRouter } from '@/app/router'
+import StateBlock from '@/components/StateBlock.vue'
+import { alertClass, cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import {
+  cronLabel,
+  extractErrorMessage,
+  formatDateTime,
+  statusLabel,
+  statusTone,
+} from '@/utils/format'
 
-      <!-- 密码未设置提醒 -->
-      <a-alert
-        v-if="!authStore.user?.has_password"
-        message="您还未设置登录密码"
-        type="info"
-        :closable="true"
-        show-icon
-        style="margin-bottom: 20px"
-      >
-        <template #description>
-          <div>
-            设置密码后可以使用用户名+密码快速登录。
-            <a style="margin-left: 8px; cursor: pointer" @click="goToSettings"> 立即前往设置 → </a>
-          </div>
-        </template>
-      </a-alert>
+const router = useRouter()
+const auth = useAuth()
+const loading = ref(true)
+const error = ref('')
+const message = ref('')
+const tasks = ref<Task[]>([])
+const records = ref<CheckInRecord[]>([])
+const tokenStatus = ref<TokenStatus | null>(null)
+const selectedTaskId = ref<number | null>(null)
+const checkInLoading = ref(false)
+const latestStatus = ref<CheckInRecordStatus | null>(null)
+let pollTimer: number | undefined
 
-      <!-- Token 已过期提醒 -->
-      <a-alert
-        v-if="tokenStatus && !tokenStatus.is_valid"
-        message="打卡凭证已过期"
-        type="warning"
-        :closable="true"
-        show-icon
-        style="margin-bottom: 20px"
-      >
-        <template #description>
-          <div>
-            打卡凭证已过期，无法自动打卡。请扫码刷新 Token。
-            <a style="margin-left: 8px; cursor: pointer" @click="qrcodeModalVisible = true">
-              立即刷新 →
-            </a>
-          </div>
-        </template>
-      </a-alert>
+const activeTasks = computed(() => tasks.value.filter((task) => task.is_active).length)
+const inactiveTasks = computed(() => Math.max(0, tasks.value.length - activeTasks.value))
+const selectedTask = computed(() => tasks.value.find((task) => task.id === selectedTaskId.value))
+const lastRecord = computed(() => records.value[0] ?? null)
+const nextActiveTask = computed(() => tasks.value.find((task) => task.is_active) ?? null)
+const successToday = computed(
+  () => records.value.filter((record) => record.status === 'success').length,
+)
+const tokenTone = computed(() =>
+  tokenStatus.value?.is_valid
+    ? tokenStatus.value.expiring_soon
+      ? 'warning'
+      : 'success'
+    : 'danger',
+)
+const tokenLabel = computed(() => {
+  if (!tokenStatus.value) return '未知'
+  if (!tokenStatus.value.is_valid) return '无效'
+  return tokenStatus.value.expiring_soon ? '即将过期' : '有效'
+})
+const tokenDetail = computed(() => {
+  if (!tokenStatus.value) return '未获取到业务 Token 状态。'
+  if (!tokenStatus.value.is_valid) return '打卡凭证已过期，无法自动打卡。请使用扫码登录刷新授权。'
+  if (tokenStatus.value.expiring_soon) return 'Token 即将过期，建议准备刷新授权。'
+  return `业务 Token 正常，${tokenStatus.value.days_until_expiry ?? '未知'} 天后过期。`
+})
+const needsEmail = computed(() => !auth.state.user?.email)
+const needsPassword = computed(() => auth.state.user?.has_password === false)
 
-      <!-- 没有打卡任务提醒 -->
-      <a-alert
-        v-if="!taskStore.loading && taskStore.tasks.length === 0"
-        message="您还没有打卡任务"
-        type="info"
-        :closable="true"
-        show-icon
-        style="margin-bottom: 20px"
-      >
-        <template #description>
-          <div>
-            创建您的第一个打卡任务，开启自动打卡之旅。
-            <a style="margin-left: 8px; cursor: pointer" @click="goToTasks"> 立即创建 → </a>
-          </div>
-        </template>
-      </a-alert>
-
-      <a-row :gutter="[20, 20]">
-        <!-- Token 状态卡片 -->
-        <a-col :xs="24" :sm="24" :md="24">
-          <a-card class="status-card md3-card">
-            <template #title>
-              <div class="card-header">
-                <KeyOutlined />
-                <span>Token 状态</span>
-              </div>
-            </template>
-
-            <div v-if="tokenStatusLoading" class="loading-container">
-              <a-skeleton :active="true" :paragraph="{ rows: 3 }" />
-            </div>
-
-            <div v-else-if="tokenStatus" class="token-status">
-              <a-descriptions :column="{ xs: 1, sm: 1, md: 2 }" bordered>
-                <a-descriptions-item label="Token 状态">
-                  <a-tag :color="tokenStatus.is_valid ? 'success' : 'error'">
-                    {{ tokenStatus.is_valid ? '有效' : '无效' }}
-                  </a-tag>
-                </a-descriptions-item>
-
-                <a-descriptions-item label="过期时间">
-                  {{ formatExpireTime }}
-                </a-descriptions-item>
-
-                <a-descriptions-item label="剩余时间">
-                  <a-tag
-                    v-if="tokenStatus.is_valid"
-                    :color="tokenStatus.expiring_soon ? 'warning' : 'success'"
-                  >
-                    {{ formatRemainTime }}
-                  </a-tag>
-                  <a-tag v-else color="error">已过期</a-tag>
-                </a-descriptions-item>
-
-                <a-descriptions-item label="即将过期">
-                  <a-tag v-if="!tokenStatus.is_valid" color="error"> 已过期 </a-tag>
-                  <a-tag v-else :color="tokenStatus.expiring_soon ? 'warning' : 'success'">
-                    {{ tokenStatus.expiring_soon ? '是' : '否' }}
-                  </a-tag>
-                </a-descriptions-item>
-              </a-descriptions>
-
-              <!-- 刷新 Token 按钮 -->
-              <div style="margin-top: 24px; text-align: center">
-                <!-- Token 未过期时：禁用按钮并显示提示 -->
-                <a-tooltip v-if="tokenStatus.is_valid" title="Token 过期后才可以扫码刷新 Token">
-                  <a-button type="primary" size="large" :disabled="true">
-                    <template #icon><ReloadOutlined /></template>
-                    刷新 Token
-                  </a-button>
-                </a-tooltip>
-
-                <!-- Token 已过期时：启用按钮且无提示 -->
-                <a-button v-else type="primary" size="large" @click="qrcodeModalVisible = true">
-                  <template #icon><ReloadOutlined /></template>
-                  刷新 Token
-                </a-button>
-              </div>
-
-              <a-alert
-                v-if="tokenStatus.expiring_soon"
-                message="Token 即将过期"
-                description="您的 Token 将在 30 分钟内过期，请在过期后及时刷新 Token！"
-                type="warning"
-                :closable="false"
-                show-icon
-                style="margin-top: 15px"
-              />
-            </div>
-          </a-card>
-        </a-col>
-
-        <!-- 手动打卡卡片 -->
-        <a-col :xs="24" :sm="24" :md="24">
-          <a-card class="md3-card">
-            <template #title>
-              <div class="card-header">
-                <CalendarOutlined />
-                <span>手动打卡</span>
-              </div>
-            </template>
-
-            <div class="check-in-container">
-              <p class="hint">选择任务并点击下方按钮立即执行打卡操作</p>
-
-              <!-- 任务选择 -->
-              <a-select
-                v-model:value="selectedTaskId"
-                placeholder="请选择要打卡的任务"
-                :loading="taskStore.loading"
-                style="width: 100%; max-width: 400px; margin-bottom: 20px"
-              >
-                <a-select-option v-for="task in taskStore.tasks" :key="task.id" :value="task.id">
-                  <div style="display: flex; justify-content: space-between; align-items: center">
-                    <span>{{ task.name }}</span>
-                    <a-tag size="small" :color="task.is_active ? 'success' : 'default'">
-                      {{ task.is_active ? '启用' : '禁用' }}
-                    </a-tag>
-                  </div>
-                </a-select-option>
-              </a-select>
-
-              <a-button
-                type="primary"
-                size="large"
-                :loading="checkInLoading"
-                :disabled="!selectedTaskId"
-                @click="handleCheckIn"
-              >
-                <template #icon><CalendarOutlined /></template>
-                {{ checkInLoading ? '打卡中...' : '立即打卡' }}
-              </a-button>
-
-              <div v-if="lastCheckIn" class="last-check-in">
-                <a-divider />
-                <p class="label">上次打卡</p>
-                <a-descriptions :column="{ xs: 1, sm: 1, md: 2 }" bordered size="small">
-                  <a-descriptions-item label="时间">
-                    {{ formatDateTime(lastCheckIn.check_in_time) }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="状态">
-                    <a-tag
-                      :color="
-                        lastCheckIn.status === 'success'
-                          ? 'success'
-                          : lastCheckIn.status === 'out_of_time'
-                            ? 'default'
-                            : lastCheckIn.status === 'unknown'
-                              ? 'warning'
-                              : 'error'
-                      "
-                    >
-                      {{
-                        lastCheckIn.status === 'success'
-                          ? '成功'
-                          : lastCheckIn.status === 'out_of_time'
-                            ? '时间范围外'
-                            : lastCheckIn.status === 'unknown'
-                              ? '异常'
-                              : '失败'
-                      }}
-                    </a-tag>
-                  </a-descriptions-item>
-                  <a-descriptions-item label="打卡响应" :span="{ xs: 1, sm: 1, md: 2 }">
-                    {{ lastCheckIn.response_text || lastCheckIn.error_message || '-' }}
-                  </a-descriptions-item>
-                </a-descriptions>
-              </div>
-            </div>
-          </a-card>
-        </a-col>
-
-        <!-- 用户信息卡片 -->
-        <a-col :xs="24" :sm="24" :md="24">
-          <a-card class="md3-card">
-            <template #title>
-              <div class="card-header">
-                <UserOutlined />
-                <span>个人信息</span>
-              </div>
-            </template>
-
-            <a-descriptions :column="{ xs: 1, sm: 1, md: 2 }" bordered>
-              <a-descriptions-item label="用户名">
-                {{ authStore.user?.alias }}
-              </a-descriptions-item>
-              <a-descriptions-item label="角色">
-                <a-tag :color="authStore.isAdmin ? 'error' : 'blue'">
-                  {{ authStore.isAdmin ? '管理员' : '普通用户' }}
-                </a-tag>
-              </a-descriptions-item>
-              <a-descriptions-item label="邮箱">
-                {{ authStore.user?.email || '未设置' }}
-              </a-descriptions-item>
-              <a-descriptions-item label="注册时间">
-                {{ formatDateTime(authStore.user?.created_at, false) }}
-              </a-descriptions-item>
-            </a-descriptions>
-          </a-card>
-        </a-col>
-      </a-row>
-    </div>
-
-    <!-- QR Code Modal for Token Refresh -->
-    <QRCodeModal
-      v-model:visible="qrcodeModalVisible"
-      :alias="authStore.user?.alias || ''"
-      @success="handleQRCodeSuccess"
-      @error="handleQRCodeError"
-    />
-  </Layout>
-</template>
-
-<script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { message } from 'ant-design-vue';
-import { CalendarOutlined, KeyOutlined, UserOutlined, ReloadOutlined } from '@ant-design/icons-vue';
-import Layout from '@/components/Layout.vue';
-import QRCodeModal from '@/components/QRCodeModal.vue';
-import { useAuthStore } from '@/stores/auth';
-import { useUserStore } from '@/stores/user';
-import { useTaskStore } from '@/stores/task';
-import { useCheckInStore } from '@/stores/checkIn';
-import { formatDateTime } from '@/utils/helpers';
-import { usePollStatus } from '@/composables/usePollStatus';
-
-const router = useRouter();
-const authStore = useAuthStore();
-const userStore = useUserStore();
-const taskStore = useTaskStore();
-const checkInStore = useCheckInStore();
-
-// 使用轮询 composable
-const { startPolling } = usePollStatus({
-  interval: 2000, // 每 2 秒轮询一次
-  maxRetries: 15, // 最多 15 次 (30 秒)
-  backoff: false, // 不使用指数退避
-});
-
-const tokenStatusLoading = ref(false);
-const checkInLoading = ref(false);
-const selectedTaskId = ref(null);
-const qrcodeModalVisible = ref(false);
-
-const tokenStatus = computed(() => userStore.tokenStatus);
-const lastCheckIn = computed(() => {
-  if (checkInStore.myRecords.length > 0) {
-    return checkInStore.myRecords[0];
-  }
-  return null;
-});
-
-const formatExpireTime = computed(() => {
-  if (!tokenStatus.value) return '-';
-
-  // Token 无效时，尝试从 user.jwt_exp 获取过期时间
-  if (!tokenStatus.value.expires_at) {
-    // 如果后端没有返回 expires_at，说明 Token 可能无效或未设置
-    const jwtExp = authStore.user?.jwt_exp;
-    if (jwtExp && jwtExp !== '0') {
-      try {
-        const timestamp = parseInt(jwtExp);
-        return formatDateTime(timestamp * 1000);
-      } catch {
-        return '-';
-      }
-    }
-    return '-';
-  }
-
-  return formatDateTime(tokenStatus.value.expires_at * 1000);
-});
-
-const formatRemainTime = computed(() => {
-  if (!tokenStatus.value || !tokenStatus.value.expires_at) return '-';
-
-  const now = Date.now();
-  const expireTime = tokenStatus.value.expires_at * 1000;
-  const diff = expireTime - now;
-
-  if (diff <= 0) return '已过期';
-
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (days > 0) return `${days} 天 ${hours} 小时`;
-  if (hours > 0) return `${hours} 小时 ${minutes} 分钟`;
-  return `${minutes} 分钟`;
-});
-
-// 跳转到设置页面
-const goToSettings = () => {
-  router.push('/settings');
-};
-
-// 跳转到任务页面
-const goToTasks = () => {
-  router.push('/tasks');
-};
-
-// 获取 Token 状态
-const fetchTokenStatus = async () => {
-  tokenStatusLoading.value = true;
+async function load() {
+  loading.value = true
+  error.value = ''
   try {
-    await userStore.fetchTokenStatus();
-  } catch (error) {
-    message.error(error.message || '获取 Token 状态失败');
+    const [taskList, token, recordPage] = await Promise.all([
+      taskApi.list(),
+      userApi.tokenStatus().catch(() => null),
+      checkInApi.myRecords({ limit: 6 }),
+    ])
+    tasks.value = taskList
+    tokenStatus.value = token
+    records.value = recordPage.records
+    if (!selectedTaskId.value || !taskList.some((task) => task.id === selectedTaskId.value)) {
+      selectedTaskId.value = taskList.find((task) => task.is_active)?.id ?? taskList[0]?.id ?? null
+    }
+  } catch (err) {
+    error.value = extractErrorMessage(err)
   } finally {
-    tokenStatusLoading.value = false;
+    loading.value = false
   }
-};
+}
 
-// 手动打卡
-const handleCheckIn = async () => {
-  if (!selectedTaskId.value) {
-    message.warning('请先选择要打卡的任务');
-    return;
-  }
-
-  checkInLoading.value = true;
-
+async function manualCheckIn() {
+  if (!selectedTaskId.value) return
+  checkInLoading.value = true
+  error.value = ''
+  message.value = ''
+  latestStatus.value = null
   try {
-    // 调用异步打卡接口，立即返回 record_id
-    const result = await taskStore.checkInTask(selectedTaskId.value);
+    const result = await checkInApi.manual(selectedTaskId.value)
+    const recordId = result.record_id ?? result.id
+    message.value = result.message || '已启动打卡任务'
+    if (recordId) startRecordPolling(recordId)
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    checkInLoading.value = false
+  }
+}
 
-    // 获取 record_id
-    const recordId = result.record_id;
-    if (!recordId) {
-      message.error('打卡请求失败：未获取到记录ID');
-      checkInLoading.value = false;
-      return;
-    }
-
-    // 如果初始状态就是失败,显示错误并刷新记录
-    if (result.status === 'failure') {
-      message.error(result.message || '打卡失败');
-      checkInLoading.value = false;
-      checkInStore.fetchMyRecords({ limit: 1 });
-      return;
-    }
-
-    // 显示提示消息
-    message.info('打卡任务已启动，正在后台处理...');
-
-    // 使用轮询 composable 检查打卡状态
-    startPolling(
-      async () => {
-        const status = await taskStore.getCheckInRecordStatus(recordId);
-        return {
-          completed: status.status !== 'pending',
-          success: status.status === 'success',
-          data: status,
-        };
-      },
-      {
-        onSuccess: () => {
-          checkInLoading.value = false;
-          message.success('打卡成功！');
-          checkInStore.fetchMyRecords({ limit: 1 });
-        },
-        onFailure: statusData => {
-          checkInLoading.value = false;
-          // 优先使用 error_message，如果为空则使用 response_text，都为空则使用默认消息
-          const errorMsg =
-            (statusData.error_message && statusData.error_message.trim()) ||
-            (statusData.response_text && statusData.response_text.trim()) ||
-            '打卡失败';
-          message.error(errorMsg);
-          checkInStore.fetchMyRecords({ limit: 1 });
-        },
-        onTimeout: () => {
-          checkInLoading.value = false;
-          message.warning('打卡处理时间较长，请稍后查看打卡记录');
-        },
+function startRecordPolling(recordId: number) {
+  window.clearInterval(pollTimer)
+  pollTimer = window.setInterval(async () => {
+    try {
+      const status = await checkInApi.status(recordId)
+      latestStatus.value = status
+      if (!['pending', 'running'].includes(status.status)) {
+        window.clearInterval(pollTimer)
+        await load()
       }
-    );
-  } catch (error) {
-    console.error('启动打卡失败:', error);
-    checkInLoading.value = false;
-    message.error(error.message || '启动打卡任务失败');
-  }
-};
-
-// 处理扫码成功（Token 刷新）
-const handleQRCodeSuccess = async () => {
-  try {
-    // 获取最新的用户信息和 Token 状态
-    await authStore.fetchCurrentUser();
-    await fetchTokenStatus();
-    message.success({ content: 'Token 刷新成功！', duration: 3 });
-  } catch (error) {
-    console.error('刷新用户信息失败:', error);
-    message.error({ content: '获取最新信息失败，请刷新页面', duration: 3 });
-  }
-};
-
-// 处理扫码失败
-const handleQRCodeError = errorMsg => {
-  message.error({ content: errorMsg || '扫码刷新 Token 失败', duration: 3 });
-};
-
-onMounted(async () => {
-  // 刷新用户信息，确保 email 和 has_password 是最新的
-  try {
-    await authStore.fetchCurrentUser();
-  } catch (error) {
-    console.error('刷新用户信息失败:', error);
-  }
-
-  // 获取 Token 状态
-  fetchTokenStatus();
-  checkInStore.fetchMyRecords({ limit: 1 });
-
-  // 加载任务列表
-  try {
-    await taskStore.fetchMyTasks();
-    // 如果只有一个任务，自动选中（优先选择启用的任务）
-    if (taskStore.activeTasks.length === 1) {
-      selectedTaskId.value = taskStore.activeTasks[0].id;
-    } else if (taskStore.tasks.length === 1) {
-      selectedTaskId.value = taskStore.tasks[0].id;
+    } catch {
+      window.clearInterval(pollTimer)
     }
-  } catch (error) {
-    message.error(error.message || '加载任务列表失败');
-  }
-});
+  }, 1800)
+}
+
+onMounted(load)
 </script>
 
-<style scoped>
-.dashboard-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+<template>
+  <StateBlock v-if="loading" title="正在加载仪表盘" type="loading" />
+  <StateBlock
+    v-else-if="error && tasks.length === 0"
+    title="仪表盘加载失败"
+    :description="error"
+    type="error"
+    action-label="重试"
+    @action="load"
+  />
+  <div v-else class="grid gap-5">
+    <div
+      v-if="
+        needsEmail || needsPassword || (tokenStatus && !tokenStatus.is_valid) || tasks.length === 0
+      "
+      class="grid gap-2"
+    >
+      <div
+        v-if="needsEmail"
+        :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
+      >
+        <span>未设置邮箱</span>
+        <Button
+          variant="ghost"
+          class="font-semibold"
+          type="button"
+          @click="router.navigate('/settings')"
+        >
+          设置
+        </Button>
+      </div>
+      <div
+        v-if="needsPassword"
+        :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
+      >
+        <span>未设置登录密码</span>
+        <Button
+          variant="ghost"
+          class="font-semibold"
+          type="button"
+          @click="router.navigate('/settings')"
+        >
+          设置
+        </Button>
+      </div>
+      <div
+        v-if="tokenStatus && !tokenStatus.is_valid"
+        :class="[alertClass.warning, 'flex flex-wrap items-center justify-between gap-2']"
+      >
+        <span class="inline-flex items-center gap-2">
+          <AlertTriangle class="size-4 shrink-0" />
+          打卡凭证已过期
+        </span>
+        <Button
+          variant="ghost"
+          class="font-semibold"
+          type="button"
+          @click="router.navigate('/login')"
+        >
+          刷新
+        </Button>
+      </div>
+      <div
+        v-if="tasks.length === 0"
+        :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
+      >
+        <span>暂无打卡任务</span>
+        <Button
+          variant="ghost"
+          class="font-semibold"
+          type="button"
+          @click="router.navigate('/tasks')"
+        >
+          创建
+        </Button>
+      </div>
+    </div>
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 18px;
-  font-weight: 500;
-}
+    <section class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div :class="[cardClass, 'overflow-hidden']">
+        <div :class="sectionHeaderClass">
+          <div class="flex items-center gap-2">
+            <CalendarDays class="size-4 text-[var(--tone-success-fg)]" />
+            <h2 class="font-semibold">手动打卡</h2>
+          </div>
+          <span class="text-sm text-muted-foreground">{{ activeTasks }} 个启用</span>
+        </div>
+        <div class="p-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <select v-model.number="selectedTaskId" :class="[inputClass, 'sm:max-w-md']">
+              <option v-for="task in tasks" :key="task.id" :value="task.id">
+                {{ task.name || `任务 #${task.id}` }} · {{ task.is_active ? '启用' : '停用' }}
+              </option>
+            </select>
+            <Button
+              :disabled="!selectedTaskId || checkInLoading"
+              type="button"
+              @click="manualCheckIn"
+            >
+              <CalendarDays class="size-4" />
+              {{ checkInLoading ? '打卡中' : '立即打卡' }}
+            </Button>
+          </div>
+          <div
+            v-if="selectedTask"
+            class="mt-4 rounded-lg border border-border bg-muted p-4 text-sm"
+          >
+            <div class="font-medium text-foreground">
+              {{ selectedTask.name || `任务 #${selectedTask.id}` }}
+            </div>
+            <div class="mt-1 text-muted-foreground">
+              ThreadId: {{ selectedTask.thread_id || '未解析' }} ·
+              {{ cronLabel(selectedTask.cron_expression) }}
+            </div>
+          </div>
+          <div v-if="message" :class="[alertClass.success, 'mt-4']">{{ message }}</div>
+          <div v-if="error" :class="[alertClass.danger, 'mt-4']">{{ error }}</div>
+          <div
+            v-if="latestStatus"
+            class="mt-4 rounded-lg border border-border bg-background p-4 text-sm"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-semibold text-foreground">本次打卡</span>
+              <span :class="toneClass(statusTone(latestStatus.status))">{{
+                statusLabel(latestStatus.status)
+              }}</span>
+            </div>
+            <p class="mt-2 text-muted-foreground">
+              {{
+                latestStatus.response_text || latestStatus.error_message || '正在等待后端返回结果。'
+              }}
+            </p>
+          </div>
+          <div
+            v-else-if="lastRecord"
+            class="mt-4 rounded-lg border border-border bg-background p-4 text-sm"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-semibold text-foreground">上次打卡</span>
+              <span :class="toneClass(statusTone(lastRecord.status))">{{
+                statusLabel(lastRecord.status)
+              }}</span>
+            </div>
+            <p class="mt-2 text-muted-foreground">
+              {{ formatDateTime(lastRecord.check_in_time) }} ·
+              {{ lastRecord.response_text || lastRecord.error_message || '无响应内容' }}
+            </p>
+          </div>
+        </div>
+      </div>
 
-.loading-container {
-  padding: 20px;
-}
+      <div :class="[cardClass, 'overflow-hidden']">
+        <div :class="sectionHeaderClass">
+          <div class="flex items-center gap-2">
+            <KeyRound class="size-4 text-[var(--tone-success-fg)]" />
+            <h2 class="font-semibold">授权</h2>
+          </div>
+          <span :class="toneClass(tokenTone)">{{ tokenLabel }}</span>
+        </div>
+        <div class="grid gap-3 p-4 text-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-muted-foreground">剩余</span>
+            <span class="font-medium">
+              {{
+                tokenStatus?.days_until_expiry == null
+                  ? '未知'
+                  : `${tokenStatus.days_until_expiry} 天`
+              }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-muted-foreground">预警</span>
+            <span>{{ tokenStatus?.expiring_soon ? '是' : '否' }}</span>
+          </div>
+          <div class="text-sm text-muted-foreground">{{ tokenDetail }}</div>
+          <Button
+            :variant="tokenStatus?.is_valid ? 'outline' : 'default'"
+            type="button"
+            @click="router.navigate('/login')"
+          >
+            <QrCode class="size-4" />
+            扫码刷新
+          </Button>
+        </div>
+      </div>
+    </section>
 
-.token-status {
-  padding: 0;
-}
+    <section :class="[cardClass, 'overflow-hidden']">
+      <div :class="sectionHeaderClass">
+        <div class="flex items-center gap-2">
+          <UserRound class="size-4 text-[var(--tone-success-fg)]" />
+          <h2 class="font-semibold">个人信息</h2>
+        </div>
+        <Button variant="outline" type="button" @click="router.navigate('/settings')">
+          个人设置
+        </Button>
+      </div>
+      <div class="grid gap-3 p-4 text-sm md:grid-cols-4">
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">用户名</div>
+          <div class="mt-1 font-medium text-foreground">
+            {{ auth.state.user?.alias || '未登录' }}
+          </div>
+        </div>
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">角色</div>
+          <div class="mt-1">
+            <span :class="toneClass(auth.state.user?.role === 'admin' ? 'danger' : 'info')">
+              {{ auth.state.user?.role === 'admin' ? '管理员' : '普通用户' }}
+            </span>
+          </div>
+        </div>
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">邮箱</div>
+          <div class="mt-1 font-medium text-foreground">
+            {{ auth.state.user?.email || '未设置' }}
+          </div>
+        </div>
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">注册时间</div>
+          <div class="mt-1 font-medium text-foreground">
+            {{ formatDateTime(auth.state.user?.created_at) }}
+          </div>
+        </div>
+      </div>
+    </section>
 
-.token-status .ant-descriptions {
-  margin-bottom: 0;
-}
+    <section :class="[cardClass, 'overflow-hidden']">
+      <div :class="sectionHeaderClass">
+        <div>
+          <h2 class="font-semibold">任务概览</h2>
+        </div>
+        <Button variant="outline" type="button" @click="router.navigate('/tasks')">
+          管理任务
+        </Button>
+      </div>
+      <div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-lg border border-border bg-muted p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-muted-foreground">任务总数</span>
+            <CheckCircle2 class="size-4 text-[var(--tone-success-fg)]" />
+          </div>
+          <div class="mt-3 text-3xl font-semibold">{{ tasks.length }}</div>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {{ activeTasks }} 启用 · {{ inactiveTasks }} 停用
+          </p>
+        </div>
+        <div class="rounded-lg border border-border bg-muted p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-muted-foreground">最近成功</span>
+            <Activity class="size-4 text-foreground" />
+          </div>
+          <div class="mt-3 text-3xl font-semibold">{{ successToday }}</div>
+          <p class="mt-1 text-sm text-muted-foreground">最近记录</p>
+        </div>
+        <div class="rounded-lg border border-border bg-muted p-3 md:col-span-2">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-muted-foreground">下次定时</span>
+            <Clock class="size-4 text-[var(--tone-warning-fg)]" />
+          </div>
+          <div class="mt-3 text-lg font-semibold">
+            {{ cronLabel(nextActiveTask?.cron_expression) }}
+          </div>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {{ nextActiveTask?.name || '无启用任务' }}
+          </p>
+        </div>
+      </div>
+    </section>
 
-.check-in-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 20px;
-  gap: 12px;
-}
-
-.check-in-container .hint {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 14px;
-  margin: 0 0 4px 0;
-  text-align: center;
-}
-
-.last-check-in {
-  width: 100%;
-  margin-top: 20px;
-}
-
-.last-check-in .label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
-  margin: 12px 0 8px 0;
-}
-
-.ant-alert {
-  margin-top: 16px;
-}
-
-.ant-select {
-  margin-bottom: 0;
-}
-</style>
+    <section :class="[cardClass, 'overflow-hidden']">
+      <div :class="sectionHeaderClass">
+        <div>
+          <h2 class="font-semibold">最近记录</h2>
+        </div>
+        <Button variant="outline" type="button" @click="router.navigate('/records')">
+          查看全部
+        </Button>
+      </div>
+      <StateBlock v-if="records.length === 0" title="暂无记录" />
+      <div v-else class="divide-y divide-border">
+        <div v-for="record in records" :key="record.id" class="px-4 py-3">
+          <div class="flex items-center justify-between gap-3">
+            <span class="font-medium">{{ record.task_name || `任务 #${record.task_id}` }}</span>
+            <span :class="toneClass(statusTone(record.status))">{{
+              statusLabel(record.status)
+            }}</span>
+          </div>
+          <div class="mt-1 text-sm text-muted-foreground">
+            {{ formatDateTime(record.check_in_time) }} ·
+            {{ record.trigger_type ? statusLabel(record.trigger_type) : '未注明触发' }}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>

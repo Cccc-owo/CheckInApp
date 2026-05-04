@@ -1,1194 +1,197 @@
-/* ============================================
-   Material Design 3 全局样式
-   严格遵循 Material Design 3 规范
-   https://m3.material.io/
-   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap');
 
-/* TailwindCSS directives */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-/* ============================================
-   Base Layer - 基础样式
-   ============================================ */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-sans-app);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --font-sans-app:
+    'Noto Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.004 145);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.49 0.14 150);
+  --primary-foreground: oklch(0.99 0.006 145);
+  --secondary: oklch(0.965 0.015 150);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.94 0.045 150);
+  --accent-foreground: oklch(0.23 0.07 150);
+  --destructive: oklch(0.577 0.245 27.325);
+  --tone-success-bg: oklch(0.965 0.045 150);
+  --tone-success-fg: oklch(0.36 0.11 150);
+  --tone-success-border: oklch(0.84 0.09 150);
+  --tone-warning-bg: oklch(0.97 0.05 88);
+  --tone-warning-fg: oklch(0.42 0.1 70);
+  --tone-warning-border: oklch(0.85 0.11 82);
+  --tone-danger-bg: oklch(0.96 0.035 18);
+  --tone-danger-fg: oklch(0.48 0.16 24);
+  --tone-danger-border: oklch(0.84 0.09 20);
+  --tone-info-bg: oklch(0.96 0.035 225);
+  --tone-info-fg: oklch(0.39 0.1 230);
+  --tone-info-border: oklch(0.84 0.08 225);
+  --tone-info-strong: oklch(0.48 0.13 230);
+  --tone-info-strong-hover: oklch(0.42 0.13 230);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.58 0.12 150);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.49 0.14 150);
+  --sidebar-primary-foreground: oklch(0.99 0.006 145);
+  --sidebar-accent: oklch(0.94 0.045 150);
+  --sidebar-accent-foreground: oklch(0.23 0.07 150);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --tone-success-bg: oklch(0.28 0.055 150 / 58%);
+  --tone-success-fg: oklch(0.82 0.12 150);
+  --tone-success-border: oklch(0.43 0.09 150 / 75%);
+  --tone-warning-bg: oklch(0.3 0.06 70 / 58%);
+  --tone-warning-fg: oklch(0.84 0.13 82);
+  --tone-warning-border: oklch(0.48 0.1 74 / 75%);
+  --tone-danger-bg: oklch(0.31 0.075 24 / 58%);
+  --tone-danger-fg: oklch(0.82 0.12 20);
+  --tone-danger-border: oklch(0.48 0.11 22 / 75%);
+  --tone-info-bg: oklch(0.31 0.06 230 / 58%);
+  --tone-info-fg: oklch(0.82 0.11 225);
+  --tone-info-border: oklch(0.48 0.1 230 / 75%);
+  --tone-info-strong: oklch(0.62 0.14 230);
+  --tone-info-strong-hover: oklch(0.68 0.14 230);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
 @layer base {
-  :root {
-    /* === MD3 Typography === */
-    font-family:
-      'Roboto',
-      'Inter',
-      system-ui,
-      -apple-system,
-      sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
-    color-scheme: light;
-
-    /* === MD3 Color System - Light Mode === */
-    /* Primary */
-    --md-sys-color-primary: #4caf50;
-    --md-sys-color-on-primary: #ffffff;
-    --md-sys-color-primary-container: #c8e6c9;
-    --md-sys-color-on-primary-container: #1b5e20;
-
-    /* Secondary */
-    --md-sys-color-secondary: #2196f3;
-    --md-sys-color-on-secondary: #ffffff;
-    --md-sys-color-secondary-container: #bbdefb;
-    --md-sys-color-on-secondary-container: #0d47a1;
-
-    /* Tertiary */
-    --md-sys-color-tertiary: #ff9800;
-    --md-sys-color-on-tertiary: #ffffff;
-    --md-sys-color-tertiary-container: #ffe0b2;
-    --md-sys-color-on-tertiary-container: #e65100;
-
-    /* Error */
-    --md-sys-color-error: #f44336;
-    --md-sys-color-on-error: #ffffff;
-    --md-sys-color-error-container: #ffebee;
-    --md-sys-color-on-error-container: #b71c1c;
-
-    /* Surface & Background */
-    --md-sys-color-surface: #ffffff;
-    --md-sys-color-on-surface: #1c1b1f;
-    --md-sys-color-surface-variant: #f5f5f5;
-    --md-sys-color-on-surface-variant: #49454f;
-    --md-sys-color-background: #fefbff;
-    --md-sys-color-on-background: #1c1b1f;
-
-    /* Outline */
-    --md-sys-color-outline: #d1cdd6;
-    --md-sys-color-outline-variant: #e3e1e6;
-
-    /* Surface Container Levels (Elevation Tint) */
-    --md-sys-color-surface-container-lowest: #ffffff;
-    --md-sys-color-surface-container-low: #f7f9fb;
-    --md-sys-color-surface-container: #f3f4f6;
-    --md-sys-color-surface-container-high: #e8eaed;
-    --md-sys-color-surface-container-highest: #e0e3e6;
-  }
-
-  /* === Dark Mode === */
-  .dark {
-    color-scheme: dark;
-
-    /* Primary */
-    --md-sys-color-primary: #81c784;
-    --md-sys-color-on-primary: #1b5e20;
-    --md-sys-color-primary-container: #2e7d32;
-    --md-sys-color-on-primary-container: #c8e6c9;
-
-    /* Secondary */
-    --md-sys-color-secondary: #64b5f6;
-    --md-sys-color-on-secondary: #0d47a1;
-    --md-sys-color-secondary-container: #1565c0;
-    --md-sys-color-on-secondary-container: #bbdefb;
-
-    /* Tertiary */
-    --md-sys-color-tertiary: #ffb74d;
-    --md-sys-color-on-tertiary: #e65100;
-    --md-sys-color-tertiary-container: #ef6c00;
-    --md-sys-color-on-tertiary-container: #ffe0b2;
-
-    /* Error */
-    --md-sys-color-error: #ef5350;
-    --md-sys-color-on-error: #b71c1c;
-    --md-sys-color-error-container: #c62828;
-    --md-sys-color-on-error-container: #ffebee;
-
-    /* Surface & Background */
-    --md-sys-color-surface: #1c1b1f;
-    --md-sys-color-on-surface: #e6e1e5;
-    --md-sys-color-surface-variant: #26252a;
-    --md-sys-color-on-surface-variant: #cac4d0;
-    --md-sys-color-background: #1c1b1f;
-    --md-sys-color-on-background: #e6e1e5;
-
-    /* Outline */
-    --md-sys-color-outline: #605d66;
-    --md-sys-color-outline-variant: #49454f;
-
-    /* Surface Container Levels */
-    --md-sys-color-surface-container-lowest: #0f0e11;
-    --md-sys-color-surface-container-low: #1c1b1f;
-    --md-sys-color-surface-container: #201f24;
-    --md-sys-color-surface-container-high: #2b292f;
-    --md-sys-color-surface-container-highest: #36343a;
-  }
-
-  /* === Reset & Base === */
   * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    @apply border-border outline-ring/50;
   }
-
+  html {
+    @apply scroll-smooth;
+  }
   body {
-    margin: 0;
-    min-width: 320px;
-    min-height: 100vh;
-    background-color: var(--md-sys-color-background);
-    color: var(--md-sys-color-on-background);
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans-app);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    transition:
-      background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
-  #app {
-    width: 100%;
-    min-height: 100vh;
-  }
-
-  /* === Typography Styles === */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-weight: 400;
-    line-height: 1.2;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  /* Display Large */
-  .md3-display-large {
-    font-size: 57px;
-    line-height: 64px;
-    font-weight: 400;
-    letter-spacing: -0.25px;
-  }
-
-  /* Display Medium */
-  .md3-display-medium {
-    font-size: 45px;
-    line-height: 52px;
-    font-weight: 400;
-  }
-
-  /* Display Small */
-  .md3-display-small {
-    font-size: 36px;
-    line-height: 44px;
-    font-weight: 400;
-  }
-
-  /* Headline Large */
-  .md3-headline-large {
-    font-size: 32px;
-    line-height: 40px;
-    font-weight: 400;
-  }
-
-  /* Headline Medium */
-  .md3-headline-medium {
-    font-size: 28px;
-    line-height: 36px;
-    font-weight: 400;
-  }
-
-  /* Headline Small */
-  .md3-headline-small {
-    font-size: 24px;
-    line-height: 32px;
-    font-weight: 400;
-  }
-
-  /* Title Large */
-  .md3-title-large {
-    font-size: 22px;
-    line-height: 28px;
-    font-weight: 400;
-  }
-
-  /* Title Medium */
-  .md3-title-medium {
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 500;
-    letter-spacing: 0.15px;
-  }
-
-  /* Title Small */
-  .md3-title-small {
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-    letter-spacing: 0.1px;
-  }
-
-  /* Body Large */
-  .md3-body-large {
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 400;
-    letter-spacing: 0.5px;
-  }
-
-  /* Body Medium */
-  .md3-body-medium {
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 400;
-    letter-spacing: 0.25px;
-  }
-
-  /* Body Small */
-  .md3-body-small {
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 400;
-    letter-spacing: 0.4px;
-  }
-
-  /* Label Large */
-  .md3-label-large {
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: 500;
-    letter-spacing: 0.1px;
-  }
-
-  /* Label Medium */
-  .md3-label-medium {
-    font-size: 12px;
-    line-height: 16px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-  }
-
-  /* Label Small */
-  .md3-label-small {
-    font-size: 11px;
-    line-height: 16px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
   }
 }
 
-/* ============================================
-   Components Layer - MD3 组件样式
-   ============================================ */
-@layer components {
-  /* === MD3 Card === */
-  .md3-card {
-    background-color: var(--md-sys-color-surface-container-low);
-    color: var(--md-sys-color-on-surface);
-    border-radius: 12px;
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .md3-card:hover {
-    box-shadow:
-      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-  }
-
-  /* === MD3 Button === */
-  .md3-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 24px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 20px;
-    letter-spacing: 0.1px;
-    cursor: pointer;
-    border: none;
-    outline: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Filled Button (Primary) */
-  .md3-button-filled {
-    @apply md3-button;
-    background-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
-  }
-
-  .md3-button-filled:hover {
-    box-shadow:
-      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-  }
-
-  .md3-button-filled:active {
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
-    transform: translateY(0);
-  }
-
-  /* Outlined Button */
-  .md3-button-outlined {
-    @apply md3-button;
-    background-color: transparent;
-    color: var(--md-sys-color-primary);
-    border: 1px solid var(--md-sys-color-outline);
-    box-shadow: none;
-  }
-
-  .md3-button-outlined:hover {
-    background-color: rgba(76, 175, 80, 0.08);
-  }
-
-  .md3-button-outlined:active {
-    background-color: rgba(76, 175, 80, 0.12);
-  }
-
-  /* Text Button */
-  .md3-button-text {
-    @apply md3-button;
-    background-color: transparent;
-    color: var(--md-sys-color-primary);
-    box-shadow: none;
-    padding: 10px 12px;
-  }
-
-  .md3-button-text:hover {
-    background-color: rgba(76, 175, 80, 0.08);
-  }
-
-  .md3-button-text:active {
-    background-color: rgba(76, 175, 80, 0.12);
-  }
-
-  /* === MD3 State Layers === */
-  .md3-state-layer {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .md3-state-layer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: currentColor;
-    opacity: 0;
-    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-  }
-
-  .md3-state-layer:hover::before {
-    opacity: 0.08;
-  }
-
-  .md3-state-layer:focus::before {
-    opacity: 0.12;
-  }
-
-  .md3-state-layer:active::before {
-    opacity: 0.12;
-  }
-
-  /* === MD3 Status Badges === */
-  .md3-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 16px;
-    letter-spacing: 0.5px;
-  }
-
-  .md3-badge-success {
-    @apply md3-badge;
-    background-color: #c8e6c9;
-    color: #1b5e20;
-  }
-
-  .dark .md3-badge-success {
-    background-color: #2e7d32;
-    color: #c8e6c9;
-  }
-
-  .md3-badge-warning {
-    @apply md3-badge;
-    background-color: #ffe0b2;
-    color: #e65100;
-  }
-
-  .dark .md3-badge-warning {
-    background-color: #ef6c00;
-    color: #ffe0b2;
-  }
-
-  .md3-badge-error {
-    @apply md3-badge;
-    background-color: #ffebee;
-    color: #b71c1c;
-  }
-
-  .dark .md3-badge-error {
-    background-color: #c62828;
-    color: #ffebee;
-  }
-
-  .md3-badge-info {
-    @apply md3-badge;
-    background-color: #bbdefb;
-    color: #0d47a1;
-  }
-
-  .dark .md3-badge-info {
-    background-color: #1565c0;
-    color: #bbdefb;
-  }
-
-  /* === MD3 Divider === */
-  .md3-divider {
-    height: 1px;
-    background-color: var(--md-sys-color-outline-variant);
-    border: none;
-    margin: 20px 0;
-  }
-
-  .ant-divider {
-    margin: 20px 0;
-  }
-
-  /* === MD3 Surface === */
-  .md3-surface {
-    background-color: var(--md-sys-color-surface);
-    color: var(--md-sys-color-on-surface);
-  }
-
-  .md3-surface-variant {
-    background-color: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-on-surface-variant);
-  }
-
-  .md3-surface-container-lowest {
-    background-color: var(--md-sys-color-surface-container-lowest);
-  }
-
-  .md3-surface-container-low {
-    background-color: var(--md-sys-color-surface-container-low);
-  }
-
-  .md3-surface-container {
-    background-color: var(--md-sys-color-surface-container);
-  }
-
-  .md3-surface-container-high {
-    background-color: var(--md-sys-color-surface-container-high);
-  }
-
-  .md3-surface-container-highest {
-    background-color: var(--md-sys-color-surface-container-highest);
-  }
+.dark .bg-white {
+  background-color: rgb(24 24 27);
 }
 
-/* ============================================
-   Ant Design Vue 组件覆盖样式
-   ============================================ */
-@layer components {
-  /* === Card === */
-  .ant-card {
-    border-radius: 12px;
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .ant-card:hover {
-    box-shadow:
-      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-  }
-
-  .ant-card-head {
-    padding: 12px 16px;
-  }
-
-  .ant-card-body {
-    padding: 16px;
-  }
-
-  /* === Navbar === */
-  .navbar-wrapper {
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.12),
-      0px 2px 6px 2px rgba(0, 0, 0, 0.08) !important;
-    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  }
-
-  .navbar-wrapper .text-on-surface {
-    color: #1c1b1f;
-  }
-
-  /* 导航按钮悬浮效果 */
-  /* 普通导航按钮（绿色） */
-  .navbar-wrapper .nav-button:not(.bg-primary-100):hover {
-    background-color: rgba(76, 175, 80, 0.08) !important;
-  }
-
-  /* 管理后台按钮（蓝色） */
-  .navbar-wrapper .admin-nav-button:not(.bg-secondary-100):hover {
-    background-color: rgba(33, 150, 243, 0.08) !important;
-  }
-
-  /* 其他 navbar 组件的通用悬浮效果（绿色） */
-  .navbar-wrapper .navbar-item:hover {
-    background-color: rgba(76, 175, 80, 0.08) !important;
-  }
-
-  /* === Button === */
-  .ant-btn {
-    border-radius: 20px;
-    font-weight: 500;
-    letter-spacing: 0.1px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 10px 24px;
-    height: auto;
-    min-height: 40px;
-  }
-
-  .ant-btn-lg {
-    padding: 12px 28px;
-    min-height: 48px;
-    font-size: 16px;
-  }
-
-  .ant-btn-sm {
-    padding: 6px 16px;
-    min-height: 32px;
-  }
-
-  .ant-btn-primary {
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
-  }
-
-  .ant-btn-primary:hover {
-    box-shadow:
-      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-  }
-
-  .ant-btn-primary:active {
-    transform: translateY(0);
-  }
-
-  .ant-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-  }
-
-  .ant-btn:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  /* === Input & Select === */
-  .ant-input,
-  .ant-input-password,
-  .ant-select-selector,
-  .ant-picker {
-    border-radius: 12px !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 10px 16px !important;
-    min-height: 40px;
-  }
-
-  .ant-select-selector {
-    padding: 6px 16px !important;
-  }
-
-  .ant-input:focus,
-  .ant-input-password:focus,
-  .ant-select-focused .ant-select-selector,
-  .ant-picker-focused {
-    border-color: var(--md-sys-color-primary);
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.12);
-  }
-
-  /* === Table === */
-  .ant-table {
-    border-radius: 12px;
-  }
-
-  .ant-table-thead > tr > th {
-    background-color: var(--md-sys-color-surface-container);
-    color: var(--md-sys-color-on-surface);
-    font-weight: 500;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  }
-
-  .ant-table-tbody > tr:hover > td {
-    background-color: rgba(76, 175, 80, 0.04);
-  }
-
-  /* === Modal === */
-  .ant-modal-content {
-    border-radius: 28px;
-  }
-
-  .ant-modal-header {
-    border-radius: 28px 28px 0 0;
-    background-color: var(--md-sys-color-surface);
-    border-bottom: none;
-  }
-
-  /* === Tag === */
-  .ant-tag {
-    border-radius: 16px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    border: none;
-    padding: 4px 14px;
-    font-size: 13px;
-    line-height: 20px;
-  }
-
-  /* === Tabs === */
-  .ant-tabs-tab {
-    border-radius: 12px 12px 0 0;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .ant-tabs-tab:hover {
-    background-color: rgba(76, 175, 80, 0.08);
-  }
-
-  .ant-tabs-tab-active {
-    background-color: rgba(76, 175, 80, 0.12);
-  }
-
-  /* === Menu === */
-  .ant-menu-item {
-    border-radius: 12px;
-    margin: 4px 8px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .ant-menu-item:hover {
-    background-color: rgba(76, 175, 80, 0.08);
-  }
-
-  .ant-menu-item-selected {
-    background-color: rgba(76, 175, 80, 0.12);
-  }
-
-  /* === Drawer === */
-  .ant-drawer-content {
-    border-radius: 16px 0 0 16px;
-  }
-
-  /* === Alert === */
-  .ant-alert {
-    border-radius: 12px;
-    padding: 16px 20px;
-  }
-
-  .ant-alert-message {
-    margin-bottom: 4px;
-    font-weight: 500;
-  }
-
-  .ant-alert-description {
-    line-height: 1.6;
-  }
-
-  /* === Dropdown === */
-  .ant-dropdown-menu {
-    border-radius: 12px;
-    box-shadow:
-      0px 2px 3px 0px rgba(0, 0, 0, 0.15),
-      0px 6px 10px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .ant-dropdown-menu-item {
-    border-radius: 8px;
-    margin: 4px 8px;
-  }
-
-  .ant-dropdown-menu-item:hover {
-    background-color: rgba(76, 175, 80, 0.08);
-  }
-
-  /* === Descriptions === */
-  .ant-descriptions-bordered .ant-descriptions-view {
-    border-color: var(--md-sys-color-outline-variant) !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-  }
-
-  /* table 元素也需要圆角 */
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table {
-    border-radius: 8px !important;
-  }
-
-  /* 使用最高优先级覆盖 Ant Design CSS-in-JS */
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr th,
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr td {
-    border-color: var(--md-sys-color-outline-variant) !important;
-  }
-
-  /* Label 列 (th) 背景色 */
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr th {
-    background-color: var(--md-sys-color-surface-container) !important;
-    padding: 12px 16px !important;
-  }
-
-  /* Content 列 (td) 背景色 - 只对包含 content 的 td 应用 */
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-view table tbody tr td {
-    padding: 12px 16px !important;
-  }
-
-  /* 只对包含 ant-descriptions-item-content 的 td 应用白色背景 */
-  .ant-descriptions.ant-descriptions-bordered
-    .ant-descriptions-view
-    table
-    tbody
-    tr
-    td:has(.ant-descriptions-item-content) {
-    background-color: var(--md-sys-color-surface) !important;
-  }
-
-  /* 对包含 ant-descriptions-item-label 的 td 应用灰色背景（跨列的 label） */
-  .ant-descriptions.ant-descriptions-bordered
-    .ant-descriptions-view
-    table
-    tbody
-    tr
-    td:has(.ant-descriptions-item-label) {
-    background-color: var(--md-sys-color-surface-container) !important;
-  }
-
-  /* Label 和 Content 内部元素样式 */
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-item-label {
-    font-weight: 500 !important;
-    color: var(--md-sys-color-on-surface-variant) !important;
-  }
-
-  .ant-descriptions.ant-descriptions-bordered .ant-descriptions-item-content {
-    font-weight: 400 !important;
-    color: var(--md-sys-color-on-surface) !important;
-  }
-
-  /* 圆角 - 第一行第一个 th（左上角）*/
-  .ant-descriptions.ant-descriptions-bordered
-    .ant-descriptions-view
-    table
-    tbody
-    tr:first-child
-    th:first-child {
-    border-top-left-radius: 7px !important;
-  }
-
-  /* 圆角 - 第一行最后一个 td（右上角）*/
-  .ant-descriptions.ant-descriptions-bordered
-    .ant-descriptions-view
-    table
-    tbody
-    tr:first-child
-    td:last-child {
-    border-top-right-radius: 7px !important;
-  }
-
-  /* 圆角 - 最后一行第一个 th（左下角）*/
-  .ant-descriptions.ant-descriptions-bordered
-    .ant-descriptions-view
-    table
-    tbody
-    tr:last-child
-    th:first-child {
-    border-bottom-left-radius: 7px !important;
-  }
-
-  /* 圆角 - 最后一行最后一个 td（右下角）*/
-  .ant-descriptions.ant-descriptions-bordered
-    .ant-descriptions-view
-    table
-    tbody
-    tr:last-child
-    td:last-child {
-    border-bottom-right-radius: 7px !important;
-  }
+.dark .bg-zinc-50 {
+  background-color: rgb(9 9 11 / 0.62);
 }
 
-/* ============================================
-   暗色模式特定样式
-   ============================================ */
-/* Navbar 暗色模式 */
-.dark .navbar-wrapper {
-  box-shadow:
-    0px 2px 4px 0px rgba(0, 0, 0, 0.4),
-    0px 4px 8px 4px rgba(0, 0, 0, 0.3) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.dark .bg-emerald-50 {
+  background-color: rgb(2 44 34 / 0.42);
 }
 
-.dark .navbar-wrapper .text-on-surface {
-  color: #e6e1e5;
+.dark .border-zinc-200 {
+  border-color: rgb(39 39 42);
 }
 
-.dark .navbar-wrapper .nav-button:not(.bg-primary-100):hover {
-  background-color: rgba(129, 199, 132, 0.12) !important;
+.dark .text-zinc-800,
+.dark .text-zinc-600 {
+  color: rgb(212 212 216);
 }
 
-.dark .navbar-wrapper .admin-nav-button:not(.bg-secondary-100):hover {
-  background-color: rgba(100, 181, 246, 0.12) !important;
+.dark .text-zinc-500,
+.dark .text-zinc-400 {
+  color: rgb(161 161 170);
 }
 
-.dark .navbar-wrapper .navbar-item:hover {
-  background-color: rgba(129, 199, 132, 0.12) !important;
-}
-
-/* Ant Design 组件暗色模式 */
-.dark .ant-card {
-  background-color: var(--md-sys-color-surface-container-low);
-  border-color: var(--md-sys-color-outline-variant);
-}
-
-.dark .ant-input,
-.dark .ant-input-password,
-.dark .ant-select-selector,
-.dark .ant-picker {
-  background-color: var(--md-sys-color-surface-container);
-  border-color: var(--md-sys-color-outline);
-  color: var(--md-sys-color-on-surface);
-}
-
-.dark .ant-input::placeholder,
-.dark .ant-input-password::placeholder {
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.dark .ant-table {
-  background-color: var(--md-sys-color-surface);
-}
-
-.dark .ant-table-thead > tr > th {
-  background-color: var(--md-sys-color-surface-container);
-  color: var(--md-sys-color-on-surface);
-  border-color: var(--md-sys-color-outline-variant);
-}
-
-.dark .ant-table-tbody > tr > td {
-  border-color: var(--md-sys-color-outline-variant);
-  color: var(--md-sys-color-on-surface);
-}
-
-/* Descriptions 暗色模式 */
-.dark .ant-descriptions.ant-descriptions-bordered th {
-  background-color: var(--md-sys-color-surface-container) !important;
-}
-
-.dark .ant-descriptions.ant-descriptions-bordered td {
-  background-color: var(--md-sys-color-surface) !important;
-}
-
-.dark .ant-descriptions.ant-descriptions-bordered .ant-descriptions-item-label {
-  color: var(--md-sys-color-on-surface-variant) !important;
-}
-
-.dark .ant-descriptions.ant-descriptions-bordered .ant-descriptions-item-content {
-  color: var(--md-sys-color-on-surface) !important;
-}
-
-.dark .ant-modal-content {
-  background-color: var(--md-sys-color-surface);
-}
-
-.dark .ant-modal-header {
-  background-color: var(--md-sys-color-surface);
-  color: var(--md-sys-color-on-surface);
-}
-
-.dark .ant-modal-body,
-.dark .ant-modal-footer {
-  background-color: var(--md-sys-color-surface);
-  color: var(--md-sys-color-on-surface);
-}
-
-.dark .ant-drawer-content {
-  background-color: var(--md-sys-color-surface);
-}
-
-.dark .ant-dropdown-menu {
-  background-color: var(--md-sys-color-surface-container);
-}
-
-/* ============================================
-   响应式设计
-   ============================================ */
-
-/* Extra Large Screens (≥1200px) */
-@media (min-width: 1200px) {
-  .ant-card {
-    padding: 24px;
-  }
-}
-
-/* Large Screens (992px - 1199px) */
-@media (min-width: 992px) and (max-width: 1199px) {
-  .ant-card {
-    padding: 20px;
-  }
-}
-
-/* Medium Screens (768px - 991px) */
-@media (min-width: 768px) and (max-width: 991px) {
-  .ant-card {
-    padding: 16px;
-  }
-
-  .ant-table {
-    font-size: 13px;
-  }
-
-  .ant-btn {
-    height: 36px;
-    padding: 8px 16px;
-  }
-}
-
-/* Small Screens (576px - 767px) */
-@media (min-width: 576px) and (max-width: 767px) {
-  .ant-card-head {
-    padding: 12px 16px;
-  }
-
-  .ant-card-body {
-    padding: 16px;
-  }
-
-  .ant-table {
-    font-size: 12px;
-  }
-
-  .ant-btn {
-    height: 32px;
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-
-  .md3-button {
-    padding: 8px 20px;
-    font-size: 13px;
-  }
-}
-
-/* Extra Small Screens (<576px) */
-@media (max-width: 575px) {
-  body {
-    font-size: 14px;
-  }
-
-  .ant-card-head {
-    padding: 10px 12px;
-    font-size: 16px;
-  }
-
-  .ant-card-body {
-    padding: 12px;
-  }
-
-  .ant-table {
-    font-size: 12px;
-  }
-
-  .ant-btn {
-    height: 32px;
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-
-  .md3-button {
-    padding: 8px 16px;
-    font-size: 12px;
-  }
-
-  .ant-modal-content {
-    margin: 16px;
-    border-radius: 24px;
-  }
-
-  .md3-card,
-  .md3-card-elevated {
-    margin: 8px;
-  }
-}
-
-/* ============================================
-   辅助类
-   ============================================ */
-@layer utilities {
-  /* MD3 Elevation Classes */
-  .elevation-0 {
-    box-shadow: none;
-  }
-
-  .elevation-1 {
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.1),
-      0px 1px 3px 1px rgba(0, 0, 0, 0.05);
-  }
-
-  .elevation-2 {
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.12),
-      0px 2px 6px 2px rgba(0, 0, 0, 0.08) !important;
-  }
-
-  .dark .elevation-2 {
-    box-shadow:
-      0px 1px 2px 0px rgba(0, 0, 0, 0.3),
-      0px 2px 6px 2px rgba(0, 0, 0, 0.2) !important;
-  }
-
-  .elevation-3 {
-    box-shadow:
-      0px 1px 3px 0px rgba(0, 0, 0, 0.15),
-      0px 4px 8px 3px rgba(0, 0, 0, 0.08);
-  }
-
-  .elevation-4 {
-    box-shadow:
-      0px 2px 3px 0px rgba(0, 0, 0, 0.15),
-      0px 6px 10px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .elevation-5 {
-    box-shadow:
-      0px 4px 4px 0px rgba(0, 0, 0, 0.18),
-      0px 8px 12px 6px rgba(0, 0, 0, 0.12);
-  }
-
-  /* Text Colors */
-  .text-on-surface {
-    color: var(--md-sys-color-on-surface);
-  }
-
-  .text-on-surface-variant {
-    color: var(--md-sys-color-on-surface-variant);
-  }
-
-  .text-primary {
-    color: var(--md-sys-color-primary);
-  }
-
-  .text-secondary {
-    color: var(--md-sys-color-secondary);
-  }
-
-  .text-error {
-    color: var(--md-sys-color-error);
-  }
-
-  /* Background Colors */
-  .bg-surface {
-    background-color: var(--md-sys-color-surface);
-  }
-
-  .bg-surface-variant {
-    background-color: var(--md-sys-color-surface-variant);
-  }
-
-  .bg-primary {
-    background-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-  }
-
-  .bg-secondary {
-    background-color: var(--md-sys-color-secondary);
-    color: var(--md-sys-color-on-secondary);
-  }
-
-  .bg-error {
-    background-color: var(--md-sys-color-error);
-    color: var(--md-sys-color-on-error);
-  }
-
-  /* MD3 Motion */
-  .transition-standard {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .transition-emphasized {
-    transition: all 0.5s cubic-bezier(0.2, 0, 0, 1);
-  }
-
-  .transition-decelerated {
-    transition: all 0.4s cubic-bezier(0, 0, 0, 1);
-  }
-
-  .transition-accelerated {
-    transition: all 0.2s cubic-bezier(0.3, 0, 1, 1);
-  }
-
-  /* Ant Design Tooltip 文本居中 */
-
-  /* 针对 Ant Design Vue 4.x 的 tooltip */
-  .ant-tooltip .ant-tooltip-inner {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  /* 更高优先级的选择器 */
-  div[class*='ant-tooltip'] .ant-tooltip-inner,
-  div[class^='ant-tooltip'] div[class*='tooltip-inner'] {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-}
-
-/* ============================================
-   滚动条样式（MD3 风格）
-   ============================================ */
-::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-::-webkit-scrollbar-track {
-  background-color: var(--md-sys-color-surface-variant);
-  border-radius: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: var(--md-sys-color-outline);
-  border-radius: 6px;
-  border: 2px solid var(--md-sys-color-surface-variant);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--md-sys-color-outline-variant);
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--md-sys-color-outline) var(--md-sys-color-surface-variant);
+.dark .hover\:text-zinc-950:hover {
+  color: rgb(250 250 250);
 }

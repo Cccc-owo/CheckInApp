@@ -19,7 +19,7 @@
 ## 技术栈
 
 **后端**: FastAPI + SQLAlchemy + APScheduler + Selenium  
-**前端**: Vue 3 + Ant Design Vue + Pinia  
+**前端**: Vue 3 + TypeScript + shadcn-vue + Tailwind  
 **数据库**: SQLite  
 
 ## 快速开始
@@ -28,7 +28,8 @@
 
 - Python 3.9+
 - uv
-- Node.js 16+
+- Node.js 20+
+- pnpm
 - Chrome 浏览器
 
 ### 安装运行
@@ -40,8 +41,8 @@ uv run python main.py backend
 
 # 前端
 cd apps/frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 
 # 创建管理员
 uv run python apps/backend/scripts/create_admin.py

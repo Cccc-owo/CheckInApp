@@ -159,7 +159,7 @@ def run_frontend(args: argparse.Namespace) -> int:
     if not FRONTEND_DIR.exists():
         print(f"frontend directory not found: {FRONTEND_DIR}", file=sys.stderr)
         return 1
-    cmd = ["npm", "run", "dev", "--", "--host", args.host, "--port", str(args.port)]
+    cmd = ["pnpm", "dev", "--host", args.host, "--port", str(args.port)]
     return subprocess.call(cmd, cwd=FRONTEND_DIR, env=frontend_env())
 
 
@@ -200,10 +200,10 @@ def build_frontend(args: argparse.Namespace) -> int:
         print(f"frontend directory not found: {FRONTEND_DIR}", file=sys.stderr)
         return 1
     if args.install and not (FRONTEND_DIR / "node_modules").exists():
-        result = subprocess.call(["npm", "install"], cwd=FRONTEND_DIR)
+        result = subprocess.call(["pnpm", "install"], cwd=FRONTEND_DIR)
         if result != 0:
             return result
-    return subprocess.call(["npm", "run", "build"], cwd=FRONTEND_DIR)
+    return subprocess.call(["pnpm", "build"], cwd=FRONTEND_DIR)
 
 
 def deploy_frontend(args: argparse.Namespace) -> int:
@@ -212,7 +212,7 @@ def deploy_frontend(args: argparse.Namespace) -> int:
         print(f"build output not found: {dist}", file=sys.stderr)
         print("run: python main.py frontend-build", file=sys.stderr)
         return 1
-    print(f"build output ready: {dist}")
+    print(f"frontend build output ready: {dist}")
     print("copy this directory to the web server root configured by nginx")
     return 0
 
@@ -278,9 +278,9 @@ def build_parser() -> argparse.ArgumentParser:
     frontend_daemon.add_argument("--port", type=int, default=FRONTEND_PORT)
     frontend_daemon.set_defaults(func=start_frontend_daemon)
 
-    frontend_build = sub.add_parser("frontend-build", help="build current frontend")
+    frontend_build = sub.add_parser("frontend-build", help="build frontend")
     frontend_build.add_argument(
-        "--install", action="store_true", help="run npm install if node_modules is missing"
+        "--install", action="store_true", help="run pnpm install if node_modules is missing"
     )
     frontend_build.set_defaults(func=build_frontend)
 

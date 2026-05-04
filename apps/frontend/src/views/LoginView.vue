@@ -1,524 +1,256 @@
-<template>
-  <div class="login-container">
-    <a-row justify="center" align="middle" style="height: 100%">
-      <a-col :xs="22" :sm="18" :md="12" :lg="10" :xl="8">
-        <a-card class="login-card">
-          <template #title>
-            <div class="card-header">
-              <h2>接龙自动打卡系统</h2>
-              <p class="subtitle">
-                {{ loginMode === 'qrcode' ? 'QQ 扫码登录/注册' : '用户名密码登录' }}
-              </p>
-            </div>
-          </template>
+<script setup lang="ts">
+import { KeyRound, QrCode, RotateCw, UserRound } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { authApi } from '@/api'
+import { useAuth } from '@/app/auth'
+import { useRouter } from '@/app/router'
+import { alertClass, cardClass, inputClass, labelClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import { extractErrorMessage } from '@/utils/format'
 
-          <!-- 登录模式切换 -->
-          <div class="mode-switch">
-            <a-segmented v-model:value="loginMode" :options="loginModeOptions" block />
-          </div>
+const router = useRouter()
+const auth = useAuth()
 
-          <!-- QR码登录表单 -->
-          <a-form
-            v-if="loginMode === 'qrcode'"
-            ref="qrcodeFormRef"
-            :model="qrcodeForm"
-            :rules="qrcodeRules"
-            layout="vertical"
-            @submit.prevent="handleQRCodeLogin"
-          >
-            <a-form-item name="alias">
-              <a-input
-                v-model:value="qrcodeForm.alias"
-                placeholder="请输入您的用户名"
-                size="large"
-                autocomplete="username"
-                allow-clear
-                @keyup.enter="handleQRCodeLogin"
-              >
-                <template #prefix>
-                  <UserOutlined />
-                </template>
-              </a-input>
-            </a-form-item>
+const alias = ref('')
+const password = ref('')
+const loading = ref(false)
+const error = ref('')
+const info = ref('')
+const qrImage = ref('')
+const qrSessionId = ref('')
+const loginMode = ref<'qrcode' | 'password'>('qrcode')
+let pollTimer: number | undefined
 
-            <a-form-item>
-              <a-button
-                type="primary"
-                size="large"
-                block
-                :loading="loading"
-                @click="handleQRCodeLogin"
-              >
-                {{ loading ? '正在登录...' : '扫码登录/注册' }}
-              </a-button>
-            </a-form-item>
-          </a-form>
+const canSubmitPassword = computed(
+  () => Boolean(alias.value.trim()) && Boolean(password.value) && !loading.value,
+)
+const canRequestQr = computed(() => Boolean(alias.value.trim()) && !loading.value)
 
-          <!-- 别名+密码登录表单 -->
-          <a-form
-            v-else
-            ref="passwordFormRef"
-            :model="passwordForm"
-            :rules="passwordRules"
-            layout="vertical"
-          >
-            <a-form-item name="alias">
-              <a-input
-                v-model:value="passwordForm.alias"
-                placeholder="请输入您的用户名"
-                size="large"
-                autocomplete="username"
-                allow-clear
-              >
-                <template #prefix>
-                  <UserOutlined />
-                </template>
-              </a-input>
-            </a-form-item>
+function switchMode(mode: 'qrcode' | 'password') {
+  loginMode.value = mode
+  error.value = ''
+  info.value = ''
+  if (mode === 'password' && qrSessionId.value) void cancelQr()
+}
 
-            <a-form-item name="password">
-              <a-input-password
-                v-model:value="passwordForm.password"
-                placeholder="请输入密码"
-                size="large"
-                autocomplete="current-password"
-                @keyup.enter="handlePasswordLogin"
-              >
-                <template #prefix>
-                  <KeyOutlined />
-                </template>
-              </a-input-password>
-            </a-form-item>
+function loginRedirect() {
+  const redirect = router.query.value.get('redirect') || '/dashboard'
+  void auth.refreshCurrentUser().finally(() => router.replace(redirect))
+}
 
-            <a-form-item>
-              <a-button
-                type="primary"
-                size="large"
-                block
-                :loading="loading"
-                @click="handlePasswordLogin"
-              >
-                {{ loading ? '登录中...' : '登录' }}
-              </a-button>
-            </a-form-item>
-
-            <div class="tips-link">
-              <a class="link-text" @click="loginMode = 'qrcode'"> 没有密码？使用扫码登录 </a>
-            </div>
-          </a-form>
-
-          <div class="tips">
-            <a-alert
-              :message="loginMode === 'qrcode' ? '扫码登录提示' : '密码登录提示'"
-              type="info"
-              :closable="false"
-              show-icon
-            >
-              <template #description>
-                <template v-if="loginMode === 'qrcode'">
-                  <p>1. 输入您的用户名(用于标识身份)</p>
-                  <p>2. 点击"扫码登录/注册"按钮</p>
-                  <p>3. 使用手机 QQ 扫描弹出的二维码</p>
-                  <p>4. 扫码成功后即可登录系统</p>
-                  <p class="tip-note">💡 新用户首次扫码将自动注册账户</p>
-                </template>
-                <template v-else>
-                  <p>1. 输入您的用户名和密码</p>
-                  <p>2. 点击"登录"按钮直接登录</p>
-                  <p>3. 首次使用请先扫码登录/注册，然后在设置中设置密码</p>
-                </template>
-              </template>
-            </a-alert>
-          </div>
-        </a-card>
-      </a-col>
-    </a-row>
-
-    <!-- QR 码弹窗 -->
-    <QRCodeModal
-      v-model:visible="qrcodeVisible"
-      :alias="qrcodeForm.alias"
-      @success="handleLoginSuccess"
-      @error="handleLoginError"
-    />
-  </div>
-</template>
-
-<script setup>
-import { ref, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { message } from 'ant-design-vue';
-import { UserOutlined, KeyOutlined } from '@ant-design/icons-vue';
-import { authAPI } from '@/api';
-import { useAuthStore } from '@/stores/auth';
-import QRCodeModal from '@/components/QRCodeModal.vue';
-
-const router = useRouter();
-const route = useRoute();
-const authStore = useAuthStore();
-
-const qrcodeFormRef = ref(null);
-const passwordFormRef = ref(null);
-const loading = ref(false);
-const qrcodeVisible = ref(false);
-
-// 登录模式
-const loginMode = ref('qrcode');
-const loginModeOptions = [
-  { label: '扫码登录', value: 'qrcode' },
-  { label: '密码登录', value: 'password' },
-];
-
-// 监听登录模式切换，同步用户名
-watch(loginMode, () => {
-  // 从密码登录切换到扫码登录
-  if (loginMode.value === 'qrcode' && passwordForm.value.alias) {
-    qrcodeForm.value.alias = passwordForm.value.alias;
-  }
-  // 从扫码登录切换到密码登录
-  else if (loginMode.value === 'password' && qrcodeForm.value.alias) {
-    passwordForm.value.alias = qrcodeForm.value.alias;
-  }
-});
-
-// QR码登录表单
-const qrcodeForm = ref({
-  alias: '',
-});
-
-const qrcodeRules = {
-  alias: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' },
-  ],
-};
-
-// 密码登录表单
-const passwordForm = ref({
-  alias: '',
-  password: '',
-});
-
-const passwordRules = {
-  alias: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' },
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码至少6个字符', trigger: 'blur' },
-  ],
-};
-
-// QR码登录
-const handleQRCodeLogin = async () => {
-  if (!qrcodeFormRef.value) return;
-
+async function loginWithPassword() {
+  if (!canSubmitPassword.value) return
+  error.value = ''
+  info.value = ''
+  loading.value = true
   try {
-    await qrcodeFormRef.value.validate();
-    // 显示 QR 码弹窗
-    qrcodeVisible.value = true;
-  } catch {
-    // 表单验证失败，不需要打印错误（由 Ant Design 自动显示错误提示）
-  }
-};
-
-// 密码登录
-const handlePasswordLogin = async () => {
-  if (!passwordFormRef.value) return;
-
-  try {
-    await passwordFormRef.value.validate();
-
-    loading.value = true;
-
-    const response = await authAPI.aliasLogin(
-      passwordForm.value.alias,
-      passwordForm.value.password
-    );
-
-    if (response.success) {
-      // 保存 JWT token 和用户信息
-      authStore.setAuth(response.token, response.user);
-
-      // 如果有打卡 Token 警告，显示提示（不影响网站登录）
-      if (response.token_warning && response.warning_message) {
-        message.warning({
-          content: response.warning_message,
-          duration: 2,
-        });
-      } else {
-        message.success(`欢迎回来，${response.user.alias}！`);
-      }
-
-      // 跳转到重定向页面或仪表盘
-      const redirect = route.query.redirect || '/dashboard';
-      router.push(redirect);
-    } else {
-      // 根据不同错误类型提供友好提示
-      handlePasswordLoginError(response.message);
-    }
-  } catch (error) {
-    console.error('密码登录失败:', error);
-    const errorMsg = error.response?.data?.detail || error.message || '登录失败，请稍后重试';
-    handlePasswordLoginError(errorMsg);
+    const result = await authApi.aliasLogin(alias.value.trim(), password.value)
+    auth.applyLogin(result)
+    loginRedirect()
+  } catch (err) {
+    error.value = extractErrorMessage(err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-// 处理密码登录错误
-const handlePasswordLoginError = msg => {
-  if (!msg) {
-    message.error('登录失败，请稍后重试');
-    return;
+async function requestQrCode() {
+  if (!canRequestQr.value) return
+  error.value = ''
+  info.value = '正在创建扫码会话'
+  loading.value = true
+  try {
+    if (qrSessionId.value) await authApi.cancelQRCodeSession(qrSessionId.value)
+    const result = await authApi.requestQRCode(alias.value.trim())
+    if (result.status === 'error') throw new Error(result.message || '创建扫码会话失败')
+    qrSessionId.value = result.session_id
+    qrImage.value = result.qrcode_image ?? result.qrcode_base64 ?? result.qr_code ?? ''
+    info.value = '请使用 QQ 扫码完成授权'
+    startPolling()
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    loading.value = false
   }
+}
 
-  // 用户不存在或密码错误
-  if (msg.includes('用户名或密码错误')) {
-    message.error('用户名或密码错误');
-    return;
-  }
+function startPolling() {
+  window.clearInterval(pollTimer)
+  pollTimer = window.setInterval(async () => {
+    if (!qrSessionId.value) return
+    try {
+      const status = await authApi.getQRCodeStatus(qrSessionId.value)
+      qrImage.value = status.qrcode_image ?? qrImage.value
+      if (status.status === 'success') {
+        window.clearInterval(pollTimer)
+        auth.applyLogin(status)
+        loginRedirect()
+      } else if (status.status === 'error') {
+        error.value = status.message || '扫码登录失败'
+        window.clearInterval(pollTimer)
+      } else {
+        info.value = status.message || '等待扫码确认'
+      }
+    } catch (err) {
+      error.value = extractErrorMessage(err)
+      window.clearInterval(pollTimer)
+    }
+  }, 2200)
+}
 
-  // 未设置密码
-  if (msg.includes('未设置密码')) {
-    message.warning('该账户未设置密码，请使用扫码登录');
-    return;
-  }
+async function cancelQr() {
+  window.clearInterval(pollTimer)
+  if (qrSessionId.value) await authApi.cancelQRCodeSession(qrSessionId.value).catch(() => undefined)
+  qrSessionId.value = ''
+  qrImage.value = ''
+  info.value = ''
+}
 
-  // 用户不存在
-  if (msg.includes('用户不存在')) {
-    message.error('用户不存在，请检查用户名或使用扫码登录注册');
-    return;
-  }
-
-  // 其他错误
-  message.error(msg || '登录失败，请稍后重试');
-};
-
-const handleLoginSuccess = user => {
-  message.success(`欢迎回来，${user.alias}！`);
-
-  // 跳转到重定向页面或仪表盘
-  const redirect = route.query.redirect || '/dashboard';
-  router.push(redirect);
-};
-
-const handleLoginError = error => {
-  message.error(error.message || '登录失败');
-};
+onBeforeUnmount(() => {
+  void cancelQr()
+})
 </script>
 
-<style scoped>
-.login-container {
-  width: 100vw;
-  height: 100vh;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow-y: auto;
-  padding: 16px;
-  transition: background 0.3s ease;
-}
+<template>
+  <main
+    class="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-8 text-foreground"
+  >
+    <section class="w-full max-w-md">
+      <div :class="[cardClass, 'overflow-hidden']">
+        <div class="border-b border-border px-4 py-3 text-center">
+          <div
+            class="mx-auto mb-3 flex size-10 items-center justify-center rounded-lg bg-[var(--tone-info-strong)] text-background shadow-sm"
+          >
+            <QrCode class="size-5" />
+          </div>
+          <h1 class="text-xl font-semibold tracking-normal text-foreground">接龙自动打卡系统</h1>
+        </div>
 
-/* 暗色模式背景 */
-.dark .login-container {
-  background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
-}
+        <div class="p-4">
+          <div class="grid grid-cols-2 rounded-lg border border-border bg-muted p-1 text-sm">
+            <button
+              type="button"
+              class="rounded-md px-3 py-2 text-center font-medium transition"
+              :class="
+                loginMode === 'qrcode'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
+              @click="switchMode('qrcode')"
+            >
+              扫码登录
+            </button>
+            <button
+              type="button"
+              class="rounded-md px-3 py-2 text-center font-medium transition"
+              :class="
+                loginMode === 'password'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
+              @click="switchMode('password')"
+            >
+              密码登录
+            </button>
+          </div>
 
-.login-card {
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  margin: 20px 0;
-}
+          <form
+            v-if="loginMode === 'password'"
+            class="mt-5 grid gap-4"
+            @submit.prevent="loginWithPassword"
+          >
+            <label class="grid gap-2">
+              <span :class="labelClass">用户名</span>
+              <div class="relative">
+                <UserRound
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  v-model="alias"
+                  :class="[inputClass, 'pl-9']"
+                  autocomplete="username"
+                  required
+                  placeholder="请输入您的用户名"
+                />
+              </div>
+            </label>
+            <label class="grid gap-2">
+              <span :class="labelClass">密码</span>
+              <div class="relative">
+                <KeyRound
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  v-model="password"
+                  :class="[inputClass, 'pl-9']"
+                  autocomplete="current-password"
+                  type="password"
+                  placeholder="请输入密码"
+                />
+              </div>
+            </label>
 
-/* 暗色模式卡片阴影 */
-.dark .login-card {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
+            <div v-if="error" :class="alertClass.danger">
+              {{ error }}
+            </div>
+            <div v-if="info" :class="alertClass.info">
+              {{ info }}
+            </div>
 
-.card-header {
-  text-align: center;
-}
+            <Button class="w-full" type="submit" :disabled="!canSubmitPassword">
+              <KeyRound class="size-4" />
+              {{ loading ? '登录中' : '登录' }}
+            </Button>
+          </form>
 
-.card-header h2 {
-  margin: 0;
-  font-size: 24px;
-  color: #303133;
-  transition: color 0.3s ease;
-}
+          <div v-else class="mt-5 grid gap-4">
+            <label class="grid gap-2">
+              <span :class="labelClass">用户名</span>
+              <div class="relative">
+                <UserRound
+                  class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  v-model="alias"
+                  :class="[inputClass, 'pl-9']"
+                  autocomplete="username"
+                  required
+                  placeholder="请输入您的用户名"
+                  @keyup.enter="requestQrCode"
+                />
+              </div>
+            </label>
 
-/* 暗色模式标题 */
-.dark .card-header h2 {
-  color: #e6e1e5;
-}
+            <div v-if="error" :class="alertClass.danger">
+              {{ error }}
+            </div>
+            <div v-if="info" :class="alertClass.info">
+              {{ info }}
+            </div>
 
-.subtitle {
-  margin: 10px 0 0 0;
-  font-size: 14px;
-  color: #909399;
-  transition: color 0.3s ease;
-}
+            <Button class="w-full" type="button" :disabled="!canRequestQr" @click="requestQrCode">
+              <QrCode class="size-4" />
+              {{ loading ? '正在登录' : '扫码登录/注册' }}
+            </Button>
 
-/* 暗色模式副标题 */
-.dark .subtitle {
-  color: #cac4d0;
-}
-
-.mode-switch {
-  margin-bottom: 20px;
-}
-
-.tips-link {
-  text-align: center;
-  margin-top: 10px;
-}
-
-.link-text {
-  color: #2196f3;
-  cursor: pointer;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.link-text:hover {
-  text-decoration: underline;
-}
-
-/* 暗色模式链接 */
-.dark .link-text {
-  color: #64b5f6;
-}
-
-.dark .link-text:hover {
-  color: #90caf9;
-}
-
-.tips {
-  margin-top: 20px;
-}
-
-.tips :deep(p) {
-  margin: 5px 0;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.tip-note {
-  margin-top: 12px !important;
-  padding-top: 8px;
-  border-top: 1px dashed #e0e0e0;
-  color: #606266;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-/* 暗色模式提示注释 */
-.dark .tip-note {
-  border-top-color: #49454f;
-  color: #cac4d0;
-}
-
-/* 确保 Ant Design Row 占满高度 */
-.login-container :deep(.ant-row) {
-  width: 100%;
-  min-height: 100%;
-}
-
-/* 移动端优化 */
-@media (max-width: 768px) {
-  .login-container {
-    padding: 12px;
-  }
-
-  .login-card {
-    border-radius: 12px;
-  }
-
-  .card-header h2 {
-    font-size: 20px;
-  }
-
-  .subtitle {
-    font-size: 13px;
-  }
-
-  .tips :deep(p) {
-    font-size: 13px;
-  }
-
-  .tips :deep(.ant-alert) {
-    font-size: 13px;
-  }
-}
-
-/* 小屏手机优化 */
-@media (max-width: 576px) {
-  .login-container {
-    padding: 8px;
-  }
-
-  .login-card {
-    border-radius: 8px;
-    margin: 10px 0;
-  }
-
-  .card-header h2 {
-    font-size: 18px;
-  }
-
-  .subtitle {
-    font-size: 12px;
-  }
-
-  .mode-switch {
-    margin-bottom: 16px;
-  }
-
-  .tips {
-    margin-top: 16px;
-  }
-
-  .tips :deep(p) {
-    font-size: 12px;
-    margin: 4px 0;
-  }
-}
-
-/* 横屏优化 */
-@media (max-height: 600px) and (orientation: landscape) {
-  .login-container {
-    padding: 8px;
-    align-items: flex-start;
-  }
-
-  .login-card {
-    margin: 8px 0;
-  }
-
-  .card-header h2 {
-    font-size: 18px;
-  }
-
-  .tips :deep(p) {
-    margin: 3px 0;
-    font-size: 12px;
-  }
-
-  .mode-switch {
-    margin-bottom: 12px;
-  }
-
-  .tips {
-    margin-top: 12px;
-  }
-}
-</style>
+            <div v-if="qrImage" class="rounded-lg border border-border bg-muted p-4 text-center">
+              <img
+                :src="qrImage.startsWith('data:') ? qrImage : `data:image/png;base64,${qrImage}`"
+                alt="QQ 登录二维码"
+                class="mx-auto size-48 rounded-md bg-background object-contain"
+              />
+              <button
+                class="mt-3 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+                type="button"
+                @click="requestQrCode"
+              >
+                <RotateCw class="size-4" />
+                刷新会话
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</template>

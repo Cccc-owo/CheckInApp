@@ -7,7 +7,8 @@
 - Ubuntu 20.04+ / CentOS 7+ / Windows Server
 - Python 3.9+
 - uv
-- Node.js 16+
+- Node.js 20+
+- pnpm
 - Chrome / Chromium
 - 2GB+ RAM
 
@@ -17,10 +18,12 @@
 # Ubuntu
 sudo apt update
 sudo apt install -y python3 nodejs npm chromium-browser
+npm install -g pnpm
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # CentOS
 sudo yum install -y python3 nodejs npm chromium
+npm install -g pnpm
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
@@ -52,10 +55,10 @@ vim .env  # 修改环境变量
 cd apps/frontend
 
 # 安装依赖
-npm install
+pnpm install --frozen-lockfile
 
 # 构建生产版本
-npm run build
+pnpm build
 
 # 输出在 dist/ 目录
 ```

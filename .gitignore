@@ -53,9 +53,10 @@ Thumbs.db
 apps/frontend/node_modules/
 apps/frontend/dist/
 apps/frontend/.vite/
-apps/new-frontend/node_modules/
-apps/new-frontend/dist/
-apps/new-frontend/.vite/
+
+# 本地验证产物
+.playwright-cli/
+output/
 
 .claude
 .codex

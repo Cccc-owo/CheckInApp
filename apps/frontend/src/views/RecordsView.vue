@@ -1,235 +1,127 @@
-<template>
-  <Layout>
-    <div class="records-container">
-      <a-card>
-        <template #title>
-          <div class="card-header">
-            <div>
-              <UnorderedListOutlined />
-              <span>我的打卡记录</span>
-            </div>
-            <a-button type="primary" @click="handleRefresh">
-              <template #icon><ReloadOutlined /></template>
-              刷新
-            </a-button>
-          </div>
-        </template>
+<script setup lang="ts">
+import { Search } from 'lucide-vue-next'
+import { onMounted, reactive, ref } from 'vue'
+import { checkInApi, type CheckInRecord } from '@/api'
+import StateBlock from '@/components/StateBlock.vue'
+import { cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import { extractErrorMessage, formatFullDateTime, statusLabel, statusTone } from '@/utils/format'
 
-        <!-- 统计信息 -->
-        <div class="stats-container">
-          <a-row :gutter="20">
-            <a-col :xs="24" :sm="8" :md="8">
-              <a-statistic title="总打卡次数" :value="total" />
-            </a-col>
-            <a-col :xs="24" :sm="8" :md="8">
-              <a-statistic
-                title="成功次数"
-                :value="successCount"
-                :value-style="{ color: '#67c23a' }"
-              />
-            </a-col>
-            <a-col :xs="24" :sm="8" :md="8">
-              <a-statistic
-                title="成功率"
-                :value="parseFloat(checkInStore.successRate)"
-                suffix="%"
-                :precision="2"
-              />
-            </a-col>
-          </a-row>
-        </div>
+const loading = ref(true)
+const error = ref('')
+const records = ref<CheckInRecord[]>([])
+const total = ref(0)
+const filters = reactive({ status: '', trigger_type: '', skip: 0, limit: 20 })
 
-        <a-divider />
-
-        <!-- 桌面端表格 -->
-        <a-table
-          v-if="!isMobile"
-          :data-source="checkInStore.myRecords"
-          :columns="columns"
-          :loading="checkInStore.loading"
-          :pagination="false"
-          :row-key="record => record.id"
-          :scroll="{ x: 'max-content' }"
-          bordered
-        >
-          <template #bodyCell="{ column, record }">
-            <template v-if="column.key === 'check_in_time'">
-              {{ formatDateTime(record.check_in_time) }}
-            </template>
-            <template v-else-if="column.key === 'status'">
-              <a-tag v-if="record.status === 'success'" color="success">✅ 打卡成功</a-tag>
-              <a-tag v-else-if="record.status === 'out_of_time'" color="default"
-                >🕐 时间范围外</a-tag
-              >
-              <a-tag v-else-if="record.status === 'unknown'" color="warning">❗ 打卡异常</a-tag>
-              <a-tag v-else color="error">❌ 打卡失败</a-tag>
-            </template>
-            <template v-else-if="column.key === 'trigger_type'">
-              <a-tag v-if="record.trigger_type === 'manual'" color="blue">手动</a-tag>
-              <a-tag v-else-if="record.trigger_type === 'scheduled'" color="default">定时</a-tag>
-              <a-tag v-else-if="record.trigger_type === 'admin'" color="orange">管理员</a-tag>
-              <a-tag v-else>{{ record.trigger_type }}</a-tag>
-            </template>
-          </template>
-        </a-table>
-
-        <!-- 移动端卡片视图 -->
-        <a-space v-else direction="vertical" :size="16" style="width: 100%">
-          <a-card
-            v-for="record in checkInStore.myRecords"
-            :key="record.id"
-            size="small"
-            :loading="checkInStore.loading"
-          >
-            <a-descriptions :column="1" size="small" bordered>
-              <a-descriptions-item label="ID">{{ record.id }}</a-descriptions-item>
-              <a-descriptions-item label="打卡时间">
-                {{ formatDateTime(record.check_in_time) }}
-              </a-descriptions-item>
-              <a-descriptions-item label="状态">
-                <a-tag v-if="record.status === 'success'" color="success">✅ 打卡成功</a-tag>
-                <a-tag v-else-if="record.status === 'out_of_time'" color="default"
-                  >🕐 时间范围外</a-tag
-                >
-                <a-tag v-else-if="record.status === 'unknown'" color="warning">❗ 打卡异常</a-tag>
-                <a-tag v-else color="error">❌ 打卡失败</a-tag>
-              </a-descriptions-item>
-              <a-descriptions-item label="触发方式">
-                <a-tag v-if="record.trigger_type === 'manual'" color="blue">手动</a-tag>
-                <a-tag v-else-if="record.trigger_type === 'scheduled'" color="default">定时</a-tag>
-                <a-tag v-else-if="record.trigger_type === 'admin'" color="orange">管理员</a-tag>
-                <a-tag v-else>{{ record.trigger_type }}</a-tag>
-              </a-descriptions-item>
-              <a-descriptions-item label="消息">
-                {{ record.response_text || '-' }}
-              </a-descriptions-item>
-            </a-descriptions>
-          </a-card>
-        </a-space>
-
-        <!-- 分页 -->
-        <div class="pagination-container">
-          <a-pagination
-            v-model:current="checkInStore.currentPage"
-            v-model:page-size="checkInStore.pageSize"
-            :total="total"
-            :page-size-options="['10', '20', '50', '100']"
-            show-size-changer
-            show-quick-jumper
-            :show-total="total => `共 ${total} 条记录`"
-            @change="handlePageChange"
-            @show-size-change="handleSizeChange"
-          />
-        </div>
-      </a-card>
-    </div>
-  </Layout>
-</template>
-
-<script setup>
-import { computed, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
-import { UnorderedListOutlined, ReloadOutlined } from '@ant-design/icons-vue';
-import Layout from '@/components/Layout.vue';
-import { useBreakpoint } from '@/composables/useBreakpoint';
-import { useCheckInStore } from '@/stores/checkIn';
-import { formatDateTime } from '@/utils/helpers';
-
-const checkInStore = useCheckInStore();
-const { isMobile } = useBreakpoint();
-
-const total = computed(() => checkInStore.total);
-
-const successCount = computed(() => {
-  return checkInStore.myRecords.filter(r => r.status === 'success').length;
-});
-
-// 表格列配置
-const columns = [
-  {
-    title: 'ID',
-    dataIndex: 'id',
-    key: 'id',
-    width: 80,
-  },
-  {
-    title: '打卡时间',
-    dataIndex: 'check_in_time',
-    key: 'check_in_time',
-    width: 180,
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    width: 120,
-  },
-  {
-    title: '触发方式',
-    dataIndex: 'trigger_type',
-    key: 'trigger_type',
-    width: 120,
-  },
-  {
-    title: '消息',
-    dataIndex: 'response_text',
-    key: 'response_text',
-    ellipsis: true,
-  },
-];
-
-// 刷新数据
-const handleRefresh = async () => {
+async function load() {
+  loading.value = true
+  error.value = ''
   try {
-    await checkInStore.fetchMyRecords();
-    message.success('刷新成功');
-  } catch (error) {
-    message.error(error.message || '刷新失败');
+    const page = await checkInApi.myRecords(filters)
+    records.value = page.records
+    total.value = page.total
+    filters.skip = page.skip
+    filters.limit = page.limit
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    loading.value = false
   }
-};
+}
 
-// 页码改变
-const handlePageChange = () => {
-  checkInStore.fetchMyRecords();
-};
+function page(delta: number) {
+  filters.skip = Math.max(0, filters.skip + delta * filters.limit)
+  void load()
+}
 
-// 每页数量改变
-const handleSizeChange = () => {
-  checkInStore.currentPage = 1;
-  checkInStore.fetchMyRecords();
-};
-
-onMounted(() => {
-  checkInStore.fetchMyRecords();
-});
+onMounted(load)
 </script>
 
-<style scoped>
-.records-container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
+<template>
+  <section :class="[cardClass, 'overflow-hidden']">
+    <div :class="[sectionHeaderClass, 'md:grid-cols-[1fr_180px_180px_auto]']">
+      <div>
+        <h2 class="font-semibold">个人打卡记录</h2>
+      </div>
+      <select v-model="filters.status" :class="inputClass">
+        <option value="">全部状态</option>
+        <option value="success">成功</option>
+        <option value="failure">失败</option>
+        <option value="out_of_time">超出时间</option>
+      </select>
+      <select v-model="filters.trigger_type" :class="inputClass">
+        <option value="">全部触发</option>
+        <option value="manual">手动</option>
+        <option value="scheduler">定时</option>
+        <option value="admin">管理员</option>
+      </select>
+      <Button variant="outline" type="button" @click="load">
+        <Search class="size-4" />
+        筛选
+      </Button>
+    </div>
 
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.card-header > div {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: bold;
-}
-
-.stats-container {
-  padding: 20px 0;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-</style>
+    <StateBlock v-if="loading" title="正在加载记录" type="loading" />
+    <StateBlock
+      v-else-if="error"
+      title="记录加载失败"
+      :description="error"
+      type="error"
+      action-label="重试"
+      @action="load"
+    />
+    <StateBlock v-else-if="records.length === 0" title="暂无记录" />
+    <div v-else>
+      <div class="divide-y divide-border">
+        <article
+          v-for="record in records"
+          :key="record.id"
+          class="grid gap-3 p-3 lg:grid-cols-[180px_minmax(0,1fr)_auto] lg:items-center"
+        >
+          <div class="min-w-0">
+            <div class="truncate text-sm font-semibold">
+              {{ record.task_name || `任务 #${record.task_id}` }}
+            </div>
+            <div class="mt-1 text-xs text-muted-foreground">
+              {{ formatFullDateTime(record.check_in_time) }}
+            </div>
+          </div>
+          <div class="min-w-0">
+            <p class="truncate text-sm text-foreground">
+              {{ record.response_text || record.error_message || '无响应内容' }}
+            </p>
+            <p class="mt-1 text-xs text-muted-foreground">
+              触发方式：{{ statusLabel(record.trigger_type) }}
+            </p>
+          </div>
+          <div class="lg:text-right">
+            <span :class="toneClass(statusTone(record.status))">{{
+              statusLabel(record.status)
+            }}</span>
+          </div>
+        </article>
+      </div>
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/55 px-4 py-3 text-sm text-muted-foreground"
+      >
+        <span
+          >共 {{ total }} 条，当前 {{ filters.skip + 1 }} -
+          {{ Math.min(filters.skip + filters.limit, total) }}</span
+        >
+        <div class="flex gap-2">
+          <Button variant="outline" :disabled="filters.skip === 0" type="button" @click="page(-1)">
+            上一页
+          </Button>
+          <Button
+            variant="outline"
+            :disabled="filters.skip + filters.limit >= total"
+            type="button"
+            @click="page(1)"
+          >
+            下一页
+          </Button>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>

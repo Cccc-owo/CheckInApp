@@ -1,838 +1,427 @@
-<template>
-  <Layout>
-    <div class="tasks-view">
-      <div class="max-w-7xl mx-auto">
-        <!-- Header Section -->
-        <div class="mb-8">
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h1 class="text-4xl font-bold text-gradient mb-2">任务管理</h1>
-              <p class="text-on-surface-variant">管理您的自动打卡任务</p>
-            </div>
-            <a-button type="primary" size="large" class="shadow-md3-3" @click="openCreateDialog">
-              <template #icon>
-                <PlusOutlined />
-              </template>
-              创建任务
-            </a-button>
-          </div>
-
-          <!-- Stats Cards -->
-          <a-row :gutter="[16, 16]" class="mb-6">
-            <a-col :xs="24" :sm="8" :md="8">
-              <a-card class="md3-card animate-slide-up">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-sm text-on-surface-variant mb-1">总任务数</p>
-                    <p class="text-3xl font-bold text-primary">{{ taskStore.taskStats.total }}</p>
-                  </div>
-                  <div
-                    class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-md3 flex items-center justify-center"
-                  >
-                    <FileTextOutlined class="text-2xl text-primary" />
-                  </div>
-                </div>
-              </a-card>
-            </a-col>
-
-            <a-col :xs="24" :sm="8" :md="8">
-              <a-card class="md3-card animate-slide-up" style="animation-delay: 0.1s">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-sm text-on-surface-variant mb-1">启用中</p>
-                    <p class="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {{ taskStore.taskStats.active }}
-                    </p>
-                  </div>
-                  <div
-                    class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-md3 flex items-center justify-center"
-                  >
-                    <CheckCircleOutlined class="text-2xl text-green-600 dark:text-green-400" />
-                  </div>
-                </div>
-              </a-card>
-            </a-col>
-
-            <a-col :xs="24" :sm="8" :md="8">
-              <a-card class="md3-card animate-slide-up" style="animation-delay: 0.2s">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-sm text-on-surface-variant mb-1">已禁用</p>
-                    <p class="text-3xl font-bold text-on-surface-variant">
-                      {{ taskStore.taskStats.inactive }}
-                    </p>
-                  </div>
-                  <div
-                    class="w-12 h-12 bg-surface-container-high rounded-md3 flex items-center justify-center"
-                  >
-                    <StopOutlined class="text-2xl text-on-surface-variant" />
-                  </div>
-                </div>
-              </a-card>
-            </a-col>
-          </a-row>
-        </div>
-
-        <!-- Tasks List -->
-        <div v-if="loading">
-          <a-row :gutter="[16, 16]">
-            <a-col v-for="i in 6" :key="i" :xs="24" :sm="12" :lg="8">
-              <a-card>
-                <a-skeleton :active="true" :paragraph="{ rows: 4 }" />
-              </a-card>
-            </a-col>
-          </a-row>
-        </div>
-
-        <a-card
-          v-else-if="taskStore.tasks.length === 0"
-          class="md3-card text-center"
-          style="padding: 48px 20px"
-        >
-          <FileTextOutlined class="text-8xl text-on-surface-variant opacity-30 mb-4" />
-          <h3 class="text-xl font-semibold text-on-surface mb-2">暂无任务</h3>
-          <p class="text-on-surface-variant mb-6">
-            点击右上角的"创建任务"按钮开始添加您的第一个打卡任务
-          </p>
-          <a-button type="primary" @click="openCreateDialog"> 创建第一个任务 </a-button>
-        </a-card>
-
-        <a-row v-else :gutter="[16, 16]">
-          <a-col v-for="task in taskStore.tasks" :key="task.id" :xs="24" :sm="12" :lg="8">
-            <a-card
-              class="md3-card hover:scale-105 transform transition-all cursor-pointer animate-slide-up"
-              @click="viewTask(task)"
-            >
-              <!-- Task Header -->
-              <div class="flex items-start justify-between mb-4">
-                <div class="flex-1">
-                  <h3 class="text-lg font-semibold text-on-surface mb-1">
-                    {{ task.name || '未命名任务' }}
-                  </h3>
-                  <a-divider style="margin: 8px 0" />
-                  <p class="text-sm text-on-surface-variant">任务 ID: {{ task.id }}</p>
-                </div>
-                <a-tag :color="task.is_active ? 'success' : 'default'">
-                  {{ task.is_active ? '启用' : '禁用' }}
-                </a-tag>
-              </div>
-
-              <!-- Task Details -->
-              <div class="space-y-2 mb-4">
-                <div class="flex items-center text-sm text-on-surface-variant">
-                  <TagOutlined class="mr-2" />
-                  接龙ID: {{ getThreadId(task) }}
-                </div>
-                <div class="flex items-center text-sm text-on-surface-variant">
-                  <ClockCircleOutlined class="mr-2" />
-                  最后打卡:
-                  {{ task.last_check_in_time ? formatDateTime(task.last_check_in_time) : '未打卡' }}
-                </div>
-                <div class="flex items-center text-sm">
-                  <CheckCircleOutlined class="mr-2 text-on-surface-variant" />
-                  <span
-                    v-if="task.last_check_in_status"
-                    :class="{
-                      'text-green-600 dark:text-green-400 font-medium':
-                        task.last_check_in_status === 'success',
-                      'text-blue-600 dark:text-blue-400 font-medium':
-                        task.last_check_in_status === 'out_of_time',
-                      'text-red-600 dark:text-red-400 font-medium':
-                        task.last_check_in_status === 'failure',
-                      'text-yellow-600 dark:text-yellow-400 font-medium':
-                        task.last_check_in_status === 'unknown',
-                    }"
-                  >
-                    {{
-                      task.last_check_in_status === 'success'
-                        ? '✅ 打卡成功'
-                        : task.last_check_in_status === 'out_of_time'
-                          ? '🕐 时间范围外'
-                          : task.last_check_in_status === 'failure'
-                            ? '❌ 打卡失败'
-                            : '❗ 打卡异常'
-                    }}
-                  </span>
-                  <span v-else class="text-on-surface-variant">暂无打卡记录</span>
-                </div>
-              </div>
-
-              <!-- Task Actions -->
-              <div class="flex gap-2 pt-4 border-t border-outline-variant">
-                <a-button
-                  type="primary"
-                  size="small"
-                  :loading="checkInLoading[task.id]"
-                  class="flex-1"
-                  @click.stop="handleCheckIn(task.id)"
-                >
-                  {{ checkInLoading[task.id] ? '打卡中...' : '立即打卡' }}
-                </a-button>
-                <a-button size="small" class="flex-1" @click.stop="toggleTaskStatus(task)">
-                  {{ task.is_active ? '禁用' : '启用' }}
-                </a-button>
-                <a-button
-                  type="primary"
-                  size="small"
-                  ghost
-                  class="icon-button"
-                  @click.stop="editTask(task)"
-                >
-                  <template #icon><EditOutlined /></template>
-                </a-button>
-                <a-button danger size="small" class="icon-button" @click.stop="deleteTask(task)">
-                  <template #icon><DeleteOutlined /></template>
-                </a-button>
-              </div>
-            </a-card>
-          </a-col>
-        </a-row>
-      </div>
-    </div>
-
-    <!-- Create/Edit Task Dialog -->
-    <a-modal
-      v-model:open="showCreateDialog"
-      :title="editingTask ? '编辑任务' : '从模板创建任务'"
-      :width="isMobile ? '100%' : 700"
-      :style="isMobile ? { top: 0, maxWidth: '100vw' } : {}"
-      :mask-closable="false"
-    >
-      <!-- 只显示从模板创建 -->
-      <div v-if="!editingTask">
-        <div v-if="loadingTemplates" class="text-center py-8">
-          <a-spin size="large" />
-          <p class="text-on-surface-variant mt-2">加载模板中...</p>
-        </div>
-
-        <div v-else-if="activeTemplates.length === 0" class="text-center py-8">
-          <p class="text-on-surface-variant">暂无可用模板</p>
-          <p class="text-sm text-on-surface-variant opacity-70 mt-2">请联系管理员创建模板</p>
-        </div>
-
-        <div v-else>
-          <!-- Template Selection -->
-          <a-form-item v-if="!selectedTemplate" label="选择模板">
-            <div class="grid grid-cols-1 gap-3">
-              <div
-                v-for="template in activeTemplates"
-                :key="template.id"
-                class="border border-outline-variant rounded-lg p-4 cursor-pointer hover:border-primary hover:bg-primary-container/10 transition-all"
-                @click="selectTemplate(template)"
-              >
-                <h4 class="font-semibold text-on-surface mb-1">{{ template.name }}</h4>
-                <p class="text-sm text-on-surface-variant">
-                  {{ template.description || '无描述' }}
-                </p>
-              </div>
-            </div>
-          </a-form-item>
-
-          <!-- Template Form -->
-          <a-form
-            v-if="selectedTemplate"
-            ref="templateFormRef"
-            :model="templateTaskForm"
-            layout="vertical"
-          >
-            <div class="mb-4 p-3 bg-blue-50 rounded-lg flex items-center justify-between">
-              <div class="flex items-center">
-                <FileTextOutlined class="text-blue-600 mr-2" />
-                <span class="text-sm font-medium text-blue-900"
-                  >使用模板：{{ selectedTemplate.name }}</span
-                >
-              </div>
-              <a-button size="small" type="link" @click="selectedTemplate = null"
-                >更换模板</a-button
-              >
-            </div>
-
-            <a-form-item label="任务名称" name="task_name">
-              <a-input
-                v-model:value="templateTaskForm.task_name"
-                placeholder="可选，留空则自动生成"
-              />
-            </a-form-item>
-
-            <a-form-item label="接龙 ID" name="thread_id" required>
-              <a-input
-                v-model:value="templateTaskForm.thread_id"
-                placeholder="请输入接龙项目 ID(ThreadID) | 如果你不知道这是什么，请询问管理员"
-              />
-            </a-form-item>
-
-            <a-form-item label="打卡时间表">
-              <CrontabEditor v-model="templateTaskForm.cron_expression" />
-            </a-form-item>
-
-            <a-divider orientation="left">填写字段信息</a-divider>
-
-            <!-- Dynamic Fields -->
-            <div v-for="(fieldConfig, key) in visibleFields" :key="key">
-              <a-form-item :label="fieldConfig.display_name" :required="fieldConfig.required">
-                <!-- Text Input -->
-                <a-input
-                  v-if="fieldConfig.field_type === 'text'"
-                  v-model:value="templateTaskForm.field_values[key]"
-                  :placeholder="fieldConfig.placeholder || `请输入${fieldConfig.display_name}`"
-                />
-
-                <!-- Textarea -->
-                <a-textarea
-                  v-else-if="fieldConfig.field_type === 'textarea'"
-                  v-model:value="templateTaskForm.field_values[key]"
-                  :rows="3"
-                  :placeholder="fieldConfig.placeholder || `请输入${fieldConfig.display_name}`"
-                />
-
-                <!-- Number Input -->
-                <a-input-number
-                  v-else-if="fieldConfig.field_type === 'number'"
-                  v-model:value="templateTaskForm.field_values[key]"
-                  :placeholder="fieldConfig.placeholder || `请输入${fieldConfig.display_name}`"
-                  style="width: 100%"
-                />
-
-                <!-- Select -->
-                <a-select
-                  v-else-if="fieldConfig.field_type === 'select'"
-                  v-model:value="templateTaskForm.field_values[key]"
-                  :placeholder="fieldConfig.placeholder || `请选择${fieldConfig.display_name}`"
-                  style="width: 100%"
-                >
-                  <a-select-option
-                    v-for="option in fieldConfig.options"
-                    :key="option.value"
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </a-select-option>
-                </a-select>
-
-                <span v-if="fieldConfig.default_value" class="text-xs text-on-surface-variant mt-1">
-                  默认值: {{ fieldConfig.default_value }}
-                </span>
-              </a-form-item>
-            </div>
-          </a-form>
-        </div>
-      </div>
-
-      <!-- Edit Mode Form - 简化版，只显示任务名称和启用状态 -->
-      <a-form
-        v-if="editingTask"
-        ref="taskFormRef"
-        :model="taskForm"
-        :rules="taskRules"
-        layout="vertical"
-      >
-        <a-form-item label="任务名称" name="name">
-          <a-input v-model:value="taskForm.name" placeholder="请输入任务名称（例如：公司打卡）" />
-        </a-form-item>
-
-        <a-form-item label="启用状态">
-          <a-switch v-model:checked="taskForm.is_active" />
-          <span class="ml-2 text-sm text-on-surface-variant">
-            {{ taskForm.is_active ? '启用自动打卡' : '禁用自动打卡（仍可手动打卡）' }}
-          </span>
-        </a-form-item>
-
-        <!-- 新增：Crontab 编辑器 -->
-        <a-form-item label="打卡时间表">
-          <CrontabEditor v-model="taskForm.cron_expression" />
-        </a-form-item>
-
-        <a-divider orientation="left">任务 Payload 配置（只读）</a-divider>
-
-        <div class="mb-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm text-on-surface-variant">完整的打卡请求配置</span>
-            <a-button size="small" type="primary" ghost @click="copyPayload">
-              <template #icon><CopyOutlined /></template>
-              复制
-            </a-button>
-          </div>
-          <a-textarea
-            v-model:value="formattedPayload"
-            :rows="12"
-            readonly
-            class="font-mono text-xs"
-            style="resize: vertical; min-height: 200px; max-height: 400px"
-          />
-          <p class="text-xs text-on-surface-variant mt-1">
-            💡 此配置由模板自动生成，如需修改请删除任务后从模板重新创建
-          </p>
-        </div>
-      </a-form>
-
-      <template #footer>
-        <div class="flex gap-3 justify-end">
-          <a-button @click="showCreateDialog = false">取消</a-button>
-          <a-button type="primary" :loading="submitting" @click="handleSubmit">
-            {{ submitting ? '提交中...' : editingTask ? '保存修改' : '创建任务' }}
-          </a-button>
-        </div>
-      </template>
-    </a-modal>
-  </Layout>
-</template>
-
-<script setup>
-import { ref, reactive, onMounted, computed, watch } from 'vue';
-import { message, Modal } from 'ant-design-vue';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { Check, Edit3, Play, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import {
-  PlusOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  StopOutlined,
-  TagOutlined,
-  ClockCircleOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  CopyOutlined,
-} from '@ant-design/icons-vue';
-import Layout from '@/components/Layout.vue';
-import CrontabEditor from '@/components/CrontabEditor.vue';
-import { useBreakpoint } from '@/composables/useBreakpoint';
-import { useTaskStore } from '@/stores/task';
-import { useTemplateStore } from '@/stores/template';
-import { copyToClipboard, formatDateTime } from '@/utils/helpers';
-import { usePollStatus } from '@/composables/usePollStatus';
+  checkInApi,
+  taskApi,
+  templateApi,
+  type CheckInRecordStatus,
+  type Task,
+  type Template,
+  type TemplateFieldConfigItem,
+  type TemplatePreview,
+} from '@/api'
+import { useRouter } from '@/app/router'
+import StateBlock from '@/components/StateBlock.vue'
+import {
+  alertClass,
+  cardClass,
+  inputClass,
+  labelClass,
+  sectionHeaderClass,
+  textareaClass,
+  toneClass,
+} from '@/components/ui'
+import { Button } from '@/components/ui/button'
+import {
+  cronLabel,
+  extractErrorMessage,
+  parseJson,
+  statusLabel,
+  statusTone,
+  stringifyJson,
+} from '@/utils/format'
 
-const router = useRouter();
-const taskStore = useTaskStore();
-const templateStore = useTemplateStore();
-const { isMobile } = useBreakpoint();
+const router = useRouter()
+const loading = ref(true)
+const error = ref('')
+const message = ref('')
+const tasks = ref<Task[]>([])
+const templates = ref<Template[]>([])
+const selectedTemplateId = ref<number | null>(null)
+const preview = ref<TemplatePreview | null>(null)
+const creating = ref(false)
+const actionId = ref<number | null>(null)
+const polling = ref<Record<number, CheckInRecordStatus>>({})
+const editingTaskId = ref<number | null>(null)
+let pollTimer: number | undefined
 
-// 使用轮询 composable
-const { startPolling } = usePollStatus({
-  interval: 2000,
-  maxRetries: 15,
-  backoff: false,
-});
-
-const loading = ref(false);
-const showCreateDialog = ref(false);
-const submitting = ref(false);
-const editingTask = ref(null);
-const taskFormRef = ref(null);
-const templateFormRef = ref(null);
-const checkInLoading = ref({});
-
-// Template mode
-const loadingTemplates = ref(false);
-const activeTemplates = ref([]);
-const selectedTemplate = ref(null);
-const templatePreview = ref(null); // 存储从 preview 接口获取的合并后配置
-
-// Edit task form (仅用于编辑任务)
-const taskForm = reactive({
-  name: '',
-  thread_id: '',
-  is_active: true,
-  payload_config: '',
-  cron_expression: '0 20 * * *',
-});
-
-// Template create form
-const templateTaskForm = reactive({
+const createForm = reactive({
   task_name: '',
   thread_id: '',
-  field_values: {},
   cron_expression: '0 20 * * *',
-});
+  field_values: {} as Record<string, string>,
+})
 
-const taskRules = {
-  name: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
-  thread_id: [{ required: true, message: '请输入接龙 ID', trigger: 'blur' }],
-};
+const editForm = reactive({
+  name: '',
+  cron_expression: '',
+  payload_config: '',
+})
 
-// Compute visible fields from selected template (using merged config)
-const visibleFields = computed(() => {
-  if (!templatePreview.value) return {};
+const fieldEntries = computed(() => {
+  const config = preview.value?.field_config
+  if (!config) return []
+  const items: Array<[string, TemplateFieldConfigItem]> = []
+  if (config.signature) items.push(['signature', config.signature])
+  if (config.texts) items.push(['texts', config.texts])
+  Object.entries(config.values ?? {}).forEach(([key, value]) => items.push([key, value]))
+  return items.filter(([, field]) => field && !field.hidden)
+})
 
-  // 使用合并后的完整字段配置（包含从父模板继承的字段）
-  const fieldConfig = templatePreview.value.field_config;
-  const visible = {};
-
-  // 递归函数：提取所有可见的普通字段
-  const extractVisibleFields = (config, parentPath = '') => {
-    for (const [key, value] of Object.entries(config)) {
-      const currentPath = parentPath ? `${parentPath}.${key}` : key;
-
-      // 判断是否为字段配置对象（包含 display_name）
-      if (value && typeof value === 'object' && 'display_name' in value) {
-        // 这是一个普通字段配置
-        if (!value.hidden) {
-          visible[currentPath] = value;
-        }
-      }
-      // 判断是否为数组字段
-      else if (Array.isArray(value)) {
-        // 数组字段：遍历每个元素
-        if (value.length > 0) {
-          const firstElement = value[0];
-          // 如果数组元素是字段配置对象，直接提取
-          if (firstElement && typeof firstElement === 'object' && 'display_name' in firstElement) {
-            if (!firstElement.hidden) {
-              visible[`${currentPath}[0]`] = firstElement;
-            }
-          }
-          // 如果数组元素是对象（但不是字段配置），递归处理
-          else if (firstElement && typeof firstElement === 'object') {
-            extractVisibleFields(firstElement, `${currentPath}[0]`);
-          }
-        }
-      }
-      // 判断是否为对象字段（不包含 display_name 的对象）
-      else if (value && typeof value === 'object' && !('display_name' in value)) {
-        // 递归处理对象字段
-        extractVisibleFields(value, currentPath);
-      }
-    }
-  };
-
-  extractVisibleFields(fieldConfig);
-
-  return visible;
-});
-
-// Formatted payload for display in edit mode
-const formattedPayload = computed(() => {
-  if (!taskForm.payload_config) return '{}';
-
+async function load() {
+  loading.value = true
+  error.value = ''
   try {
-    const payload = JSON.parse(taskForm.payload_config);
-    return JSON.stringify(payload, null, 2);
-  } catch {
-    return taskForm.payload_config;
-  }
-});
-
-// Copy payload to clipboard
-const copyPayload = async () => {
-  const success = await copyToClipboard(formattedPayload.value);
-  if (success) {
-    message.success('Payload 已复制到剪贴板');
-  } else {
-    message.error('复制失败');
-  }
-};
-
-// Initialize field values with defaults when template is selected
-watch(selectedTemplate, async newTemplate => {
-  if (!newTemplate) {
-    templatePreview.value = null;
-    return;
-  }
-
-  // 获取模板的合并后配置（包含父模板的字段）
-  try {
-    templatePreview.value = await templateStore.previewTemplate(newTemplate.id);
-  } catch {
-    message.error('获取模板配置失败');
-    templatePreview.value = null;
-    return;
-  }
-
-  const fieldConfig = templatePreview.value.field_config;
-  const fieldValues = {};
-
-  // 递归函数：提取所有字段的默认值
-  const extractDefaultValues = (config, parentPath = '') => {
-    for (const [key, value] of Object.entries(config)) {
-      const currentPath = parentPath ? `${parentPath}.${key}` : key;
-
-      // 判断是否为字段配置对象（包含 display_name）
-      if (value && typeof value === 'object' && 'display_name' in value) {
-        fieldValues[currentPath] = value.default_value || '';
-      }
-      // 判断是否为数组字段
-      else if (Array.isArray(value)) {
-        // 数组字段：处理第一个元素的默认值
-        if (value.length > 0) {
-          const firstElement = value[0];
-          // 如果数组元素是字段配置对象，直接提取默认值
-          if (firstElement && typeof firstElement === 'object' && 'display_name' in firstElement) {
-            fieldValues[`${currentPath}[0]`] = firstElement.default_value || '';
-          }
-          // 如果数组元素是对象（但不是字段配置），递归处理
-          else if (firstElement && typeof firstElement === 'object') {
-            extractDefaultValues(firstElement, `${currentPath}[0]`);
-          }
-        }
-      }
-      // 判断是否为对象字段（不包含 display_name 的对象）
-      else if (value && typeof value === 'object' && !('display_name' in value)) {
-        // 递归处理对象字段
-        extractDefaultValues(value, currentPath);
-      }
-    }
-  };
-
-  extractDefaultValues(fieldConfig);
-
-  templateTaskForm.field_values = fieldValues;
-});
-
-// Load templates
-const loadTemplates = async () => {
-  loadingTemplates.value = true;
-  try {
-    activeTemplates.value = await templateStore.fetchActiveTemplates();
-  } catch (error) {
-    message.error(error.message || '加载模板失败');
+    const [taskList, templateList] = await Promise.all([taskApi.list(), templateApi.active()])
+    tasks.value = taskList
+    templates.value = templateList
+    if (!selectedTemplateId.value && templateList[0]) selectedTemplateId.value = templateList[0].id
+  } catch (err) {
+    error.value = extractErrorMessage(err)
   } finally {
-    loadingTemplates.value = false;
+    loading.value = false
   }
-};
+}
 
-// Select template
-const selectTemplate = template => {
-  selectedTemplate.value = template;
-};
-
-// 从 payload_config 中提取 ThreadId
-const getThreadId = task => {
-  if (!task.payload_config) return '未知';
-
+watch(selectedTemplateId, async (id) => {
+  preview.value = null
+  createForm.field_values = {}
+  if (!id) return
   try {
-    const payload = JSON.parse(task.payload_config);
-    return payload.ThreadId || '未知';
-  } catch (e) {
-    console.error('解析 payload_config 失败:', e);
-    return '未知';
+    preview.value = await templateApi.preview(id)
+    fieldEntries.value.forEach(([key, field]) => {
+      createForm.field_values[key] = field?.default_value ?? ''
+    })
+  } catch (err) {
+    error.value = extractErrorMessage(err)
   }
-};
+})
 
-// 加载任务列表
-const fetchTasks = async () => {
-  loading.value = true;
+async function createTask() {
+  if (!selectedTemplateId.value) return
+  creating.value = true
+  error.value = ''
+  message.value = ''
   try {
-    await taskStore.fetchMyTasks();
-  } catch (error) {
-    message.error(error.message || '加载任务列表失败');
+    await templateApi.createTask({
+      template_id: selectedTemplateId.value,
+      thread_id: createForm.thread_id,
+      task_name: createForm.task_name || undefined,
+      cron_expression: createForm.cron_expression || null,
+      field_values: createForm.field_values,
+    })
+    createForm.task_name = ''
+    createForm.thread_id = ''
+    message.value = '任务已创建'
+    await load()
+  } catch (err) {
+    error.value = extractErrorMessage(err)
   } finally {
-    loading.value = false;
+    creating.value = false
   }
-};
+}
 
-// 查看任务详情
-const viewTask = task => {
-  router.push(`/tasks/${task.id}/records`);
-};
+function startEdit(task: Task) {
+  editingTaskId.value = task.id
+  editForm.name = task.name ?? ''
+  editForm.cron_expression = task.cron_expression ?? ''
+  editForm.payload_config = stringifyJson(parseJson(task.payload_config))
+}
 
-// 编辑任务
-const editTask = task => {
-  editingTask.value = task;
-
-  // 从 payload_config 中提取 thread_id
-  let threadId = '';
+async function saveEdit(taskId: number) {
+  actionId.value = taskId
+  error.value = ''
   try {
-    const payload = JSON.parse(task.payload_config || '{}');
-    threadId = payload.ThreadId || '';
-  } catch (e) {
-    console.error('解析 payload_config 失败:', e);
-  }
-
-  Object.assign(taskForm, {
-    name: task.name,
-    thread_id: threadId,
-    is_active: task.is_active,
-    payload_config: task.payload_config || '{}',
-    cron_expression: task.cron_expression || '0 20 * * *',
-  });
-  showCreateDialog.value = true;
-};
-
-// 删除任务
-const deleteTask = task => {
-  Modal.confirm({
-    title: '删除确认',
-    content: `确定要删除任务"${task.name || task.id}"吗？此操作不可恢复。`,
-    okText: '确定删除',
-    cancelText: '取消',
-    okType: 'danger',
-    onOk: async () => {
-      try {
-        await taskStore.deleteTask(task.id);
-        message.success('任务删除成功');
-        await fetchTasks();
-      } catch (error) {
-        message.error(error.message || '删除任务失败');
-      }
-    },
-  });
-};
-
-// 切换任务状态
-const toggleTaskStatus = async task => {
-  try {
-    await taskStore.toggleTask(task.id);
-    message.success(task.is_active ? '任务已禁用' : '任务已启用');
-  } catch (error) {
-    message.error(error.message || '切换任务状态失败');
-  }
-};
-
-// 手动打卡 (异步轮询方式)
-const handleCheckIn = async taskId => {
-  checkInLoading.value[taskId] = true;
-
-  try {
-    // 调用异步打卡接口，立即返回 record_id
-    const result = await taskStore.checkInTask(taskId);
-
-    // 获取 record_id
-    const recordId = result.record_id;
-    if (!recordId) {
-      message.error('打卡请求失败:未获取到记录ID');
-      checkInLoading.value[taskId] = false;
-      return;
-    }
-
-    // 如果初始状态就是失败,显示错误并刷新任务列表
-    if (result.status === 'failure') {
-      message.error(result.message || '打卡失败');
-      checkInLoading.value[taskId] = false;
-      await fetchTasks();
-      return;
-    }
-
-    // 显示提示消息
-    message.info('打卡任务已启动，正在后台处理...');
-
-    // 使用轮询 composable 检查打卡状态
-    startPolling(
-      async () => {
-        const status = await taskStore.getCheckInRecordStatus(recordId);
-        return {
-          completed: status.status !== 'pending',
-          success: status.status === 'success',
-          data: status,
-        };
-      },
-      {
-        onSuccess: async () => {
-          checkInLoading.value[taskId] = false;
-          message.success('打卡成功！');
-          await fetchTasks();
-        },
-        onFailure: async statusData => {
-          checkInLoading.value[taskId] = false;
-          // 优先使用 error_message，如果为空则使用 response_text，都为空则使用默认消息
-          const errorMsg =
-            (statusData.error_message && statusData.error_message.trim()) ||
-            (statusData.response_text && statusData.response_text.trim()) ||
-            '打卡失败';
-          message.error(errorMsg);
-          await fetchTasks();
-        },
-        onTimeout: () => {
-          checkInLoading.value[taskId] = false;
-          message.warning('打卡处理时间较长，请稍后查看打卡记录');
-        },
-      }
-    );
-  } catch (error) {
-    console.error('启动打卡失败:', error);
-    checkInLoading.value[taskId] = false;
-    message.error(error.message || '启动打卡任务失败');
-  }
-};
-
-// 提交表单
-const handleSubmit = async () => {
-  submitting.value = true;
-
-  try {
-    // Edit mode
-    if (editingTask.value) {
-      if (!taskFormRef.value) return;
-      await taskFormRef.value.validate();
-
-      await taskStore.updateTask(editingTask.value.id, taskForm);
-      message.success('任务更新成功');
-    }
-    // Create from template
-    else {
-      if (!selectedTemplate.value) {
-        message.warning('请选择一个模板');
-        return;
-      }
-
-      if (!templateTaskForm.thread_id) {
-        message.warning('请输入接龙 ID');
-        return;
-      }
-
-      await templateStore.createTaskFromTemplate(
-        selectedTemplate.value.id,
-        templateTaskForm.thread_id,
-        templateTaskForm.field_values,
-        templateTaskForm.task_name || null,
-        templateTaskForm.cron_expression || '0 20 * * *'
-      );
-
-      message.success('任务创建成功');
-    }
-
-    showCreateDialog.value = false;
-    resetForm();
-    await fetchTasks();
-  } catch (error) {
-    message.error(error.message || '操作失败');
+    JSON.parse(editForm.payload_config)
+    await taskApi.update(taskId, {
+      name: editForm.name,
+      cron_expression: editForm.cron_expression || null,
+      payload_config: editForm.payload_config,
+    })
+    editingTaskId.value = null
+    await load()
+  } catch (err) {
+    error.value = extractErrorMessage(err)
   } finally {
-    submitting.value = false;
+    actionId.value = null
   }
-};
+}
 
-// 重置表单
-const resetForm = () => {
-  editingTask.value = null;
-  selectedTemplate.value = null;
-
-  Object.assign(taskForm, {
-    name: '',
-    thread_id: '',
-    is_active: true,
-    payload_config: '',
-    cron_expression: '0 20 * * *',
-  });
-
-  templateTaskForm.task_name = '';
-  templateTaskForm.thread_id = '';
-  templateTaskForm.field_values = {};
-  templateTaskForm.cron_expression = '0 20 * * *';
-
-  taskFormRef.value?.resetFields();
-};
-
-// 打开创建任务对话框
-const openCreateDialog = () => {
-  resetForm(); // 重置表单状态，确保不会显示编辑界面
-  showCreateDialog.value = true;
-};
-
-// Watch dialog open to load templates
-watch(showCreateDialog, isOpen => {
-  if (isOpen && !editingTask.value) {
-    loadTemplates();
+async function toggleTask(task: Task) {
+  actionId.value = task.id
+  try {
+    await taskApi.toggle(task.id)
+    await load()
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    actionId.value = null
   }
-});
+}
 
-onMounted(() => {
-  fetchTasks();
-});
+async function deleteTask(task: Task) {
+  if (!window.confirm(`确认删除任务「${task.name || task.id}」？关联记录也会删除。`)) return
+  actionId.value = task.id
+  try {
+    await taskApi.delete(task.id)
+    await load()
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    actionId.value = null
+  }
+}
+
+async function manualCheckIn(task: Task) {
+  actionId.value = task.id
+  error.value = ''
+  try {
+    const result = await checkInApi.manual(task.id)
+    const recordId = result.record_id ?? result.id
+    if (recordId) startRecordPolling(recordId)
+    message.value = result.message || '已启动打卡任务'
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    actionId.value = null
+  }
+}
+
+function startRecordPolling(recordId: number) {
+  window.clearInterval(pollTimer)
+  pollTimer = window.setInterval(async () => {
+    try {
+      const status = await checkInApi.status(recordId)
+      polling.value = { ...polling.value, [recordId]: status }
+      if (!['pending', 'running'].includes(status.status)) {
+        window.clearInterval(pollTimer)
+        await load()
+      }
+    } catch {
+      window.clearInterval(pollTimer)
+    }
+  }, 1800)
+}
+
+onMounted(load)
 </script>
 
-<style scoped>
-.icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  padding: 4px 8px;
-}
-</style>
+<template>
+  <div class="grid gap-5">
+    <section :class="[cardClass, 'overflow-hidden']">
+      <div :class="sectionHeaderClass">
+        <div>
+          <h2 class="font-semibold">从模板创建任务</h2>
+        </div>
+        <Button variant="outline" type="button" @click="load">
+          <RefreshCw class="size-4" />
+          刷新
+        </Button>
+      </div>
+
+      <form class="grid gap-4 p-4" @submit.prevent="createTask">
+        <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)_220px]">
+          <label class="grid gap-2">
+            <span :class="labelClass">模板</span>
+            <select v-model.number="selectedTemplateId" :class="inputClass">
+              <option v-for="template in templates" :key="template.id" :value="template.id">
+                {{ template.name }}
+              </option>
+            </select>
+          </label>
+          <label class="grid gap-2">
+            <span :class="labelClass">任务名称</span>
+            <input v-model="createForm.task_name" :class="inputClass" placeholder="可选" />
+          </label>
+          <label class="grid gap-2">
+            <span :class="labelClass">接龙 ThreadId</span>
+            <input v-model="createForm.thread_id" :class="inputClass" required />
+          </label>
+        </div>
+        <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
+          <label class="grid gap-2">
+            <span :class="labelClass">Cron 表达式</span>
+            <input
+              v-model="createForm.cron_expression"
+              :class="inputClass"
+              placeholder="0 20 * * *"
+            />
+          </label>
+          <Button
+            class="w-full md:w-fit"
+            :disabled="creating || !selectedTemplateId || !createForm.thread_id"
+            type="submit"
+          >
+            <Plus class="size-4" />
+            {{ creating ? '创建中' : '创建任务' }}
+          </Button>
+        </div>
+        <div v-if="fieldEntries.length" class="grid gap-3 md:grid-cols-2">
+          <label v-for="[key, field] in fieldEntries" :key="key" class="grid gap-2">
+            <span :class="labelClass">{{ field?.display_name ?? key }}</span>
+            <select
+              v-if="field?.field_type === 'select'"
+              v-model="createForm.field_values[key]"
+              :class="inputClass"
+              :required="field.required"
+            >
+              <option
+                v-for="option in field.options ?? []"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+            <textarea
+              v-else-if="field?.field_type === 'textarea'"
+              v-model="createForm.field_values[key]"
+              :class="textareaClass"
+              :placeholder="field.placeholder ?? ''"
+              :required="field.required"
+            />
+            <input
+              v-else
+              v-model="createForm.field_values[key]"
+              :class="inputClass"
+              :type="field?.field_type === 'number' ? 'number' : 'text'"
+              :placeholder="field?.placeholder ?? ''"
+              :required="field?.required"
+            />
+          </label>
+        </div>
+        <div v-if="error" :class="alertClass.danger">
+          {{ error }}
+        </div>
+        <div v-if="message" :class="alertClass.success">
+          {{ message }}
+        </div>
+      </form>
+    </section>
+
+    <StateBlock v-if="loading" title="正在加载任务" type="loading" />
+    <StateBlock
+      v-else-if="error && tasks.length === 0"
+      title="任务加载失败"
+      :description="error"
+      type="error"
+      action-label="重试"
+      @action="load"
+    />
+    <StateBlock v-else-if="tasks.length === 0" title="暂无任务" />
+    <section v-else :class="[cardClass, 'overflow-hidden']">
+      <div :class="sectionHeaderClass">
+        <div>
+          <h2 class="font-semibold">任务列表</h2>
+        </div>
+        <span
+          class="rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground"
+        >
+          {{ tasks.length }} 个任务
+        </span>
+      </div>
+      <div class="divide-y divide-border">
+        <article v-for="task in tasks" :key="task.id" class="p-3 sm:p-4">
+          <div class="grid gap-3 lg:grid-cols-[1fr_auto]">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="truncate font-semibold">{{ task.name || `任务 #${task.id}` }}</h3>
+                <span :class="toneClass(task.is_active ? 'success' : 'neutral')">{{
+                  task.is_active ? '启用' : '停用'
+                }}</span>
+                <span
+                  v-if="task.last_check_in_status"
+                  :class="toneClass(statusTone(task.last_check_in_status))"
+                >
+                  {{ statusLabel(task.last_check_in_status) }}
+                </span>
+                <span
+                  v-for="status in Object.values(polling).filter(
+                    (item) => item.task_id === task.id,
+                  )"
+                  :key="status.record_id"
+                  :class="toneClass(statusTone(status.status))"
+                >
+                  {{ statusLabel(status.status) }}
+                </span>
+              </div>
+              <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                <span>ThreadId: {{ task.thread_id || '未解析' }}</span>
+                <span>{{ cronLabel(task.cron_expression) }}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 lg:justify-end">
+              <Button
+                variant="outline"
+                type="button"
+                @click="router.navigate(`/tasks/${task.id}/records`)"
+              >
+                记录
+              </Button>
+              <Button
+                variant="outline"
+                :disabled="actionId === task.id"
+                type="button"
+                @click="manualCheckIn(task)"
+              >
+                <Play class="size-4" />
+                打卡
+              </Button>
+              <Button
+                variant="outline"
+                :disabled="actionId === task.id"
+                type="button"
+                @click="toggleTask(task)"
+              >
+                <Check class="size-4" />
+                {{ task.is_active ? '停用' : '启用' }}
+              </Button>
+              <Button variant="ghost" type="button" @click="startEdit(task)">
+                <Edit3 class="size-4" />
+                编辑
+              </Button>
+              <Button
+                variant="danger"
+                :disabled="actionId === task.id"
+                type="button"
+                @click="deleteTask(task)"
+              >
+                <Trash2 class="size-4" />
+                删除
+              </Button>
+            </div>
+          </div>
+
+          <form
+            v-if="editingTaskId === task.id"
+            class="mt-4 grid gap-3 rounded-lg border border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] p-3"
+            @submit.prevent="saveEdit(task.id)"
+          >
+            <div>
+              <h4 class="text-sm font-semibold text-foreground">编辑任务</h4>
+            </div>
+            <div class="grid gap-3 md:grid-cols-2">
+              <label class="grid gap-2">
+                <span :class="labelClass">任务名称</span>
+                <input v-model="editForm.name" :class="inputClass" />
+              </label>
+              <label class="grid gap-2">
+                <span :class="labelClass">Cron</span>
+                <input v-model="editForm.cron_expression" :class="inputClass" />
+              </label>
+            </div>
+            <label class="grid gap-2">
+              <span :class="labelClass">Payload JSON</span>
+              <textarea v-model="editForm.payload_config" :class="textareaClass" />
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <Button type="submit">保存</Button>
+              <Button variant="outline" type="button" @click="editingTaskId = null"> 取消 </Button>
+            </div>
+          </form>
+        </article>
+      </div>
+    </section>
+  </div>
+</template>

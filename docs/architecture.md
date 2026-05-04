@@ -75,9 +75,10 @@ CheckIn App V2 采用用户-任务分离架构，一个用户可管理多个打�
 ### 前端
 
 - **Vue 3**: Composition API
-- **Ant Design Vue**: UI 组件库
-- **Pinia**: 状态管理
-- **Axios**: HTTP 客户端，拦截器处理 Token
+- **TypeScript**: 前端类型约束
+- **shadcn-vue**: 共享 UI primitive
+- **Tailwind CSS**: 设计令牌和布局表达
+- **fetch + local API helpers**: 请求封装和 Token 处理
 
 ## 认证流程
 
@@ -166,11 +167,11 @@ apps/backend/
 ```
 apps/frontend/src/
 ├── api/          # API 调用封装
+├── app/          # 认证、路由、主题
 ├── views/        # 页面组件
-├── components/   # 可复用组件
-├── stores/       # Pinia 状态
-├── router/       # 路由配置
-└── composables/  # 组合式函数
+├── components/   # 可复用组件和 shadcn primitives
+├── utils/        # 格式化与显示 helper
+└── style.css     # 全局 token 和语义样式
 ```
 
 ## 扩展性

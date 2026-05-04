@@ -21,14 +21,14 @@ uv run python main.py backend
 cd apps/frontend
 
 # 安装依赖
-npm install
+pnpm install
 
 # 启动开发服务器
-npm run dev
+pnpm dev
 
-# 代码格式化
-npm run lint
-npm run format
+# 代码检查和格式化
+pnpm lint:check
+pnpm format:check
 ```
 
 ## 项目结构
@@ -82,12 +82,18 @@ apps/backend/
 
 ```
 apps/frontend/src/
-├── main.js              # Vue 应用入口
+├── main.ts              # Vue 应用入口
 ├── App.vue              # 根组件
 │
 ├── api/                 # API 封装
-│   ├── client.js        # Axios 实例、拦截器
-│   └── index.js         # API 模块（auth, user, task 等）
+│   ├── client.ts        # fetch 客户端、鉴权存储、错误归一化
+│   ├── index.ts         # API 模块（auth, user, task 等）
+│   └── types.ts         # API 类型
+│
+├── app/                 # 应用级状态和路由
+│   ├── auth.ts          # 认证状态
+│   ├── router.ts        # Vue Router 配置、导航守卫
+│   └── theme.ts         # 主题模式
 │
 ├── views/               # 页面组件
 │   ├── LoginView.vue
@@ -97,21 +103,14 @@ apps/frontend/src/
 │   └── admin/           # 管理员页面
 │
 ├── components/          # 可复用组件
-│   ├── TaskCard.vue
-│   ├── RecordTable.vue
-│   └── ...
+│   ├── AppLayout.vue
+│   ├── StateBlock.vue
+│   ├── templates/       # 模板结构化编辑器
+│   └── ui/              # shadcn-vue primitive
 │
-├── stores/              # Pinia 状态管理
-│   ├── auth.js          # 认证状态
-│   ├── user.js          # 用户信息
-│   └── task.js          # 任务列表
-│
-├── router/              # Vue Router
-│   └── index.js         # 路由配置、导航守卫
-│
-└── composables/         # 组合式函数
-    ├── useAuth.js
-    └── useTask.js
+├── components/ui.ts     # 本地共享样式 helper
+├── style.css            # Tailwind v4 + shadcn token
+└── utils/               # 格式化和显示 helper
 ```
 
 ## 开发流程
@@ -163,38 +162,27 @@ app.include_router(tags.router, prefix="/api")
 
 **步骤**:
 
-1. 在 `api/index.js` 添加 API 调用
-2. 在 `stores/` 创建或更新状态
-3. 创建或更新 Vue 组件
+1. 在 `apps/frontend/src/api/index.ts` 添加 API 调用和类型引用
+2. 在 `apps/frontend/src/app/` 更新认证、路由或主题状态（如需要）
+3. 创建或更新 Vue 组件，优先复用现有 shadcn-vue primitive 和 `src/components/ui.ts`
 4. 配置路由（如需要）
 
 **示例**: 添加标签管理页面
 
-```javascript
-// api/index.js
+```typescript
+// apps/frontend/src/api/index.ts
 export const tagApi = {
   addTag: (taskId, data) => client.post(`/tasks/${taskId}/tags`, data),
   getTags: (taskId) => client.get(`/tasks/${taskId}/tags`)
 }
 
-// stores/tag.js
-export const useTagStore = defineStore('tag', {
-  state: () => ({
-    tags: []
-  }),
-  actions: {
-    async fetchTags(taskId) {
-      const { data } = await tagApi.getTags(taskId)
-      this.tags = data
-    }
-  }
-})
-
-// components/TagManager.vue
+// apps/frontend/src/components/TagManager.vue
 <template>
-  <div>
-    <a-tag v-for="tag in tags" :key="tag.id">{{ tag.tag_name }}</a-tag>
-    <a-button @click="addTag">添加标签</a-button>
+  <div class="grid gap-2">
+    <span v-for="tag in tags" :key="tag.id" :class="toneClass('neutral')">
+      {{ tag.tag_name }}
+    </span>
+    <Button type="button" @click="addTag">添加标签</Button>
   </div>
 </template>
 ```
@@ -229,20 +217,12 @@ uv run pytest tests/
 
 #### 前端测试
 
-```javascript
-// tests/TaskCard.spec.js
-import { mount } from '@vue/test-utils'
-import TaskCard from '@/components/TaskCard.vue'
+```bash
+cd apps/frontend
 
-test('displays task name', () => {
-  const wrapper = mount(TaskCard, {
-    props: { task: { name: 'Test Task' } }
-  })
-  expect(wrapper.text()).toContain('Test Task')
-})
-
-// 运行测试
-npm run test
+pnpm test
+pnpm lint:check
+pnpm build
 ```
 
 ## 代码规范
@@ -273,23 +253,47 @@ async def create_task(
 - 使用 ESLint + Prettier
 - 组件使用 Composition API
 - 使用 `<script setup>` 语法
-- Props 添加类型验证
-- 统一使用 Ant Design Vue 组件
+- 使用 TypeScript 类型定义 Props 和 API 数据
+- 优先使用 shadcn-vue primitive、lucide 图标、Tailwind token 和 `src/components/ui.ts` 共享样式
+- 保留页面局部 Tailwind 来表达独有布局，不为一次性结构强行抽象
 
 ```vue
 <!-- 好的示例 -->
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 
-const props = defineProps({
+const props = defineProps<{
   task: {
-    type: Object,
-    required: true
+    name: string
+    is_active: boolean
   }
-})
+}>()
 
 const isActive = computed(() => props.task.is_active)
 </script>
+
+<template>
+  <article class="rounded-lg border border-border bg-card p-4">
+    {{ task.name }}
+  </article>
+</template>
+```
+
+### 前端调试
+
+```typescript
+// 使用 Vue Devtools
+// Chrome 扩展安装
+
+// console 输出
+console.log('Task data:', task.value)
+
+// 调试 API 请求
+const response = await fetch('/api/tasks', {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+})
 ```
 
 ## 调试技巧
@@ -309,22 +313,6 @@ import pdb; pdb.set_trace()
 import logging
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-```
-
-### 前端调试
-
-```javascript
-// 使用 Vue Devtools
-// Chrome 扩展安装
-
-// console 输出
-console.log('Task data:', task.value)
-
-// 调试 API 请求
-axios.interceptors.request.use(request => {
-  console.log('Request:', request)
-  return request
-})
 ```
 
 ## 常见问题

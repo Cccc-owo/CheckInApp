@@ -1,38 +1,65 @@
-import js from '@eslint/js';
-import pluginVue from 'eslint-plugin-vue';
-import prettierConfig from '@vue/eslint-config-prettier';
+import js from '@eslint/js'
+import prettierConfig from '@vue/eslint-config-prettier'
+import tsParser from '@typescript-eslint/parser'
+import pluginVue from 'eslint-plugin-vue'
+import vueParser from 'vue-eslint-parser'
+
+const browserGlobals = {
+  AbortController: 'readonly',
+  DOMException: 'readonly',
+  Headers: 'readonly',
+  URL: 'readonly',
+  URLSearchParams: 'readonly',
+  console: 'readonly',
+  document: 'readonly',
+  fetch: 'readonly',
+  localStorage: 'readonly',
+  window: 'readonly',
+}
 
 export default [
   {
-    ignores: ['node_modules', 'dist', '*.local'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.local', 'pnpm-lock.yaml'],
   },
   js.configs.recommended,
-  ...pluginVue.configs['flat/recommended'],
-  prettierConfig,
   {
+    files: ['**/*.ts'],
     languageOptions: {
-      globals: {
-        // 浏览器环境
-        window: 'readonly',
-        document: 'readonly',
-        localStorage: 'readonly',
-        console: 'readonly',
-        setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-        navigator: 'readonly',
-        // Node.js 环境（用于配置文件）
-        process: 'readonly',
-        __dirname: 'readonly',
-      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parser: tsParser,
+      globals: browserGlobals,
     },
     rules: {
-      'vue/multi-word-component-names': 'off',
-      'vue/no-v-html': 'warn',
-      'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-      'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-      'no-unused-vars': 'warn',
+      'no-undef': 'off',
     },
   },
-];
+  ...pluginVue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parser: vueParser,
+      parserOptions: {
+        parser: tsParser,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+      globals: browserGlobals,
+    },
+    rules: {
+      'no-undef': 'off',
+    },
+  },
+  prettierConfig,
+  {
+    files: ['**/*.{js,ts,vue}'],
+    rules: {
+      'no-console': 'warn',
+      'no-unused-vars': 'off',
+      'vue/multi-word-component-names': 'off',
+      'vue/no-v-html': 'warn',
+    },
+  },
+]

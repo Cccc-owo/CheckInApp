@@ -1,85 +1,72 @@
-<template>
-  <a-config-provider :theme="antdTheme" :locale="zhCN">
-    <router-view />
-  </a-config-provider>
-</template>
+<script setup lang="ts">
+import { computed, onMounted } from 'vue'
+import AppLayout from '@/components/AppLayout.vue'
+import { useAuth } from '@/app/auth'
+import { useRouter } from '@/app/router'
+import LoginView from '@/views/LoginView.vue'
+import PendingApprovalView from '@/views/PendingApprovalView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import TasksView from '@/views/TasksView.vue'
+import TaskRecordsView from '@/views/TaskRecordsView.vue'
+import RecordsView from '@/views/RecordsView.vue'
+import SettingsView from '@/views/SettingsView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
+import AdminUsersView from '@/views/admin/AdminUsersView.vue'
+import AdminTemplatesView from '@/views/admin/AdminTemplatesView.vue'
+import AdminRecordsView from '@/views/admin/AdminRecordsView.vue'
+import AdminLogsView from '@/views/admin/AdminLogsView.vue'
+import AdminStatsView from '@/views/admin/AdminStatsView.vue'
 
-<script setup>
-import { onMounted, computed } from 'vue';
-import { ConfigProvider as AConfigProvider } from 'ant-design-vue';
-import zhCN from 'ant-design-vue/es/locale/zh_CN';
-import { useAuthStore } from '@/stores/auth';
-import getAntdTheme from './antd-theme';
-import { useTheme, initTheme, watchSystemTheme } from '@/composables/useTheme';
+const router = useRouter()
+const auth = useAuth()
 
-const authStore = useAuthStore();
-
-// 初始化主题（全局）
-initTheme();
-watchSystemTheme();
-
-// 使用主题
-const { isDark } = useTheme();
-
-// 动态生成 Ant Design 主题
-const antdTheme = computed(() => getAntdTheme(isDark.value));
-
-// 应用启动时验证 Token
-onMounted(async () => {
-  if (authStore.isAuthenticated) {
-    try {
-      await authStore.fetchCurrentUser();
-    } catch (error) {
-      console.error('验证用户信息失败:', error);
-      // Token 可能已过期，清除认证状态
-      authStore.clearAuth();
-    }
+const view = computed(() => {
+  switch (router.current.value.key) {
+    case 'login':
+      return LoginView
+    case 'pending':
+      return PendingApprovalView
+    case 'dashboard':
+      return DashboardView
+    case 'tasks':
+      return TasksView
+    case 'task-records':
+      return TaskRecordsView
+    case 'records':
+      return RecordsView
+    case 'settings':
+      return SettingsView
+    case 'admin-users':
+      return AdminUsersView
+    case 'admin-templates':
+      return AdminTemplatesView
+    case 'admin-records':
+      return AdminRecordsView
+    case 'admin-logs':
+      return AdminLogsView
+    case 'admin-stats':
+      return AdminStatsView
+    default:
+      return NotFoundView
   }
-});
+})
+
+const wrappedView = computed(() => {
+  if (['login', 'pending', 'not-found'].includes(router.current.value.key)) return view.value
+  return AppLayout
+})
+
+const usesLayout = computed(() => wrappedView.value === AppLayout)
+
+onMounted(() => {
+  void auth.refreshCurrentUser().catch(() => undefined)
+  void router.guardCurrent()
+})
 </script>
 
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
-
-#app {
-  width: 100%;
-  height: 100%;
-  min-height: 100vh;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 修复按钮图标与文本的垂直对齐 */
-.ant-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.ant-btn .anticon {
-  display: inline-flex !important;
-  align-items: center !important;
-  line-height: 1 !important;
-}
-
-.ant-btn > span {
-  display: inline-flex !important;
-  align-items: center !important;
-}
-</style>
+<template>
+  <AppLayout v-if="usesLayout">
+    <component :is="view" />
+  </AppLayout>
+  <component :is="view" v-else />
+</template>
