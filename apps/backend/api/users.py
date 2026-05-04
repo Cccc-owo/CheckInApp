@@ -14,9 +14,15 @@ from backend.schemas.task import TaskResponse
 from backend.services.user_service import UserService
 from backend.services.task_service import TaskService
 from backend.dependencies import get_current_user, get_current_admin_user
-from backend.exceptions import ValidationError, AuthorizationError, ResourceNotFoundError
+from backend.exceptions import (
+    AuthorizationError,
+    BaseAPIException,
+    ResourceNotFoundError,
+    ValidationError,
+)
 
 router = APIRouter()
+EXPECTED_API_EXCEPTIONS = (BaseAPIException, HTTPException)
 
 
 @router.post(
@@ -42,6 +48,8 @@ async def create_user(
         return user
     except ValueError as e:
         raise ValidationError(str(e))
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"创建用户失败: {str(e)}"
@@ -103,6 +111,8 @@ async def update_current_user_profile(
         return user
     except ValueError as e:
         raise ValidationError(str(e))
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"更新个人信息失败: {str(e)}"
@@ -144,6 +154,8 @@ async def get_current_user_tasks(
     try:
         tasks = TaskService.get_user_tasks(current_user.id, db, include_inactive)
         return tasks
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取任务列表失败: {str(e)}"
@@ -170,6 +182,8 @@ async def get_all_users(
     try:
         users = UserService.get_all_users(db, skip, limit, search, role)
         return users
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取用户列表失败: {str(e)}"
@@ -252,6 +266,8 @@ async def update_user(
         return user
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"更新用户失败: {str(e)}"
@@ -272,6 +288,8 @@ async def delete_user(
         return None
     except ValueError as e:
         raise ResourceNotFoundError(str(e))
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"删除用户失败: {str(e)}"

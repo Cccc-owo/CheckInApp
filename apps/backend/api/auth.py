@@ -12,10 +12,11 @@ from backend.schemas.auth import (
     AliasLoginResponse,
 )
 from backend.services.auth_service import AuthService
-from backend.exceptions import BusinessLogicError
+from backend.exceptions import BaseAPIException, BusinessLogicError
 from backend.limiter import limiter
 
 router = APIRouter()
+EXPECTED_API_EXCEPTIONS = (BaseAPIException, HTTPException)
 
 
 @router.post("/request_qrcode", response_model=dict, summary="请求 QQ 扫码二维码")
@@ -68,6 +69,8 @@ async def request_qrcode(
         )
 
         return result
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"创建扫码会话失败: {str(e)}"
@@ -95,6 +98,8 @@ async def get_qrcode_status(session_id: str, db: Session = Depends(get_db)):
     try:
         result = AuthService.get_qrcode_status(session_id, db)
         return result
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"查询扫码状态失败: {str(e)}"
@@ -113,6 +118,8 @@ async def cancel_qrcode_session(session_id: str):
     try:
         result = AuthService.cancel_qrcode_session(session_id)
         return result
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"取消会话失败: {str(e)}"
@@ -136,6 +143,8 @@ async def verify_token(request: TokenVerifyRequest, db: Session = Depends(get_db
     try:
         result = AuthService.verify_token(request.authorization, db)
         return result
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"验证 Token 失败: {str(e)}"
@@ -170,6 +179,8 @@ async def alias_login(
     try:
         result = AuthService.alias_login(login_data.alias, login_data.password, db)
         return result
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"别名登录失败: {str(e)}"

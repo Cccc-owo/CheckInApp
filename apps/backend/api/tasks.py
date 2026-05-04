@@ -4,6 +4,7 @@ from typing import List
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
+from backend.exceptions import BaseAPIException
 from backend.models import get_db, User
 from backend.schemas.task import TaskUpdate, TaskResponse
 from backend.services.task_service import TaskService
@@ -37,6 +38,8 @@ async def get_tasks(
         # 为每个任务添加额外信息
         enriched_tasks = [TaskService.enrich_task_with_check_in_info(task, db) for task in tasks]
         return enriched_tasks
+    except (BaseAPIException, HTTPException):
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取任务列表失败: {str(e)}"
@@ -173,6 +176,8 @@ async def validate_cron_expression(request: CronValidateRequest):
             "next_times": next_times,
             "description": generate_cron_description(cron_expr),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"无效的 Crontab 表达式: {str(e)}"

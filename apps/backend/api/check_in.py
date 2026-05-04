@@ -12,8 +12,10 @@ from backend.schemas.check_in import (
 from backend.services.check_in_service import CheckInService
 from backend.services.task_service import TaskService
 from backend.dependencies import get_current_user, get_current_admin_user
+from backend.exceptions import BaseAPIException
 
 router = APIRouter()
+EXPECTED_API_EXCEPTIONS = (BaseAPIException, HTTPException)
 
 
 @router.post("/manual/{task_id}", summary="手动触发打卡（异步）")
@@ -38,6 +40,8 @@ async def manual_check_in(
     try:
         result = CheckInService.start_async_check_in(task, "manual", db)
         return result
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"启动打卡任务失败: {str(e)}"
@@ -111,6 +115,8 @@ async def get_task_check_in_records(
             task_id, db, skip, limit, status_filter, trigger_type
         )
         return PaginatedResponse(records=records, total=total, skip=skip, limit=limit)
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取打卡记录失败: {str(e)}"
@@ -145,6 +151,8 @@ async def get_my_check_in_records(
             current_user.id, db, skip, limit, status_filter, trigger_type
         )
         return PaginatedResponse(records=records, total=total, skip=skip, limit=limit)
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取打卡记录失败: {str(e)}"
@@ -181,6 +189,8 @@ async def get_all_check_in_records(
             CheckInService.enrich_record_with_user_task_info(record, db) for record in records
         ]
         return PaginatedResponse(records=enriched_records, total=total, skip=skip, limit=limit)
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取打卡记录失败: {str(e)}"
@@ -213,6 +223,8 @@ async def get_check_in_records_count(
         total = query.count()
 
         return {"total": total}
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取统计失败: {str(e)}"

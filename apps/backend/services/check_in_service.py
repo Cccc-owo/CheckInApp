@@ -541,10 +541,10 @@ class CheckInService:
             )
             task_name = task.name
 
-            # 从 payload_config 提取 ThreadId
-            from backend.utils.json_helpers import extract_thread_id
+            # 优先从显式任务身份读取 ThreadId，兼容旧数据时回退到 payload_config
+            from backend.utils.json_helpers import resolve_task_thread_id
 
-            thread_id = extract_thread_id(task.payload_config)  # type: ignore
+            thread_id = resolve_task_thread_id(task)
 
         # 转换为字典并添加额外字段
         record_dict = {

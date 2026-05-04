@@ -92,6 +92,29 @@ def build_task_info(task) -> Dict[str, str]:
         包含 thread_id 和 name 的字典
     """
     return {
-        "thread_id": extract_thread_id(getattr(task, "payload_config", None)) or "未知",
+        "thread_id": resolve_task_thread_id(task) or "未知",
         "name": getattr(task, "name", None) or f"Task-{getattr(task, 'id', 'Unknown')}",
     }
+
+
+def resolve_task_thread_id(task) -> Optional[str]:
+    """
+    优先从显式字段读取任务 ThreadId，兼容旧数据时回退到 payload_config。
+
+    Args:
+        task: CheckInTask 或相似对象
+
+    Returns:
+        ThreadId 或 None
+    """
+    thread_id = getattr(task, "thread_id", None)
+    if thread_id is not None:
+        value = str(thread_id).strip()
+        if value:
+            return value
+
+    legacy_thread_id = extract_thread_id(getattr(task, "payload_config", None))
+    if legacy_thread_id is None:
+        return None
+    value = str(legacy_thread_id).strip()
+    return value or None

@@ -4,7 +4,9 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from backend.models import TaskTemplate, CheckInTask
+from backend.exceptions import BaseAPIException
+from backend.models import CheckInTask, TaskTemplate
+from backend.schemas.task import TaskCreate
 from backend.schemas.template import TemplateCreate, TemplateUpdate
 
 logger = logging.getLogger(__name__)
@@ -134,6 +136,9 @@ class TemplateService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"字段配置 JSON 格式错误: {str(e)}"
             )
+        except (BaseAPIException, HTTPException):
+            db.rollback()
+            raise
         except Exception as e:
             logger.error(f"创建模板失败: {str(e)}")
             db.rollback()
@@ -219,6 +224,9 @@ class TemplateService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail=f"字段配置 JSON 格式错误: {str(e)}"
             )
+        except (BaseAPIException, HTTPException):
+            db.rollback()
+            raise
         except Exception as e:
             logger.error(f"更新模板失败: {str(e)}")
             db.rollback()
@@ -247,6 +255,9 @@ class TemplateService:
             db.commit()
             logger.info(f"删除模板成功: {template.name} (ID: {template_id})")
             return True
+        except (BaseAPIException, HTTPException):
+            db.rollback()
+            raise
         except Exception as e:
             logger.error(f"删除模板失败: {str(e)}")
             db.rollback()
@@ -424,6 +435,10 @@ class TemplateService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"解析模板配置失败"
             )
+        except BaseAPIException:
+            raise
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"组装 payload 失败: {str(e)}")
             raise HTTPException(
@@ -518,31 +533,32 @@ class TemplateService:
             signature = payload.get("Signature", "Unknown")
             task_name = f"{template.name} - {signature}"
 
-        # 创建任务（包含 cron_expression）
         try:
-            task = CheckInTask(
+            from backend.services.task_service import TaskService
+
+            task = TaskService.create_task(
                 user_id=user_id,
-                payload_config=json.dumps(payload, ensure_ascii=False),
-                name=task_name,
-                is_active=True,
-                cron_expression=cron_expression or "0 20 * * *",
+                task_data=TaskCreate(
+                    payload_config=json.dumps(payload, ensure_ascii=False),
+                    name=task_name,
+                    is_active=True,
+                    cron_expression=cron_expression or "0 20 * * *",
+                ),
+                db=db,
             )
-            db.add(task)
-            db.commit()
-            db.refresh(task)
 
             logger.info(
                 f"从模板创建任务成功: {task.name} (ID: {task.id}, 模板: {template.name}, ThreadId: {thread_id})"
             )
 
-            # 如果任务启用且包含 cron_expression，立即添加到调度器
-            if task.is_scheduled_enabled:
-                from backend.services.task_service import TaskService
-
-                TaskService._reload_scheduler_for_task(task, db)
-
             return task
 
+        except BaseAPIException:
+            db.rollback()
+            raise
+        except HTTPException:
+            db.rollback()
+            raise
         except Exception as e:
             logger.error(f"从模板创建任务失败: {str(e)}")
             db.rollback()

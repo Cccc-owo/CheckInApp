@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -22,6 +22,12 @@ class CheckInTask(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
         comment="用户 ID",
+    )
+    thread_id: Mapped[str | None] = mapped_column(
+        String(100),
+        index=True,
+        nullable=True,
+        comment="接龙项目 ID",
     )
     payload_config: Mapped[str] = mapped_column(
         Text,
@@ -57,6 +63,7 @@ class CheckInTask(Base):
     # 添加索引：加速查询
     __table_args__ = (
         Index("ix_task_user_active", "user_id", "is_active"),
+        UniqueConstraint("user_id", "thread_id", name="uq_task_user_thread_id"),
         Index("ix_task_cron", "cron_expression"),  # 加速查询启用了定时打卡的任务
     )
 

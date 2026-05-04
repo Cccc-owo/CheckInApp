@@ -11,9 +11,11 @@ from backend.services.check_in_service import CheckInService
 from backend.services.admin_service import AdminService
 from backend.dependencies import get_current_admin_user
 from backend.config import settings
+from backend.exceptions import BaseAPIException
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+EXPECTED_API_EXCEPTIONS = (BaseAPIException, HTTPException)
 
 
 class BatchToggleTasksRequest(BaseModel):
@@ -43,13 +45,21 @@ async def batch_toggle_tasks(
                 task.is_active = request.is_active
                 count += 1
 
+        from backend.services.scheduler_service import sync_scheduled_task
+
         db.commit()
+        for task_id in request.task_ids:
+            task = db.query(CheckInTask).filter(CheckInTask.id == task_id).first()
+            if task:
+                sync_scheduled_task(task)
 
         return {
             "success": True,
             "message": f"已{'启用' if request.is_active else '禁用'} {count} 个任务",
             "count": count,
         }
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"批量操作失败: {str(e)}"
@@ -72,6 +82,8 @@ async def batch_check_in(
     try:
         result = CheckInService.batch_check_in_tasks(request.task_ids, db)
         return result
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"批量打卡失败: {str(e)}"
@@ -235,6 +247,8 @@ async def get_system_stats(
             "tokens": {"expiring_soon": expiring_users},
         }
 
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取统计失败: {str(e)}"
@@ -251,6 +265,8 @@ async def get_pending_users(
     try:
         users = AdminService.get_pending_users(db)
         return users
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -274,7 +290,7 @@ async def approve_user(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"])
 
         return result
-    except HTTPException:
+    except EXPECTED_API_EXCEPTIONS:
         raise
     except Exception as e:
         raise HTTPException(
@@ -298,7 +314,7 @@ async def reject_user(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"])
 
         return result
-    except HTTPException:
+    except EXPECTED_API_EXCEPTIONS:
         raise
     except Exception as e:
         raise HTTPException(

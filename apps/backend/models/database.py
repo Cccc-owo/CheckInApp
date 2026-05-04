@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import DateTime, create_engine, event, inspect
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from backend.config import settings
@@ -24,20 +24,22 @@ class Base(DeclarativeBase):
 @event.listens_for(Base, "load", propagate=True)
 def receive_load(target, context):
     """在从数据库加载对象后，将所有 datetime 字段转换为 timezone-aware (UTC)"""
-    for attr_name in dir(target):
-        # 跳过私有属性和方法
-        if attr_name.startswith("_"):
+    mapper = inspect(target).mapper
+    for attr in mapper.column_attrs:
+        column = attr.columns[0]
+        if not isinstance(column.type, DateTime):
             continue
 
         try:
-            attr_value = getattr(target, attr_name)
-
-            # 如果是 naive datetime，添加 UTC timezone
-            if isinstance(attr_value, datetime) and attr_value.tzinfo is None:
-                setattr(target, attr_name, attr_value.replace(tzinfo=timezone.utc))
+            attr_value = getattr(target, attr.key)
         except (AttributeError, TypeError):
-            # 某些属性可能无法访问或设置，跳过
             continue
+
+        if isinstance(attr_value, datetime) and attr_value.tzinfo is None:
+            try:
+                setattr(target, attr.key, attr_value.replace(tzinfo=timezone.utc))
+            except (AttributeError, TypeError):
+                continue
 
 
 def get_db():

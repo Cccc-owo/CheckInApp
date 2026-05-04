@@ -20,6 +20,70 @@ scheduler = None
 scheduler_lock = None
 
 
+def _task_job_id(task_id: int) -> str:
+    return f"task_{task_id}"
+
+
+def _remove_task_job(job_id: str, scheduler_instance=None) -> bool:
+    active_scheduler = scheduler_instance or scheduler
+    if not active_scheduler:
+        return False
+
+    existing_job = active_scheduler.get_job(job_id)
+    if not existing_job:
+        return False
+
+    active_scheduler.remove_job(job_id)
+    logger.info(f"✅ 已移除调度任务: {job_id}")
+    return True
+
+
+def remove_scheduled_task(task_id: int, scheduler_instance=None) -> bool:
+    """从调度器移除指定任务。"""
+    active_scheduler = scheduler_instance or scheduler
+    if not active_scheduler:
+        logger.warning(f"调度器未启动，无法移除任务 {task_id}")
+        return False
+
+    return _remove_task_job(_task_job_id(task_id), active_scheduler)
+
+
+def sync_scheduled_task(task: CheckInTask, scheduler_instance=None) -> bool:
+    """
+    根据任务当前状态同步调度器中的对应 job。
+
+    返回 True 表示任务已成功安排到调度器，False 表示未安排或调度器不可用。
+    """
+    active_scheduler = scheduler_instance or scheduler
+    if not active_scheduler:
+        logger.warning(f"调度器未启动，无法同步任务 {task.id}")
+        return False
+
+    job_id = _task_job_id(task.id)
+    _remove_task_job(job_id, active_scheduler)
+
+    if not task.is_scheduled_enabled:
+        logger.info(f"任务 {task.id} 未启用或无 cron 表达式，已从调度器移除")
+        return False
+
+    cron_str = str(task.cron_expression or "").strip()
+    if not cron_str or not croniter.is_valid(cron_str):
+        logger.warning(f"任务 {task.id} 的 cron 表达式无效: {cron_str}")
+        return False
+
+    active_scheduler.add_job(
+        func=scheduled_check_in_task,
+        trigger=CronTrigger.from_crontab(cron_str),
+        id=job_id,
+        name=f"CheckIn-Task-{task.id}",
+        args=[task.id],
+        replace_existing=True,
+    )
+
+    logger.info(f"✅ 任务 {task.id} 已同步到调度器: {cron_str}")
+    return True
+
+
 def load_scheduled_tasks(db: Session, scheduler_instance):
     """
     从数据库加载所有启用的定时任务并添加到 APScheduler
@@ -55,33 +119,10 @@ def load_scheduled_tasks(db: Session, scheduler_instance):
 
     for task in tasks:
         try:
-            # 验证 cron 表达式
-            cron_str = str(task.cron_expression) if task.cron_expression else None
-            if not cron_str or not croniter.is_valid(cron_str):
-                logger.warning(f"跳过任务 {task.id}: 无效的 cron 表达式 '{task.cron_expression}'")
+            if sync_scheduled_task(task, scheduler_instance):
+                loaded_count += 1
+            else:
                 skipped_count += 1
-                continue
-
-            # 创建任务 ID
-            job_id = f"task_{task.id}"
-
-            # 检查任务是否已存在
-            if scheduler_instance.get_job(job_id):
-                logger.debug(f"任务 {task.id} 已存在，跳过")
-                continue
-
-            # 添加任务到调度器
-            scheduler_instance.add_job(
-                func=scheduled_check_in_task,
-                trigger=CronTrigger.from_crontab(cron_str),
-                id=job_id,
-                name=f"CheckIn-Task-{task.id}",
-                args=[task.id],
-                replace_existing=True,
-            )
-
-            logger.info(f"✅ 加载任务 {task.id}: {task.name} (Cron: {task.cron_expression})")
-            loaded_count += 1
 
         except Exception as e:
             logger.error(f"❌ 加载任务 {task.id} 时出错: {str(e)}")

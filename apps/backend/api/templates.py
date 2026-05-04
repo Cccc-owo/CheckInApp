@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from backend.models import User
 from backend.dependencies import get_db, get_current_user, get_current_admin_user
+from backend.exceptions import BaseAPIException
 from backend.schemas.template import (
     TemplateCreate,
     TemplateUpdate,
@@ -15,6 +16,9 @@ from backend.schemas.task import TaskResponse
 from backend.services.template_service import TemplateService
 
 router = APIRouter()
+
+
+EXPECTED_API_EXCEPTIONS = (BaseAPIException, HTTPException)
 
 
 @router.get("/", response_model=List[TemplateResponse], summary="获取所有模板列表")
@@ -35,6 +39,8 @@ async def get_all_templates(
     try:
         templates = TemplateService.get_all_templates(db, skip, limit, is_active)
         return templates
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取模板列表失败: {str(e)}"
@@ -57,6 +63,8 @@ async def get_active_templates(
     try:
         templates = TemplateService.get_all_templates(db, skip, limit, is_active=True)
         return templates
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取模板列表失败: {str(e)}"
@@ -115,6 +123,8 @@ async def preview_template(
             "preview_payload": preview_payload,
             "field_config": merged_config,
         }
+    except EXPECTED_API_EXCEPTIONS:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"生成预览失败: {str(e)}"
