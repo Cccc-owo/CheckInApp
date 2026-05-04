@@ -40,6 +40,9 @@ uv sync
 uv run playwright install chromium
 uv run python main.py backend
 
+# 手动执行数据库迁移（后端启动时也会自动执行）
+uv run python main.py backend-migrate
+
 # 前端
 cd apps/frontend
 pnpm install
@@ -70,6 +73,7 @@ docker compose up -d --build
 
 ```bash
 uv run python main.py backend-daemon
+uv run python main.py backend-migrate
 python main.py frontend-daemon
 python main.py status
 python main.py stop [all|backend|frontend]

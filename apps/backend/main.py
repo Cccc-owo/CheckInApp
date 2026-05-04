@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from backend.config import settings
+from backend.migrations import run_pending_migrations
 from backend.models import init_db
 from backend.exceptions import BaseAPIException
 from backend.schemas.response import ErrorResponse, ErrorDetail
@@ -36,6 +37,14 @@ async def lifespan(app: FastAPI):
     logger.info("正在初始化数据库...")
     init_db()
     logger.info("数据库初始化完成")
+
+    logger.info("正在执行数据库迁移...")
+    migration_result = run_pending_migrations()
+    logger.info(
+        "数据库迁移完成：applied=%s skipped=%s",
+        len(migration_result.applied),
+        len(migration_result.skipped),
+    )
 
     # 确保必要的目录存在
     settings.SESSION_DIR.mkdir(parents=True, exist_ok=True)

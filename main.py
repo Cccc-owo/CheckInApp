@@ -112,6 +112,13 @@ def run_backend(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_backend_migrations(_: argparse.Namespace) -> int:
+    ensure_import_path()
+    from backend.scripts.run_migrations import main as run_migrations_main
+
+    return run_migrations_main()
+
+
 def start_backend_daemon(args: argparse.Namespace) -> int:
     ensure_runtime_dirs()
     if BACKEND_PID.exists():
@@ -259,6 +266,9 @@ def build_parser() -> argparse.ArgumentParser:
     backend = sub.add_parser("backend", help="run backend in the foreground")
     add_backend_args(backend)
     backend.set_defaults(func=run_backend)
+
+    backend_migrate = sub.add_parser("backend-migrate", help="run backend database migrations")
+    backend_migrate.set_defaults(func=run_backend_migrations)
 
     backend_daemon = sub.add_parser("backend-daemon", help="start backend in the background")
     backend_daemon.add_argument("--host", default="0.0.0.0")

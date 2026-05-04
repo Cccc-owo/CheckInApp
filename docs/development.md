@@ -190,12 +190,16 @@ export const tagApi = {
 ### 数据库迁移
 
 ```bash
-# 修改模型后生成迁移脚本
-# 手动创建脚本在 apps/backend/scripts/migrate_*.py
+# 后端启动时会在调度器启动前自动执行待迁移项。
 
-# 执行迁移
-uv run python apps/backend/scripts/migrate_xxx.py
+# 如需手动执行全部待迁移项
+uv run python main.py backend-migrate
+
+# 或直接调用脚本模块
+uv run python -m backend.scripts.run_migrations
 ```
+
+新增迁移时，将迁移函数注册到 `backend.migrations.MIGRATIONS`，并保持迁移逻辑幂等。迁移只有成功完成后才会写入 `schema_migrations`。
 
 ### 测试
 

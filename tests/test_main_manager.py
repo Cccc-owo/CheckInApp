@@ -56,6 +56,11 @@ class BackendManagerUvTests(unittest.TestCase):
         self.assertEqual(cmd[1:3], ["run", "python"])
         self.assertEqual(cmd[3:5], [str(main.REPO_ROOT / "main.py"), "backend"])
 
+    def test_backend_migrate_command_is_registered(self) -> None:
+        args = main.build_parser().parse_args(["backend-migrate"])
+
+        self.assertIs(args.func, main.run_backend_migrations)
+
 
 if __name__ == "__main__":
     unittest.main()

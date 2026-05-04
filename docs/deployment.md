@@ -90,6 +90,14 @@ git pull
 docker compose up -d --build
 ```
 
+后端启动时会自动执行待迁移数据库脚本，并在迁移完成后才启动调度器。如果迁移失败，backend 服务会启动失败并在日志中标出失败的迁移 ID。
+
+需要手动执行迁移时：
+
+```bash
+docker compose exec backend uv run python main.py backend-migrate
+```
+
 不要使用 `docker compose down -v`，否则会删除 Compose 管理的卷。当前默认使用项目目录 bind mount，仍应避免误删 `data/`、`sessions/`、`logs/`。
 
 ### 备份与恢复
@@ -116,7 +124,7 @@ git checkout <previous-tag-or-commit>
 docker compose up -d --build
 ```
 
-回滚时复用同一份 `.env`、`data/`、`sessions/`、`logs/`。如果未来版本引入数据库迁移，按对应版本说明先确认迁移是否可逆。
+回滚时复用同一份 `.env`、`data/`、`sessions/`、`logs/`。回滚到旧版本前，先确认当前版本已经执行的数据库迁移是否可被旧版本兼容读取。
 
 ### Compose 故障排查
 
