@@ -49,6 +49,18 @@ pnpm dev
 uv run python apps/backend/scripts/create_admin.py
 ```
 
+### Docker Compose 部署
+
+生产环境推荐使用 Docker Compose。主机只需要 Docker/Compose，不需要单独安装 Python、Node.js、pnpm 或 Chromium。
+
+```bash
+cp deploy/compose.env.example .env
+# 编辑 .env，至少修改 SECRET_KEY、CORS_ORIGINS、FRONTEND_URL
+docker compose up -d --build
+```
+
+默认访问地址：<http://localhost:8080>
+
 ### 访问地址
 
 - 前端: <http://localhost:3000>
@@ -68,7 +80,7 @@ python main.py frontend-build
 
 复制 `.env.example` 到 `.env`
 
-nginx 与 systemd 的配置文件参考已给出，见 `.example`
+Docker Compose 环境变量参考 `deploy/compose.env.example`。nginx 与 systemd 的传统部署配置文件参考已给出，见 `.example`
 
 ## 文档
 

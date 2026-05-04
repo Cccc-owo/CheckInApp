@@ -20,7 +20,8 @@ debug_page_source.html
 debug_screenshot.png
 
 # 运行时文件
-sessions/
+sessions/*
+!sessions/.gitkeep
 *.lock
 !/uv.lock
 *.log
@@ -29,14 +30,16 @@ backend.pid
 frontend.pid
 
 # 数据库
-data/
+data/*
+!data/.gitkeep
 
 # 配置文件
 .env
 config.ini
 
 # 日志
-logs/
+logs/*
+!logs/.gitkeep
 
 # IDE
 .vscode/

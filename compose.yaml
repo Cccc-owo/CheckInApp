@@ -1,0 +1,49 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: deploy/docker/backend/Dockerfile
+    image: checkin-app-backend:local
+    container_name: checkin-backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/checkin.db}
+      LOG_FILE: ${LOG_FILE:-/app/logs/backend.log}
+      SESSION_DIR: ${SESSION_DIR:-/app/sessions}
+      BROWSER_EXECUTABLE_PATH: ${BROWSER_EXECUTABLE_PATH:-}
+    volumes:
+      - ./data:/app/data
+      - ./sessions:/app/sessions
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import json, urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5); raise SystemExit(0 if json.load(r).get('status') == 'healthy' else 1)\"",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/docker/web/Dockerfile
+    image: checkin-app-web:local
+    container_name: checkin-web
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${CHECKIN_WEB_PORT:-8080}:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
