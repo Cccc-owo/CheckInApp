@@ -2,7 +2,8 @@
 import { onMounted, ref } from 'vue'
 import { adminApi } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
-import { buttonBase, buttonTone, cardClass, inputClass, sectionHeaderClass } from '@/components/ui'
+import { cardClass, inputClass, sectionHeaderClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { extractErrorMessage } from '@/utils/format'
 
 const loading = ref(true)
@@ -41,9 +42,7 @@ onMounted(load)
           max="2000"
           class="max-w-40"
         />
-        <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
-          刷新日志
-        </button>
+        <Button variant="outline" type="button" @click="load"> 刷新日志 </Button>
       </div>
     </div>
     <StateBlock v-if="loading" title="正在加载日志" type="loading" />

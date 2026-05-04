@@ -1,61 +1,58 @@
 export type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info'
 
 export const buttonBase =
-  'inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700/20 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-emerald-400/30'
+  'inline-flex min-h-9 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium shadow-sm transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50'
 
 export const buttonTone = {
-  primary:
-    'border-emerald-700 bg-emerald-700 text-white hover:bg-emerald-800 dark:border-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500',
+  primary: 'border-primary bg-primary text-primary-foreground hover:bg-primary/90',
   secondary:
-    'border-zinc-200 bg-white text-zinc-900 hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 dark:hover:bg-zinc-800',
+    'border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground',
   ghost:
-    'border-transparent bg-transparent text-zinc-700 shadow-none hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800',
+    'border-transparent bg-transparent text-muted-foreground shadow-none hover:bg-accent hover:text-accent-foreground',
   danger:
-    'border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:border-rose-800 dark:hover:bg-rose-900/40',
+    'border-destructive/30 bg-destructive/10 text-destructive hover:border-destructive/40 hover:bg-destructive/15',
   admin:
-    'border-sky-700 bg-sky-700 text-white hover:bg-sky-800 dark:border-sky-500 dark:bg-sky-600 dark:hover:bg-sky-500',
+    'border-[var(--tone-info-strong)] bg-[var(--tone-info-strong)] text-white hover:bg-[var(--tone-info-strong-hover)]',
 }
 
 export const inputClass =
-  'w-full min-h-9 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/10 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-400/10 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-500'
+  'w-full min-h-9 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/15 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground'
 
 export const textareaClass = `${inputClass} min-h-24 resize-y font-mono text-xs leading-5`
 
 export const cardClass =
-  'rounded-xl border border-zinc-200/80 bg-white shadow-[0_12px_28px_-24px_rgba(24,24,27,0.42)] dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none'
+  'rounded-xl border border-border bg-card text-card-foreground shadow-[0_12px_28px_-24px_rgba(24,24,27,0.42)] dark:shadow-none'
 
 export const sectionHeaderClass =
-  'grid gap-2 border-b border-zinc-200 bg-zinc-50/65 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center dark:border-zinc-800 dark:bg-zinc-950/50'
+  'grid gap-2 border-b border-border bg-muted/55 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'
 
 export const actionBarClass =
-  'grid gap-2 border-b border-zinc-200 bg-zinc-50/65 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center dark:border-zinc-800 dark:bg-zinc-950/50'
+  'grid gap-2 border-b border-border bg-muted/55 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center'
 
-export const labelClass =
-  'text-xs font-semibold uppercase tracking-normal text-zinc-500 dark:text-zinc-400'
+export const labelClass = 'text-xs font-semibold uppercase tracking-normal text-muted-foreground'
 
-export const mutedText = 'text-sm text-zinc-500 dark:text-zinc-400'
+export const mutedText = 'text-sm text-muted-foreground'
 
 export const alertClass = {
-  info: 'rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm leading-5 text-sky-800 dark:border-sky-900/70 dark:bg-sky-950/50 dark:text-sky-200',
+  info: 'rounded-lg border border-[var(--tone-info-border)] bg-[var(--tone-info-bg)] px-3 py-2 text-sm leading-5 text-[var(--tone-info-fg)]',
   success:
-    'rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm leading-5 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-200',
+    'rounded-lg border border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] px-3 py-2 text-sm leading-5 text-[var(--tone-success-fg)]',
   warning:
-    'rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/50 dark:text-amber-200',
+    'rounded-lg border border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] px-3 py-2 text-sm leading-5 text-[var(--tone-warning-fg)]',
   danger:
-    'rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm leading-5 text-rose-800 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-200',
+    'rounded-lg border border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] px-3 py-2 text-sm leading-5 text-[var(--tone-danger-fg)]',
 }
 
 export function toneClass(tone: Tone) {
   const tones: Record<Tone, string> = {
-    neutral:
-      'border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+    neutral: 'border-border bg-muted text-muted-foreground',
     success:
-      'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300',
+      'border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)]',
     warning:
-      'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/50 dark:text-amber-300',
+      'border-[var(--tone-warning-border)] bg-[var(--tone-warning-bg)] text-[var(--tone-warning-fg)]',
     danger:
-      'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300',
-    info: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/50 dark:text-sky-300',
+      'border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] text-[var(--tone-danger-fg)]',
+    info: 'border-[var(--tone-info-border)] bg-[var(--tone-info-bg)] text-[var(--tone-info-fg)]',
   }
   return `inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${tones[tone]}`
 }

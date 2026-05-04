@@ -214,19 +214,19 @@ function removeOption(index: number) {
         <button
           v-if="canAddChildren || fieldNode"
           type="button"
-          class="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-zinc-200 text-zinc-500 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          class="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-200 text-zinc-500 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
           :title="collapsed ? '展开' : '收起'"
           @click="collapsed = !collapsed"
         >
-          <ChevronRight v-if="collapsed" class="size-4" />
-          <ChevronDown v-else class="size-4" />
+          <ChevronRight v-if="collapsed" class="size-5" />
+          <ChevronDown v-else class="size-5" />
         </button>
         <div
-          class="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300"
+          class="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300"
         >
-          <ListTree v-if="kind === 'array'" class="size-4" />
-          <Braces v-else-if="kind === 'object'" class="size-4" />
-          <span v-else class="text-xs font-semibold">Aa</span>
+          <ListTree v-if="kind === 'array'" class="size-5" />
+          <Braces v-else-if="kind === 'object'" class="size-5" />
+          <span v-else class="text-sm font-semibold">Aa</span>
         </div>
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
@@ -255,27 +255,27 @@ function removeOption(index: number) {
       <div class="flex flex-wrap gap-1">
         <button
           type="button"
-          :class="[buttonBase, buttonTone.ghost, 'size-8 min-h-8 px-0 py-0']"
+          :class="[buttonBase, buttonTone.ghost, 'size-10 min-h-10 px-0 py-0']"
           title="上移"
           @click="move('up')"
         >
-          <ArrowUp class="size-4" />
+          <ArrowUp class="size-6" />
         </button>
         <button
           type="button"
-          :class="[buttonBase, buttonTone.ghost, 'size-8 min-h-8 px-0 py-0']"
+          :class="[buttonBase, buttonTone.ghost, 'size-10 min-h-10 px-0 py-0']"
           title="下移"
           @click="move('down')"
         >
-          <ArrowDown class="size-4" />
+          <ArrowDown class="size-6" />
         </button>
         <button
           type="button"
-          :class="[buttonBase, buttonTone.danger, 'size-8 min-h-8 px-0 py-0']"
+          :class="[buttonBase, buttonTone.danger, 'size-10 min-h-10 px-0 py-0']"
           title="删除"
           @click="deleteNode"
         >
-          <Trash2 class="size-4" />
+          <Trash2 class="size-6" />
         </button>
       </div>
     </div>
@@ -388,7 +388,7 @@ function removeOption(index: number) {
               type="button"
               @click="addOption"
             >
-              <Plus class="size-3.5" />
+              <Plus class="size-4" />
               添加选项
             </button>
           </div>

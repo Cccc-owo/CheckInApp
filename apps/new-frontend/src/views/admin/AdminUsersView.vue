@@ -5,10 +5,9 @@ import { adminApi, userApi, type User } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
 import {
   alertClass,
-  buttonBase,
-  buttonTone,
   cardClass,
   inputClass,
+  labelClass,
   sectionHeaderClass,
   toneClass,
 } from '@/components/ui'
@@ -106,17 +105,17 @@ onMounted(load)
         </span>
       </div>
       <div
-        class="grid gap-3 border-b border-zinc-200 bg-zinc-50/70 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] dark:border-zinc-800 dark:bg-zinc-950/50"
+        class="grid gap-3 border-b border-border bg-muted/55 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
       >
         <input v-model="search" :class="inputClass" class="max-w-sm" placeholder="搜索别名" />
-        <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
+        <Button variant="outline" type="button" @click="load">
           <Search class="size-4" />
           搜索
-        </button>
-        <button :class="[buttonBase, buttonTone.primary]" type="button" @click="startCreate">
+        </Button>
+        <Button type="button" @click="startCreate">
           <UserPlus class="size-4" />
           创建用户
-        </button>
+        </Button>
       </div>
       <StateBlock v-if="loading" title="正在加载用户" type="loading" />
       <StateBlock
@@ -128,7 +127,7 @@ onMounted(load)
         @action="load"
       />
       <StateBlock v-else-if="users.length === 0" title="暂无用户" />
-      <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div v-else class="divide-y divide-border">
         <article
           v-for="user in users"
           :key="user.id"
@@ -144,35 +143,24 @@ onMounted(load)
                 user.role
               }}</span>
             </div>
-            <div
-              class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400"
-            >
+            <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span>{{ user.email || '未设置邮箱' }}</span>
               <span>{{ formatDateTime(user.created_at) }}</span>
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button
-              v-if="!user.is_approved"
-              :class="[buttonBase, buttonTone.primary]"
-              type="button"
-              @click="approve(user.id)"
-            >
+            <Button v-if="!user.is_approved" type="button" @click="approve(user.id)">
               <Check class="size-4" />
               审批
-            </button>
-            <button :class="[buttonBase, buttonTone.danger]" type="button" @click="reject(user.id)">
+            </Button>
+            <Button variant="danger" type="button" @click="reject(user.id)">
               <Trash2 class="size-4" />
               删除
-            </button>
-            <button
-              :class="[buttonBase, buttonTone.secondary]"
-              type="button"
-              @click="startEdit(user)"
-            >
+            </Button>
+            <Button variant="outline" type="button" @click="startEdit(user)">
               <UserPlus class="size-4" />
               编辑
-            </button>
+            </Button>
           </div>
         </article>
       </div>
@@ -187,13 +175,13 @@ onMounted(load)
     >
       <div class="grid justify-items-center gap-4">
         <span
-          class="inline-flex size-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300"
+          class="inline-flex size-12 items-center justify-center rounded-xl border border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] text-[var(--tone-success-fg)]"
         >
           <UserPlus class="size-5" />
         </span>
         <div class="grid gap-1">
           <h2 class="font-semibold">未选择用户</h2>
-          <p class="text-sm text-zinc-500 dark:text-zinc-400">创建或从列表编辑</p>
+          <p class="text-sm text-muted-foreground">创建或从列表编辑</p>
         </div>
         <Button type="button" @click="startCreate">
           <UserPlus class="size-4" />
@@ -210,29 +198,27 @@ onMounted(load)
       ]"
       @submit.prevent="save"
     >
-      <div
-        class="border-b border-zinc-200 bg-zinc-50/70 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/50"
-      >
+      <div class="border-b border-border bg-muted/55 px-4 py-3">
         <h2 class="font-semibold">{{ editingId === 'new' ? '创建用户' : '编辑用户' }}</h2>
       </div>
       <div class="grid gap-4 p-4">
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">别名</span>
+          <span :class="labelClass">别名</span>
           <input v-model="form.alias" :class="inputClass" required />
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">邮箱</span>
+          <span :class="labelClass">邮箱</span>
           <input v-model="form.email" :class="inputClass" type="email" />
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">角色</span>
+          <span :class="labelClass">角色</span>
           <select v-model="form.role" :class="inputClass">
             <option value="user">user</option>
             <option value="admin">admin</option>
           </select>
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">密码</span>
+          <span :class="labelClass">密码</span>
           <input
             v-model="form.password"
             :class="inputClass"
@@ -248,17 +234,11 @@ onMounted(load)
           {{ error }}
         </div>
         <div class="flex gap-2">
-          <button :class="[buttonBase, buttonTone.primary]" type="submit">
+          <Button type="submit">
             <Save class="size-4" />
             保存
-          </button>
-          <button
-            :class="[buttonBase, buttonTone.secondary]"
-            type="button"
-            @click="editingId = null"
-          >
-            取消
-          </button>
+          </Button>
+          <Button variant="outline" type="button" @click="editingId = null"> 取消 </Button>
         </div>
       </div>
     </form>

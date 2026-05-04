@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Eye, Plus, Save, Trash2 } from 'lucide-vue-next'
+import { Edit3, Eye, Plus, Save, Trash2 } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { templateApi, type Template, type TemplatePreview } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
@@ -167,7 +167,7 @@ onMounted(load)
         action-label="新建模板"
         @action="startCreate"
       />
-      <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div v-else class="divide-y divide-border">
         <article
           v-for="template in templates"
           :key="template.id"
@@ -180,9 +180,7 @@ onMounted(load)
                 template.is_active ? '启用' : '停用'
               }}</span>
             </div>
-            <div
-              class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400"
-            >
+            <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span>{{ template.description || '无描述' }}</span>
               <span>{{ formatDateTime(template.created_at) }}</span>
             </div>
@@ -192,13 +190,11 @@ onMounted(load)
               <Eye class="size-4" />
               预览
             </Button>
-            <Button type="button" variant="outline" @click="startEdit(template)"> 编辑 </Button>
-            <Button
-              type="button"
-              variant="outline"
-              class="border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:border-rose-800 dark:hover:bg-rose-900/40"
-              @click="remove(template)"
-            >
+            <Button type="button" variant="outline" @click="startEdit(template)">
+              <Edit3 class="size-4" />
+              编辑
+            </Button>
+            <Button type="button" variant="danger" @click="remove(template)">
               <Trash2 class="size-4" />
               删除
             </Button>
@@ -223,9 +219,7 @@ onMounted(load)
       <DialogContent
         class="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0 sm:max-w-[min(960px,calc(100vw-2rem))] lg:max-w-[min(1120px,calc(100vw-3rem))]"
       >
-        <DialogHeader
-          class="border-b border-zinc-200 bg-zinc-50/70 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950/50"
-        >
+        <DialogHeader class="border-b border-border bg-muted/55 px-5 py-4">
           <DialogTitle>{{ editorTitle }}</DialogTitle>
         </DialogHeader>
 
@@ -241,7 +235,7 @@ onMounted(load)
                 <input v-model="form.description" :class="inputClass" />
               </label>
               <label
-                class="flex min-h-9 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+                class="flex min-h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <input v-model="form.is_active" type="checkbox" />
                 启用模板
@@ -250,10 +244,7 @@ onMounted(load)
 
             <TemplateConfigEditor v-model="form.field_config" @valid="editorValid = $event" />
 
-            <div
-              v-if="localPreviewPayload"
-              class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
-            >
+            <div v-if="localPreviewPayload" class="rounded-lg border border-border p-3">
               <details>
                 <summary class="cursor-pointer text-sm font-semibold">当前配置预览</summary>
                 <pre
@@ -272,7 +263,7 @@ onMounted(load)
           </div>
 
           <DialogFooter
-            class="sticky bottom-0 border-t border-zinc-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95"
+            class="sticky bottom-0 border-t border-border bg-background/95 px-5 py-4 backdrop-blur"
           >
             <Button type="button" variant="outline" @click="editingId = null">取消</Button>
             <Button :disabled="!editorValid" type="submit">

@@ -22,15 +22,8 @@ import {
 import { useAuth } from '@/app/auth'
 import { useRouter } from '@/app/router'
 import StateBlock from '@/components/StateBlock.vue'
-import {
-  alertClass,
-  buttonBase,
-  buttonTone,
-  cardClass,
-  inputClass,
-  sectionHeaderClass,
-  toneClass,
-} from '@/components/ui'
+import { alertClass, cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import {
   cronLabel,
   extractErrorMessage,
@@ -162,26 +155,28 @@ onMounted(load)
         :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
       >
         <span>未设置邮箱</span>
-        <button
-          class="font-semibold hover:text-sky-950 dark:hover:text-sky-100"
+        <Button
+          variant="ghost"
+          class="font-semibold"
           type="button"
           @click="router.navigate('/settings')"
         >
           设置
-        </button>
+        </Button>
       </div>
       <div
         v-if="needsPassword"
         :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
       >
         <span>未设置登录密码</span>
-        <button
-          class="font-semibold hover:text-sky-950 dark:hover:text-sky-100"
+        <Button
+          variant="ghost"
+          class="font-semibold"
           type="button"
           @click="router.navigate('/settings')"
         >
           设置
-        </button>
+        </Button>
       </div>
       <div
         v-if="tokenStatus && !tokenStatus.is_valid"
@@ -191,26 +186,28 @@ onMounted(load)
           <AlertTriangle class="size-4 shrink-0" />
           打卡凭证已过期
         </span>
-        <button
-          class="font-semibold hover:text-amber-950 dark:hover:text-amber-100"
+        <Button
+          variant="ghost"
+          class="font-semibold"
           type="button"
           @click="router.navigate('/login')"
         >
           刷新
-        </button>
+        </Button>
       </div>
       <div
         v-if="tasks.length === 0"
         :class="[alertClass.info, 'flex flex-wrap items-center justify-between gap-2']"
       >
         <span>暂无打卡任务</span>
-        <button
-          class="font-semibold hover:text-sky-950 dark:hover:text-sky-100"
+        <Button
+          variant="ghost"
+          class="font-semibold"
           type="button"
           @click="router.navigate('/tasks')"
         >
           创建
-        </button>
+        </Button>
       </div>
     </div>
 
@@ -218,10 +215,10 @@ onMounted(load)
       <div :class="[cardClass, 'overflow-hidden']">
         <div :class="sectionHeaderClass">
           <div class="flex items-center gap-2">
-            <CalendarDays class="size-4 text-emerald-700" />
+            <CalendarDays class="size-4 text-[var(--tone-success-fg)]" />
             <h2 class="font-semibold">手动打卡</h2>
           </div>
-          <span class="text-sm text-zinc-500">{{ activeTasks }} 个启用</span>
+          <span class="text-sm text-muted-foreground">{{ activeTasks }} 个启用</span>
         </div>
         <div class="p-4">
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -230,24 +227,23 @@ onMounted(load)
                 {{ task.name || `任务 #${task.id}` }} · {{ task.is_active ? '启用' : '停用' }}
               </option>
             </select>
-            <button
-              :class="[buttonBase, buttonTone.primary]"
+            <Button
               :disabled="!selectedTaskId || checkInLoading"
               type="button"
               @click="manualCheckIn"
             >
               <CalendarDays class="size-4" />
               {{ checkInLoading ? '打卡中' : '立即打卡' }}
-            </button>
+            </Button>
           </div>
           <div
             v-if="selectedTask"
-            class="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+            class="mt-4 rounded-lg border border-border bg-muted p-4 text-sm"
           >
-            <div class="font-medium text-zinc-900 dark:text-zinc-100">
+            <div class="font-medium text-foreground">
               {{ selectedTask.name || `任务 #${selectedTask.id}` }}
             </div>
-            <div class="mt-1 text-zinc-500 dark:text-zinc-400">
+            <div class="mt-1 text-muted-foreground">
               ThreadId: {{ selectedTask.thread_id || '未解析' }} ·
               {{ cronLabel(selectedTask.cron_expression) }}
             </div>
@@ -256,15 +252,15 @@ onMounted(load)
           <div v-if="error" :class="[alertClass.danger, 'mt-4']">{{ error }}</div>
           <div
             v-if="latestStatus"
-            class="mt-4 rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+            class="mt-4 rounded-lg border border-border bg-background p-4 text-sm"
           >
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="font-semibold text-zinc-900 dark:text-zinc-100">本次打卡</span>
+              <span class="font-semibold text-foreground">本次打卡</span>
               <span :class="toneClass(statusTone(latestStatus.status))">{{
                 statusLabel(latestStatus.status)
               }}</span>
             </div>
-            <p class="mt-2 text-zinc-500 dark:text-zinc-400">
+            <p class="mt-2 text-muted-foreground">
               {{
                 latestStatus.response_text || latestStatus.error_message || '正在等待后端返回结果。'
               }}
@@ -272,15 +268,15 @@ onMounted(load)
           </div>
           <div
             v-else-if="lastRecord"
-            class="mt-4 rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+            class="mt-4 rounded-lg border border-border bg-background p-4 text-sm"
           >
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="font-semibold text-zinc-900 dark:text-zinc-100">上次打卡</span>
+              <span class="font-semibold text-foreground">上次打卡</span>
               <span :class="toneClass(statusTone(lastRecord.status))">{{
                 statusLabel(lastRecord.status)
               }}</span>
             </div>
-            <p class="mt-2 text-zinc-500 dark:text-zinc-400">
+            <p class="mt-2 text-muted-foreground">
               {{ formatDateTime(lastRecord.check_in_time) }} ·
               {{ lastRecord.response_text || lastRecord.error_message || '无响应内容' }}
             </p>
@@ -291,14 +287,14 @@ onMounted(load)
       <div :class="[cardClass, 'overflow-hidden']">
         <div :class="sectionHeaderClass">
           <div class="flex items-center gap-2">
-            <KeyRound class="size-4 text-emerald-700" />
+            <KeyRound class="size-4 text-[var(--tone-success-fg)]" />
             <h2 class="font-semibold">授权</h2>
           </div>
           <span :class="toneClass(tokenTone)">{{ tokenLabel }}</span>
         </div>
         <div class="grid gap-3 p-4 text-sm">
           <div class="flex items-center justify-between">
-            <span class="text-zinc-500">剩余</span>
+            <span class="text-muted-foreground">剩余</span>
             <span class="font-medium">
               {{
                 tokenStatus?.days_until_expiry == null
@@ -308,18 +304,18 @@ onMounted(load)
             </span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-zinc-500">预警</span>
+            <span class="text-muted-foreground">预警</span>
             <span>{{ tokenStatus?.expiring_soon ? '是' : '否' }}</span>
           </div>
-          <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ tokenDetail }}</div>
-          <button
-            :class="[buttonBase, tokenStatus?.is_valid ? buttonTone.secondary : buttonTone.primary]"
+          <div class="text-sm text-muted-foreground">{{ tokenDetail }}</div>
+          <Button
+            :variant="tokenStatus?.is_valid ? 'outline' : 'default'"
             type="button"
             @click="router.navigate('/login')"
           >
             <QrCode class="size-4" />
             扫码刷新
-          </button>
+          </Button>
         </div>
       </div>
     </section>
@@ -327,49 +323,37 @@ onMounted(load)
     <section :class="[cardClass, 'overflow-hidden']">
       <div :class="sectionHeaderClass">
         <div class="flex items-center gap-2">
-          <UserRound class="size-4 text-emerald-700" />
+          <UserRound class="size-4 text-[var(--tone-success-fg)]" />
           <h2 class="font-semibold">个人信息</h2>
         </div>
-        <button
-          :class="[buttonBase, buttonTone.secondary]"
-          type="button"
-          @click="router.navigate('/settings')"
-        >
+        <Button variant="outline" type="button" @click="router.navigate('/settings')">
           个人设置
-        </button>
+        </Button>
       </div>
       <div class="grid gap-3 p-4 text-sm md:grid-cols-4">
-        <div
-          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
-        >
-          <div class="text-zinc-500">用户名</div>
-          <div class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">用户名</div>
+          <div class="mt-1 font-medium text-foreground">
             {{ auth.state.user?.alias || '未登录' }}
           </div>
         </div>
-        <div
-          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
-        >
-          <div class="text-zinc-500">角色</div>
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">角色</div>
           <div class="mt-1">
             <span :class="toneClass(auth.state.user?.role === 'admin' ? 'danger' : 'info')">
               {{ auth.state.user?.role === 'admin' ? '管理员' : '普通用户' }}
             </span>
           </div>
         </div>
-        <div
-          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
-        >
-          <div class="text-zinc-500">邮箱</div>
-          <div class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">邮箱</div>
+          <div class="mt-1 font-medium text-foreground">
             {{ auth.state.user?.email || '未设置' }}
           </div>
         </div>
-        <div
-          class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-950"
-        >
-          <div class="text-zinc-500">注册时间</div>
-          <div class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">
+        <div class="rounded-lg border border-border bg-muted px-3 py-2">
+          <div class="text-muted-foreground">注册时间</div>
+          <div class="mt-1 font-medium text-foreground">
             {{ formatDateTime(auth.state.user?.created_at) }}
           </div>
         </div>
@@ -381,48 +365,40 @@ onMounted(load)
         <div>
           <h2 class="font-semibold">任务概览</h2>
         </div>
-        <button
-          :class="[buttonBase, buttonTone.secondary]"
-          type="button"
-          @click="router.navigate('/tasks')"
-        >
+        <Button variant="outline" type="button" @click="router.navigate('/tasks')">
           管理任务
-        </button>
+        </Button>
       </div>
       <div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
-        <div
-          class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950"
-        >
+        <div class="rounded-lg border border-border bg-muted p-3">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-zinc-500">任务总数</span>
-            <CheckCircle2 class="size-4 text-emerald-600" />
+            <span class="text-sm text-muted-foreground">任务总数</span>
+            <CheckCircle2 class="size-4 text-[var(--tone-success-fg)]" />
           </div>
           <div class="mt-3 text-3xl font-semibold">{{ tasks.length }}</div>
-          <p class="mt-1 text-sm text-zinc-500">
+          <p class="mt-1 text-sm text-muted-foreground">
             {{ activeTasks }} 启用 · {{ inactiveTasks }} 停用
           </p>
         </div>
-        <div
-          class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-950"
-        >
+        <div class="rounded-lg border border-border bg-muted p-3">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-zinc-500">最近成功</span>
-            <Activity class="size-4 text-zinc-700" />
+            <span class="text-sm text-muted-foreground">最近成功</span>
+            <Activity class="size-4 text-foreground" />
           </div>
           <div class="mt-3 text-3xl font-semibold">{{ successToday }}</div>
-          <p class="mt-1 text-sm text-zinc-500">最近记录</p>
+          <p class="mt-1 text-sm text-muted-foreground">最近记录</p>
         </div>
-        <div
-          class="rounded-lg border border-zinc-200 bg-zinc-50 p-3 md:col-span-2 dark:border-zinc-800 dark:bg-zinc-950"
-        >
+        <div class="rounded-lg border border-border bg-muted p-3 md:col-span-2">
           <div class="flex items-center justify-between">
-            <span class="text-sm text-zinc-500">下次定时</span>
-            <Clock class="size-4 text-amber-600" />
+            <span class="text-sm text-muted-foreground">下次定时</span>
+            <Clock class="size-4 text-[var(--tone-warning-fg)]" />
           </div>
           <div class="mt-3 text-lg font-semibold">
             {{ cronLabel(nextActiveTask?.cron_expression) }}
           </div>
-          <p class="mt-1 text-sm text-zinc-500">{{ nextActiveTask?.name || '无启用任务' }}</p>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {{ nextActiveTask?.name || '无启用任务' }}
+          </p>
         </div>
       </div>
     </section>
@@ -432,16 +408,12 @@ onMounted(load)
         <div>
           <h2 class="font-semibold">最近记录</h2>
         </div>
-        <button
-          :class="[buttonBase, buttonTone.secondary]"
-          type="button"
-          @click="router.navigate('/records')"
-        >
+        <Button variant="outline" type="button" @click="router.navigate('/records')">
           查看全部
-        </button>
+        </Button>
       </div>
       <StateBlock v-if="records.length === 0" title="暂无记录" />
-      <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div v-else class="divide-y divide-border">
         <div v-for="record in records" :key="record.id" class="px-4 py-3">
           <div class="flex items-center justify-between gap-3">
             <span class="font-medium">{{ record.task_name || `任务 #${record.task_id}` }}</span>
@@ -449,7 +421,7 @@ onMounted(load)
               statusLabel(record.status)
             }}</span>
           </div>
-          <div class="mt-1 text-sm text-zinc-500">
+          <div class="mt-1 text-sm text-muted-foreground">
             {{ formatDateTime(record.check_in_time) }} ·
             {{ record.trigger_type ? statusLabel(record.trigger_type) : '未注明触发' }}
           </div>

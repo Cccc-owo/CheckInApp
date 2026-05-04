@@ -4,14 +4,8 @@ import { onMounted, reactive, ref } from 'vue'
 import { checkInApi, taskApi, type CheckInRecord, type Task } from '@/api'
 import { useRouter } from '@/app/router'
 import StateBlock from '@/components/StateBlock.vue'
-import {
-  buttonBase,
-  buttonTone,
-  cardClass,
-  inputClass,
-  sectionHeaderClass,
-  toneClass,
-} from '@/components/ui'
+import { cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { extractErrorMessage, formatFullDateTime, statusLabel, statusTone } from '@/utils/format'
 
 const router = useRouter()
@@ -49,7 +43,7 @@ onMounted(load)
     <div :class="[sectionHeaderClass, 'lg:grid-cols-[1fr_180px_180px_auto]']">
       <div>
         <button
-          class="mb-2 inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900"
+          class="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           type="button"
           @click="router.navigate('/tasks')"
         >
@@ -68,10 +62,10 @@ onMounted(load)
         <option value="manual">手动</option>
         <option value="scheduler">定时</option>
       </select>
-      <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
+      <Button variant="outline" type="button" @click="load">
         <Search class="size-4" />
         筛选
-      </button>
+      </Button>
     </div>
 
     <StateBlock v-if="loading" title="正在加载任务记录" type="loading" />
@@ -84,20 +78,20 @@ onMounted(load)
       @action="load"
     />
     <StateBlock v-else-if="records.length === 0" title="暂无记录" />
-    <div v-else class="divide-y divide-zinc-200">
+    <div v-else class="divide-y divide-border">
       <article
         v-for="record in records"
         :key="record.id"
         class="grid gap-3 p-3 md:grid-cols-[180px_minmax(0,1fr)_auto] md:items-center"
       >
-        <div class="text-sm text-zinc-500 dark:text-zinc-400">
+        <div class="text-sm text-muted-foreground">
           {{ formatFullDateTime(record.check_in_time) }}
         </div>
         <div class="min-w-0">
-          <div class="truncate text-sm text-zinc-700 dark:text-zinc-200">
+          <div class="truncate text-sm text-foreground">
             {{ record.response_text || record.error_message || '无响应内容' }}
           </div>
-          <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+          <div class="mt-1 text-xs text-muted-foreground">
             触发：{{ statusLabel(record.trigger_type) }}
           </div>
         </div>
@@ -107,9 +101,7 @@ onMounted(load)
           }}</span>
         </div>
       </article>
-      <div
-        class="border-t border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-400"
-      >
+      <div class="border-t border-border bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
         共 {{ total }} 条记录
       </div>
     </div>

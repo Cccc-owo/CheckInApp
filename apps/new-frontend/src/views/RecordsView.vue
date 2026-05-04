@@ -3,14 +3,8 @@ import { Search } from 'lucide-vue-next'
 import { onMounted, reactive, ref } from 'vue'
 import { checkInApi, type CheckInRecord } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
-import {
-  buttonBase,
-  buttonTone,
-  cardClass,
-  inputClass,
-  sectionHeaderClass,
-  toneClass,
-} from '@/components/ui'
+import { cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { extractErrorMessage, formatFullDateTime, statusLabel, statusTone } from '@/utils/format'
 
 const loading = ref(true)
@@ -61,10 +55,10 @@ onMounted(load)
         <option value="scheduler">定时</option>
         <option value="admin">管理员</option>
       </select>
-      <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
+      <Button variant="outline" type="button" @click="load">
         <Search class="size-4" />
         筛选
-      </button>
+      </Button>
     </div>
 
     <StateBlock v-if="loading" title="正在加载记录" type="loading" />
@@ -78,7 +72,7 @@ onMounted(load)
     />
     <StateBlock v-else-if="records.length === 0" title="暂无记录" />
     <div v-else>
-      <div class="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div class="divide-y divide-border">
         <article
           v-for="record in records"
           :key="record.id"
@@ -88,15 +82,15 @@ onMounted(load)
             <div class="truncate text-sm font-semibold">
               {{ record.task_name || `任务 #${record.task_id}` }}
             </div>
-            <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <div class="mt-1 text-xs text-muted-foreground">
               {{ formatFullDateTime(record.check_in_time) }}
             </div>
           </div>
           <div class="min-w-0">
-            <p class="truncate text-sm text-zinc-700 dark:text-zinc-200">
+            <p class="truncate text-sm text-foreground">
               {{ record.response_text || record.error_message || '无响应内容' }}
             </p>
-            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <p class="mt-1 text-xs text-muted-foreground">
               触发方式：{{ statusLabel(record.trigger_type) }}
             </p>
           </div>
@@ -108,29 +102,24 @@ onMounted(load)
         </article>
       </div>
       <div
-        class="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 bg-zinc-50/70 px-4 py-3 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-400"
+        class="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/55 px-4 py-3 text-sm text-muted-foreground"
       >
         <span
           >共 {{ total }} 条，当前 {{ filters.skip + 1 }} -
           {{ Math.min(filters.skip + filters.limit, total) }}</span
         >
         <div class="flex gap-2">
-          <button
-            :class="[buttonBase, buttonTone.secondary]"
-            :disabled="filters.skip === 0"
-            type="button"
-            @click="page(-1)"
-          >
+          <Button variant="outline" :disabled="filters.skip === 0" type="button" @click="page(-1)">
             上一页
-          </button>
-          <button
-            :class="[buttonBase, buttonTone.secondary]"
+          </Button>
+          <Button
+            variant="outline"
             :disabled="filters.skip + filters.limit >= total"
             type="button"
             @click="page(1)"
           >
             下一页
-          </button>
+          </Button>
         </div>
       </div>
     </div>

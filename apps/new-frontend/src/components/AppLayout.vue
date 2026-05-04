@@ -58,9 +58,9 @@ const themeModes = [
 
 function themeModeButtonClass(mode: ThemeMode) {
   if (theme.state.mode === mode) {
-    return 'bg-zinc-900 text-white shadow-sm hover:bg-zinc-900 hover:text-white dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-100 dark:hover:text-zinc-950'
+    return 'bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background'
   }
-  return 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50'
+  return 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
 }
 
 function go(path: string) {
@@ -75,10 +75,8 @@ function signOut() {
 </script>
 
 <template>
-  <div class="min-h-[100dvh] bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
-    <header
-      class="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90"
-    >
+  <div class="min-h-[100dvh] bg-background text-foreground">
+    <header class="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
       <div class="flex h-14 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-3">
           <Button
@@ -93,27 +91,27 @@ function signOut() {
           </Button>
           <button class="flex items-center gap-3 text-left" type="button" @click="go('/dashboard')">
             <span
-              class="hidden size-9 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm sm:inline-flex"
+              class="hidden size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm sm:inline-flex"
             >
               <CheckCircle2 class="size-5" />
             </span>
             <span>
-              <div class="text-sm font-semibold leading-4">接龙自动打卡</div>
-              <div class="text-xs text-zinc-500 dark:text-zinc-400">CheckIn workspace</div>
+              <div class="text-sm font-semibold leading-4 text-foreground">接龙自动打卡</div>
+              <div class="text-xs text-muted-foreground">CheckIn workspace</div>
             </span>
           </button>
         </div>
 
         <div class="flex items-center gap-3">
           <div class="hidden text-right sm:block">
-            <div class="text-sm font-medium">{{ authState.user?.alias ?? '未登录' }}</div>
-            <div class="text-xs text-zinc-500 dark:text-zinc-400">
-              {{ roleLabel }} · {{ approvalLabel }}
+            <div class="text-sm font-medium text-foreground">
+              {{ authState.user?.alias ?? '未登录' }}
             </div>
+            <div class="text-xs text-muted-foreground">{{ roleLabel }} · {{ approvalLabel }}</div>
           </div>
           <TooltipProvider>
             <div
-              class="inline-flex items-center rounded-lg border border-zinc-200 bg-white p-0.5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+              class="inline-flex items-center rounded-lg border border-border bg-background p-0.5 shadow-sm"
               :aria-label="`主题模式，当前${themeLabel}`"
             >
               <Tooltip v-for="item in themeModes" :key="item.mode">
@@ -148,19 +146,19 @@ function signOut() {
       class="grid min-h-[calc(100dvh-3.5rem)] w-full grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)]"
     >
       <aside
-        class="border-b border-zinc-200 bg-white px-3 py-3 shadow-sm lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r lg:shadow-none dark:border-zinc-800 dark:bg-zinc-950"
+        class="border-b border-border bg-card px-3 py-3 shadow-sm lg:min-h-[calc(100dvh-3.5rem)] lg:border-b-0 lg:border-r lg:shadow-none"
         :class="mobileOpen ? 'block' : 'hidden lg:block'"
       >
-        <div
-          class="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 lg:hidden dark:border-zinc-700 dark:bg-zinc-900"
-        >
-          <div class="text-sm font-semibold">{{ authState.user?.alias ?? '未登录' }}</div>
-          <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <div class="mb-4 rounded-lg border border-border bg-muted p-3 lg:hidden">
+          <div class="text-sm font-semibold text-foreground">
+            {{ authState.user?.alias ?? '未登录' }}
+          </div>
+          <div class="mt-1 text-xs text-muted-foreground">
             {{ roleLabel }} · {{ approvalLabel }}
           </div>
         </div>
         <div
-          class="mb-2 px-3 text-xs font-semibold uppercase tracking-normal text-zinc-500 dark:text-zinc-400"
+          class="mb-2 px-3 text-xs font-semibold uppercase tracking-normal text-muted-foreground"
         >
           工作台
         </div>
@@ -169,11 +167,11 @@ function signOut() {
             v-for="link in userLinks"
             :key="link.path"
             type="button"
-            class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-emerald-50 hover:text-emerald-900 dark:hover:bg-zinc-900 dark:hover:text-emerald-300"
+            class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-accent hover:text-accent-foreground"
             :class="
               router.state.path === link.path
-                ? 'bg-emerald-700 text-white shadow-sm hover:bg-emerald-700 hover:text-white dark:bg-emerald-600 dark:text-white'
-                : 'text-zinc-700 dark:text-zinc-300'
+                ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
+                : 'text-muted-foreground'
             "
             @click="go(link.path)"
           >
@@ -182,9 +180,9 @@ function signOut() {
           </button>
         </nav>
 
-        <div v-if="isAdmin" class="mt-5 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+        <div v-if="isAdmin" class="mt-5 border-t border-border pt-4">
           <div
-            class="mb-2 flex items-center justify-between rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800 dark:border-sky-900/70 dark:bg-sky-950/50 dark:text-sky-200"
+            class="mb-2 flex items-center justify-between rounded-md border border-[var(--tone-info-border)] bg-[var(--tone-info-bg)] px-3 py-2 text-xs font-semibold text-[var(--tone-info-fg)]"
           >
             <span>管理员工作区</span>
             <Shield class="size-3.5" />
@@ -194,11 +192,11 @@ function signOut() {
               v-for="link in adminLinks"
               :key="link.path"
               type="button"
-              class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-sky-50 hover:text-sky-900 dark:hover:bg-zinc-900 dark:hover:text-sky-300"
+              class="flex min-h-9 items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition hover:bg-accent hover:text-accent-foreground"
               :class="
                 router.state.path === link.path
-                  ? 'bg-sky-700 text-white shadow-sm hover:bg-sky-700 hover:text-white dark:bg-sky-600 dark:text-white'
-                  : 'text-zinc-700 dark:text-zinc-300'
+                  ? 'bg-[var(--tone-info-strong)] text-white shadow-sm hover:bg-[var(--tone-info-strong-hover)] hover:text-white'
+                  : 'text-muted-foreground'
               "
               @click="go(link.path)"
             >
@@ -209,34 +207,32 @@ function signOut() {
         </div>
       </aside>
 
-      <main class="min-w-0 px-4 py-4 sm:px-6 lg:px-8">
+      <main class="min-w-0 bg-background px-4 py-4 sm:px-6 lg:px-8">
         <div
-          class="mb-5 grid gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none"
+          class="mb-5 grid gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm dark:shadow-none"
           :class="{
-            'border-sky-200 bg-sky-50/70 dark:border-sky-900/70 dark:bg-sky-950/30': isAdminRoute,
+            'border-[var(--tone-info-border)] bg-[var(--tone-info-bg)]': isAdminRoute,
           }"
         >
           <div class="min-w-0">
             <div
               v-if="isAdminRoute"
-              class="mb-1 inline-flex items-center gap-1 rounded-full border border-sky-200 bg-white px-2 py-0.5 text-xs font-medium text-sky-700 dark:border-sky-900/70 dark:bg-sky-950/70 dark:text-sky-200"
+              class="mb-1 inline-flex items-center gap-1 rounded-full border border-[var(--tone-info-border)] bg-background px-2 py-0.5 text-xs font-medium text-[var(--tone-info-fg)]"
             >
               <Shield class="size-3" />
               管理员
             </div>
-            <h1
-              class="truncate text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50"
-            >
+            <h1 class="truncate text-2xl font-semibold tracking-normal text-foreground">
               {{ title }}
             </h1>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <div
-              class="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium dark:bg-zinc-950"
+              class="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium"
               :class="
                 authState.user?.is_approved
-                  ? 'border-emerald-200 text-emerald-700 dark:border-emerald-900/70 dark:text-emerald-300'
-                  : 'border-amber-200 text-amber-700 dark:border-amber-900/70 dark:text-amber-300'
+                  ? 'border-[var(--tone-success-border)] text-[var(--tone-success-fg)]'
+                  : 'border-[var(--tone-warning-border)] text-[var(--tone-warning-fg)]'
               "
             >
               <UserRound class="size-3.5" />
@@ -244,7 +240,7 @@ function signOut() {
             </div>
             <div
               v-if="isAdminRoute"
-              class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-medium text-sky-700 dark:border-sky-900/70 dark:bg-zinc-950 dark:text-sky-300"
+              class="inline-flex items-center gap-2 rounded-full border border-[var(--tone-info-border)] bg-background px-3 py-1 text-xs font-medium text-[var(--tone-info-fg)]"
             >
               <Shield class="size-3.5" />
               管理员工作区

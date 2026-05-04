@@ -6,13 +6,13 @@ import { useAuth } from '@/app/auth'
 import StateBlock from '@/components/StateBlock.vue'
 import {
   alertClass,
-  buttonBase,
-  buttonTone,
   cardClass,
   inputClass,
+  labelClass,
   sectionHeaderClass,
   toneClass,
 } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { extractErrorMessage } from '@/utils/format'
 
 const auth = useAuth()
@@ -89,16 +89,16 @@ onMounted(load)
       </div>
       <div class="grid gap-4 p-4">
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">别名</span>
+          <span :class="labelClass">别名</span>
           <input v-model="form.alias" :class="inputClass" required />
         </label>
         <label class="grid gap-2">
-          <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">邮箱</span>
+          <span :class="labelClass">邮箱</span>
           <input v-model="form.email" :class="inputClass" type="email" placeholder="用于打卡通知" />
         </label>
         <div class="grid gap-4 md:grid-cols-2">
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">当前密码</span>
+            <span :class="labelClass">当前密码</span>
             <input
               v-model="form.current_password"
               :class="inputClass"
@@ -107,7 +107,7 @@ onMounted(load)
             />
           </label>
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">新密码</span>
+            <span :class="labelClass">新密码</span>
             <input
               v-model="form.new_password"
               :class="inputClass"
@@ -122,10 +122,10 @@ onMounted(load)
         <div v-if="message" :class="alertClass.success">
           {{ message }}
         </div>
-        <button :class="[buttonBase, buttonTone.primary, 'w-fit']" :disabled="saving" type="submit">
+        <Button class="w-fit" :disabled="saving" type="submit">
           <Save class="size-4" />
           {{ saving ? '保存中' : '保存设置' }}
-        </button>
+        </Button>
       </div>
     </form>
 
@@ -134,8 +134,8 @@ onMounted(load)
         class="grid gap-2 border-b px-4 py-3"
         :class="
           token?.is_valid
-            ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/70 dark:bg-emerald-950/30'
-            : 'border-rose-200 bg-rose-50/70 dark:border-rose-900/70 dark:bg-rose-950/30'
+            ? 'border-[var(--tone-success-border)] bg-[var(--tone-success-bg)]'
+            : 'border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)]'
         "
       >
         <div class="flex items-center justify-between gap-2">
@@ -148,17 +148,17 @@ onMounted(load)
       <div class="p-4">
         <div class="grid gap-3 text-sm">
           <div class="flex items-center justify-between">
-            <span class="text-zinc-500">状态</span>
+            <span class="text-muted-foreground">状态</span>
             <span :class="toneClass(token?.is_valid ? 'success' : 'danger')">{{
               token?.is_valid ? '可用' : '不可用'
             }}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-zinc-500">即将过期</span>
+            <span class="text-muted-foreground">即将过期</span>
             <span>{{ token?.expiring_soon ? '是' : '否' }}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-zinc-500">剩余天数</span>
+            <span class="text-muted-foreground">剩余天数</span>
             <span>{{ token?.days_until_expiry ?? '未知' }}</span>
           </div>
         </div>

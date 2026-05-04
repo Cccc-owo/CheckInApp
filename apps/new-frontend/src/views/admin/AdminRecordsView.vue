@@ -3,14 +3,8 @@ import { Search } from 'lucide-vue-next'
 import { onMounted, reactive, ref } from 'vue'
 import { checkInApi, type CheckInRecord } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
-import {
-  buttonBase,
-  buttonTone,
-  cardClass,
-  inputClass,
-  sectionHeaderClass,
-  toneClass,
-} from '@/components/ui'
+import { cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { extractErrorMessage, formatFullDateTime, statusLabel, statusTone } from '@/utils/format'
 
 const loading = ref(true)
@@ -52,10 +46,10 @@ onMounted(load)
         <option value="out_of_time">超出时间</option>
       </select>
       <input v-model.number="filters.limit" :class="inputClass" type="number" min="1" max="200" />
-      <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
+      <Button variant="outline" type="button" @click="load">
         <Search class="size-4" />
         筛选
-      </button>
+      </Button>
     </div>
     <StateBlock v-if="loading" title="正在加载记录" type="loading" />
     <StateBlock
@@ -67,7 +61,7 @@ onMounted(load)
       @action="load"
     />
     <StateBlock v-else-if="records.length === 0" title="暂无记录" />
-    <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800">
+    <div v-else class="divide-y divide-border">
       <article
         v-for="record in records"
         :key="record.id"
@@ -77,7 +71,7 @@ onMounted(load)
           <div class="truncate font-medium">
             {{ record.user_alias || record.user_email || `任务 #${record.task_id}` }}
           </div>
-          <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span>{{ formatFullDateTime(record.check_in_time) }}</span>
             <span>{{ record.response_text || record.error_message || '无响应内容' }}</span>
           </div>
@@ -86,7 +80,7 @@ onMounted(load)
           <span :class="toneClass(statusTone(record.status))">{{
             statusLabel(record.status)
           }}</span>
-          <span class="text-sm text-zinc-500">{{
+          <span class="text-sm text-muted-foreground">{{
             record.task_name || record.thread_id || '无任务名'
           }}</span>
         </div>

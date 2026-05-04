@@ -15,14 +15,14 @@ import { useRouter } from '@/app/router'
 import StateBlock from '@/components/StateBlock.vue'
 import {
   alertClass,
-  buttonBase,
-  buttonTone,
   cardClass,
   inputClass,
+  labelClass,
   sectionHeaderClass,
   textareaClass,
   toneClass,
 } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import {
   cronLabel,
   extractErrorMessage,
@@ -214,16 +214,16 @@ onMounted(load)
         <div>
           <h2 class="font-semibold">从模板创建任务</h2>
         </div>
-        <button :class="[buttonBase, buttonTone.secondary]" type="button" @click="load">
+        <Button variant="outline" type="button" @click="load">
           <RefreshCw class="size-4" />
           刷新
-        </button>
+        </Button>
       </div>
 
       <form class="grid gap-4 p-4" @submit.prevent="createTask">
         <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)_220px]">
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">模板</span>
+            <span :class="labelClass">模板</span>
             <select v-model.number="selectedTemplateId" :class="inputClass">
               <option v-for="template in templates" :key="template.id" :value="template.id">
                 {{ template.name }}
@@ -231,39 +231,35 @@ onMounted(load)
             </select>
           </label>
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">任务名称</span>
+            <span :class="labelClass">任务名称</span>
             <input v-model="createForm.task_name" :class="inputClass" placeholder="可选" />
           </label>
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400"
-              >接龙 ThreadId</span
-            >
+            <span :class="labelClass">接龙 ThreadId</span>
             <input v-model="createForm.thread_id" :class="inputClass" required />
           </label>
         </div>
         <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)] md:items-end">
           <label class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Cron 表达式</span>
+            <span :class="labelClass">Cron 表达式</span>
             <input
               v-model="createForm.cron_expression"
               :class="inputClass"
               placeholder="0 20 * * *"
             />
           </label>
-          <button
-            :class="[buttonBase, buttonTone.primary, 'w-full md:w-fit']"
+          <Button
+            class="w-full md:w-fit"
             :disabled="creating || !selectedTemplateId || !createForm.thread_id"
             type="submit"
           >
             <Plus class="size-4" />
             {{ creating ? '创建中' : '创建任务' }}
-          </button>
+          </Button>
         </div>
         <div v-if="fieldEntries.length" class="grid gap-3 md:grid-cols-2">
           <label v-for="[key, field] in fieldEntries" :key="key" class="grid gap-2">
-            <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{
-              field?.display_name ?? key
-            }}</span>
+            <span :class="labelClass">{{ field?.display_name ?? key }}</span>
             <select
               v-if="field?.field_type === 'select'"
               v-model="createForm.field_values[key]"
@@ -320,12 +316,12 @@ onMounted(load)
           <h2 class="font-semibold">任务列表</h2>
         </div>
         <span
-          class="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300"
+          class="rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground"
         >
           {{ tasks.length }} 个任务
         </span>
       </div>
-      <div class="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div class="divide-y divide-border">
         <article v-for="task in tasks" :key="task.id" class="p-3 sm:p-4">
           <div class="grid gap-3 lg:grid-cols-[1fr_auto]">
             <div class="min-w-0">
@@ -350,92 +346,78 @@ onMounted(load)
                   {{ statusLabel(status.status) }}
                 </span>
               </div>
-              <div
-                class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400"
-              >
+              <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 <span>ThreadId: {{ task.thread_id || '未解析' }}</span>
                 <span>{{ cronLabel(task.cron_expression) }}</span>
               </div>
             </div>
             <div class="flex flex-wrap gap-2 lg:justify-end">
-              <button
-                :class="[buttonBase, buttonTone.secondary]"
+              <Button
+                variant="outline"
                 type="button"
                 @click="router.navigate(`/tasks/${task.id}/records`)"
               >
                 记录
-              </button>
-              <button
-                :class="[buttonBase, buttonTone.secondary]"
+              </Button>
+              <Button
+                variant="outline"
                 :disabled="actionId === task.id"
                 type="button"
                 @click="manualCheckIn(task)"
               >
                 <Play class="size-4" />
                 打卡
-              </button>
-              <button
-                :class="[buttonBase, buttonTone.secondary]"
+              </Button>
+              <Button
+                variant="outline"
                 :disabled="actionId === task.id"
                 type="button"
                 @click="toggleTask(task)"
               >
                 <Check class="size-4" />
                 {{ task.is_active ? '停用' : '启用' }}
-              </button>
-              <button
-                :class="[buttonBase, buttonTone.ghost]"
-                type="button"
-                @click="startEdit(task)"
-              >
+              </Button>
+              <Button variant="ghost" type="button" @click="startEdit(task)">
                 <Edit3 class="size-4" />
                 编辑
-              </button>
-              <button
-                :class="[buttonBase, buttonTone.danger]"
+              </Button>
+              <Button
+                variant="danger"
                 :disabled="actionId === task.id"
                 type="button"
                 @click="deleteTask(task)"
               >
                 <Trash2 class="size-4" />
                 删除
-              </button>
+              </Button>
             </div>
           </div>
 
           <form
             v-if="editingTaskId === task.id"
-            class="mt-4 grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-900/70 dark:bg-emerald-950/30"
+            class="mt-4 grid gap-3 rounded-lg border border-[var(--tone-success-border)] bg-[var(--tone-success-bg)] p-3"
             @submit.prevent="saveEdit(task.id)"
           >
             <div>
-              <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">编辑任务</h4>
+              <h4 class="text-sm font-semibold text-foreground">编辑任务</h4>
             </div>
             <div class="grid gap-3 md:grid-cols-2">
               <label class="grid gap-2">
-                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">任务名称</span>
+                <span :class="labelClass">任务名称</span>
                 <input v-model="editForm.name" :class="inputClass" />
               </label>
               <label class="grid gap-2">
-                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Cron</span>
+                <span :class="labelClass">Cron</span>
                 <input v-model="editForm.cron_expression" :class="inputClass" />
               </label>
             </div>
             <label class="grid gap-2">
-              <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400"
-                >Payload JSON</span
-              >
+              <span :class="labelClass">Payload JSON</span>
               <textarea v-model="editForm.payload_config" :class="textareaClass" />
             </label>
             <div class="flex flex-wrap gap-2">
-              <button :class="[buttonBase, buttonTone.primary]" type="submit">保存</button>
-              <button
-                :class="[buttonBase, buttonTone.secondary]"
-                type="button"
-                @click="editingTaskId = null"
-              >
-                取消
-              </button>
+              <Button type="submit">保存</Button>
+              <Button variant="outline" type="button" @click="editingTaskId = null"> 取消 </Button>
             </div>
           </form>
         </article>

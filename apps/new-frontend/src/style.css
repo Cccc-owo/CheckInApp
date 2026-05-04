@@ -65,6 +65,20 @@
   --accent: oklch(0.94 0.045 150);
   --accent-foreground: oklch(0.23 0.07 150);
   --destructive: oklch(0.577 0.245 27.325);
+  --tone-success-bg: oklch(0.965 0.045 150);
+  --tone-success-fg: oklch(0.36 0.11 150);
+  --tone-success-border: oklch(0.84 0.09 150);
+  --tone-warning-bg: oklch(0.97 0.05 88);
+  --tone-warning-fg: oklch(0.42 0.1 70);
+  --tone-warning-border: oklch(0.85 0.11 82);
+  --tone-danger-bg: oklch(0.96 0.035 18);
+  --tone-danger-fg: oklch(0.48 0.16 24);
+  --tone-danger-border: oklch(0.84 0.09 20);
+  --tone-info-bg: oklch(0.96 0.035 225);
+  --tone-info-fg: oklch(0.39 0.1 230);
+  --tone-info-border: oklch(0.84 0.08 225);
+  --tone-info-strong: oklch(0.48 0.13 230);
+  --tone-info-strong-hover: oklch(0.42 0.13 230);
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.58 0.12 150);
@@ -99,6 +113,20 @@
   --accent: oklch(0.274 0.006 286.033);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --tone-success-bg: oklch(0.28 0.055 150 / 58%);
+  --tone-success-fg: oklch(0.82 0.12 150);
+  --tone-success-border: oklch(0.43 0.09 150 / 75%);
+  --tone-warning-bg: oklch(0.3 0.06 70 / 58%);
+  --tone-warning-fg: oklch(0.84 0.13 82);
+  --tone-warning-border: oklch(0.48 0.1 74 / 75%);
+  --tone-danger-bg: oklch(0.31 0.075 24 / 58%);
+  --tone-danger-fg: oklch(0.82 0.12 20);
+  --tone-danger-border: oklch(0.48 0.11 22 / 75%);
+  --tone-info-bg: oklch(0.31 0.06 230 / 58%);
+  --tone-info-fg: oklch(0.82 0.11 225);
+  --tone-info-border: oklch(0.48 0.1 230 / 75%);
+  --tone-info-strong: oklch(0.62 0.14 230);
+  --tone-info-strong-hover: oklch(0.68 0.14 230);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
@@ -138,54 +166,23 @@
   }
 }
 
-.dark .bg-white,
-.dark .bg-white\/95 {
+.dark .bg-white {
   background-color: rgb(24 24 27);
 }
 
-.dark .bg-zinc-50,
-.dark .bg-zinc-50\/70 {
+.dark .bg-zinc-50 {
   background-color: rgb(9 9 11 / 0.62);
 }
 
-.dark .bg-emerald-50,
-.dark .bg-emerald-50\/60,
-.dark .bg-emerald-50\/70 {
+.dark .bg-emerald-50 {
   background-color: rgb(2 44 34 / 0.42);
 }
 
-.dark .bg-sky-50,
-.dark .bg-sky-50\/70 {
-  background-color: rgb(8 47 73 / 0.46);
-}
-
-.dark .bg-amber-50,
-.dark .bg-amber-50\/70,
-.dark .bg-amber-50\/80 {
-  background-color: rgb(69 26 3 / 0.42);
-}
-
-.dark .bg-rose-50,
-.dark .bg-rose-50\/70 {
-  background-color: rgb(76 5 25 / 0.42);
-}
-
-.dark .border-zinc-200,
-.dark .border-zinc-200\/80 {
+.dark .border-zinc-200 {
   border-color: rgb(39 39 42);
-}
-
-.dark .divide-zinc-200 > :not(:last-child) {
-  border-color: rgb(39 39 42);
-}
-
-.dark .text-zinc-950,
-.dark .text-zinc-900 {
-  color: rgb(244 244 245);
 }
 
 .dark .text-zinc-800,
-.dark .text-zinc-700,
 .dark .text-zinc-600 {
   color: rgb(212 212 216);
 }
@@ -195,7 +192,6 @@
   color: rgb(161 161 170);
 }
 
-.dark .hover\:text-zinc-950:hover,
-.dark .hover\:text-zinc-900:hover {
+.dark .hover\:text-zinc-950:hover {
   color: rgb(250 250 250);
 }
