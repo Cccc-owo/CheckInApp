@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f4f6fb;
+            color: #22303f;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            line-height: 1.6;
+        }
+        .email-shell {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 24px 16px 32px;
+        }
+        .email-card {
+            background: #ffffff;
+            border: 1px solid #dde4ee;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+        }
+        .email-header {
+            padding: 24px 28px;
+            color: #ffffff;
+        }
+        .email-title {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1.3;
+            letter-spacing: 0;
+        }
+        .email-subtitle {
+            margin: 8px 0 0;
+            font-size: 14px;
+            opacity: 0.95;
+        }
+        .email-body {
+            padding: 28px;
+            background: #ffffff;
+        }
+        .email-body p {
+            margin: 0 0 14px;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 20px;
+            border: 1px solid #e3e9f2;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .info-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #e3e9f2;
+            vertical-align: top;
+        }
+        .info-table tr:last-child td {
+            border-bottom: 0;
+        }
+        .info-label {
+            width: 140px;
+            font-weight: 700;
+            color: #475569;
+            background: #f8fafc;
+        }
+        .status-box {
+            margin: 18px 0;
+            padding: 16px 18px;
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            background: var(--surface);
+        }
+        .status-title {
+            margin: 0 0 8px;
+            font-weight: 700;
+        }
+        .status-list {
+            margin: 10px 0 0;
+            padding-left: 20px;
+        }
+        .status-list li {
+            margin: 6px 0;
+        }
+        .action-wrap {
+            text-align: center;
+            margin: 24px 0 8px;
+        }
+        .action-link {
+            display: inline-block;
+            padding: 12px 22px;
+            border-radius: 10px;
+            color: #ffffff !important;
+            text-decoration: none;
+            background: var(--accent);
+            font-weight: 700;
+        }
+        .muted {
+            color: #64748b;
+        }
+        .email-footer {
+            padding: 18px 28px 24px;
+            text-align: center;
+            color: #7c8797;
+            font-size: 12px;
+            background: #fbfcfe;
+            border-top: 1px solid #e6edf5;
+        }
+        .email-footer p {
+            margin: 4px 0;
+        }
+        @media (max-width: 640px) {
+            .email-shell {
+                padding: 0;
+            }
+            .email-card {
+                border-radius: 0;
+                border-left: 0;
+                border-right: 0;
+            }
+            .email-header,
+            .email-body,
+            .email-footer {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+            .info-label {
+                width: 110px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-shell">
+        <div class="email-card">
+            <div class="email-header" style="background: ${header_background};">
+                <h1 class="email-title">${title}</h1>
+                <p class="email-subtitle">${subtitle}</p>
+            </div>
+            <div class="email-body">
+                ${body}
+            </div>
+            <div class="email-footer">
+                <p>此邮件由系统自动发送，请勿直接回复。</p>
+                <p>接龙自动打卡系统 © ${year}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

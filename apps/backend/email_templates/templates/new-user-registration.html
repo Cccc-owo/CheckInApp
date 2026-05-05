@@ -1,0 +1,29 @@
+<p>尊敬的管理员，</p>
+<p>有新用户注册了接龙自动打卡系统，请及时审批。</p>
+
+<table class="info-table">
+    <tr>
+        <td class="info-label">用户名</td>
+        <td>${user_alias}</td>
+    </tr>
+    <tr>
+        <td class="info-label">用户 ID</td>
+        <td>${user_id}</td>
+    </tr>
+    <tr>
+        <td class="info-label">注册时间</td>
+        <td>${created_time}</td>
+    </tr>
+</table>
+
+<div class="status-box" style="--accent: #c2410c; --surface: #fff7ed;">
+    <p class="status-title">重要提示</p>
+    <p>该用户需要在 24 小时内通过审批，否则账户将被自动删除。</p>
+    <p>请登录管理后台进行审批操作。</p>
+</div>
+
+<div class="action-wrap">
+    <a href="${admin_url}" class="action-link" style="--accent: #4f46e5;">前往用户管理</a>
+</div>
+
+<p class="muted">管理地址：<a href="${admin_url}">${admin_url}</a></p>

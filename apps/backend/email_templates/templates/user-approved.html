@@ -1,0 +1,35 @@
+<p>您好，${user_alias}！</p>
+<p>恭喜您的账户已通过管理员审批，现在可以使用所有功能了。</p>
+
+<div class="status-box" style="--accent: #15803d; --surface: #f0fdf4;">
+    <p class="status-title">审批结果：已通过</p>
+    <p>审批时间：${approved_time}</p>
+</div>
+
+<table class="info-table">
+    <tr>
+        <td class="info-label">用户名</td>
+        <td>${user_alias}</td>
+    </tr>
+    <tr>
+        <td class="info-label">账户角色</td>
+        <td>${user_role}</td>
+    </tr>
+    <tr>
+        <td class="info-label">注册时间</td>
+        <td>${created_time}</td>
+    </tr>
+</table>
+
+<p><strong>接下来您可以：</strong></p>
+<ul class="status-list">
+    <li>登录系统创建自动打卡任务</li>
+    <li>配置打卡时间和内容</li>
+    <li>查看打卡记录和统计</li>
+</ul>
+
+<div class="action-wrap">
+    <a href="${login_url}" class="action-link" style="--accent: #15803d;">立即登录</a>
+</div>
+
+<p class="muted">如果您还没有设置密码，建议在个人设置中设置密码，方便后续登录。</p>

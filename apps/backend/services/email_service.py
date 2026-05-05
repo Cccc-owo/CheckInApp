@@ -11,14 +11,97 @@
 
 import logging
 from datetime import datetime
-from typing import List
+from html import escape
+from typing import Any, List
+
 from sqlalchemy.orm import Session
 
-from backend.models import User
-from backend.workers.email_notifier import EmailNotifier
 from backend.config import settings
+from backend.models import User
+from backend.services.email_templates import EmailTemplate, SafeHtml, render_email_template
+from backend.utils.time_helpers import minutes_until_expiry, parse_jwt_exp
+from backend.workers.email_notifier import EmailNotifier
 
 logger = logging.getLogger(__name__)
+
+
+def _format_datetime(value: Any) -> str:
+    if value is None:
+        return "未知"
+
+    try:
+        return value.strftime("%Y-%m-%d %H:%M:%S")
+    except AttributeError:
+        return str(value)
+
+
+def _now_text() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _frontend_path(path: str) -> str:
+    return f"{settings.FRONTEND_URL}{path}"
+
+
+def _email_text(value: object) -> str:
+    return escape(str(value), quote=True)
+
+
+def _optional_reason_section(reason: str) -> SafeHtml:
+    if not reason:
+        return SafeHtml("")
+
+    return SafeHtml(
+        '<div class="status-box" style="--accent: #64748b; --surface: #f8fafc;">'
+        '<p class="status-title">拒绝原因</p>'
+        f"<p>{_email_text(reason)}</p>"
+        "</div>"
+    )
+
+
+def _message_row(message: str) -> SafeHtml:
+    if not message:
+        return SafeHtml("")
+
+    return SafeHtml(f'<tr><td class="info-label">失败原因</td><td>{_email_text(message)}</td></tr>')
+
+
+def _check_in_guidance_section(success: bool, is_token_error: bool) -> SafeHtml:
+    if success:
+        return SafeHtml("<p>如有问题，请及时检查您的打卡配置。</p>")
+
+    dashboard_url = _email_text(_frontend_path("/dashboard"))
+    if is_token_error:
+        status_html = (
+            '<div class="status-box" style="--accent: #b91c1c; --surface: #fef2f2;">'
+            '<p class="status-title">打卡凭证已过期</p>'
+            "<p>打卡凭证已过期，无法自动打卡。所有自动打卡任务已暂停，请进入网页处理。</p>"
+            "</div>"
+        )
+    else:
+        status_html = "<p>请进入网页检查任务配置和最近记录。</p>"
+
+    return SafeHtml(
+        status_html + '<div class="action-wrap">'
+        f'<a href="{dashboard_url}" class="action-link" style="--accent: #b91c1c;">立即登录刷新</a>'
+        "</div>"
+    )
+
+
+def _is_token_error(success: bool, message: str) -> bool:
+    if success or not message:
+        return False
+
+    return any(
+        marker in message
+        for marker in (
+            "Token",
+            "token",
+            "失效",
+            "授权",
+            "登录",
+        )
+    )
 
 
 class EmailService:
@@ -51,126 +134,27 @@ class EmailService:
         Returns:
             是否发送成功
         """
-        # 查询所有管理员邮箱
         admins = db.query(User).filter(User.role == "admin", User.email.isnot(None)).all()
-        # 使用 str() 转换避免类型检查问题，并过滤空值
         admin_emails: List[str] = []
         for admin in admins:
             email_value = admin.email
-            if email_value is not None:  # 使用 is not None 避免布尔转换
+            if email_value is not None:
                 admin_emails.append(str(email_value))
 
         if not admin_emails:
             logger.warning("没有找到管理员邮箱，无法发送通知")
             return False
 
-        # 构建邮件内容
         subject = f"【接龙自动打卡系统】新用户注册通知 - {user.alias}"
-
-        # 安全获取创建时间
-        created_at_value = user.created_at
-        created_time = (
-            created_at_value.strftime("%Y-%m-%d %H:%M:%S")
-            if created_at_value is not None
-            else "未知"
+        body_html = render_email_template(
+            EmailTemplate.NEW_USER_REGISTRATION,
+            {
+                "user_alias": user.alias,
+                "user_id": user.id,
+                "created_time": _format_datetime(user.created_at),
+                "admin_url": _frontend_path("/admin/users"),
+            },
         )
-
-        body_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background-color: #667eea;
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                    border-radius: 5px 5px 0 0;
-                }}
-                .content {{
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    border: 1px solid #ddd;
-                    border-radius: 0 0 5px 5px;
-                }}
-                .info-table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 15px 0;
-                }}
-                .info-table td {{
-                    padding: 10px;
-                    border-bottom: 1px solid #ddd;
-                }}
-                .info-table td:first-child {{
-                    font-weight: bold;
-                    width: 120px;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    text-align: center;
-                    color: #999;
-                    font-size: 12px;
-                }}
-                .warning {{
-                    background-color: #fff3cd;
-                    border-left: 4px solid #ffc107;
-                    padding: 10px;
-                    margin: 15px 0;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>🔔 新用户注册通知</h2>
-                </div>
-                <div class="content">
-                    <p>尊敬的管理员，</p>
-                    <p>有新用户注册了接龙自动打卡系统，请及时审批。</p>
-
-                    <table class="info-table">
-                        <tr>
-                            <td>用户名</td>
-                            <td>{user.alias}</td>
-                        </tr>
-                        <tr>
-                            <td>用户 ID</td>
-                            <td>{user.id}</td>
-                        </tr>
-                        <tr>
-                            <td>注册时间</td>
-                            <td>{created_time}</td>
-                        </tr>
-                    </table>
-
-                    <div class="warning">
-                        <strong>⚠️ 重要提示：</strong>
-                        <p>该用户需要在 24 小时内通过审批，否则账户将被自动删除。</p>
-                        <p>请登录管理后台进行审批操作。</p>
-                    </div>
-
-                    <p>登录地址：<a href="{settings.FRONTEND_URL}/admin/users">{settings.FRONTEND_URL}/admin/users</a></p>
-                </div>
-                <div class="footer">
-                    <p>此邮件由系统自动发送，请勿直接回复。</p>
-                    <p>接龙自动打卡系统 © {datetime.now().year}</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
 
         return EmailService.send_email(admin_emails, subject, body_html)
 
@@ -190,133 +174,17 @@ class EmailService:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过审批通知")
             return False
 
-        # 构建邮件内容
         subject = f"【接龙自动打卡系统】账户审批通过 - {user.alias}"
-
-        # 安全获取创建时间
-        user_created_at = user.created_at
-        created_time = (
-            user_created_at.strftime("%Y-%m-%d %H:%M:%S") if user_created_at is not None else "未知"
+        body_html = render_email_template(
+            EmailTemplate.USER_APPROVED,
+            {
+                "user_alias": user.alias,
+                "user_role": user.role,
+                "created_time": _format_datetime(user.created_at),
+                "approved_time": _now_text(),
+                "login_url": _frontend_path("/login"),
+            },
         )
-
-        body_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background-color: #28a745;
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                    border-radius: 5px 5px 0 0;
-                }}
-                .content {{
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    border: 1px solid #ddd;
-                    border-radius: 0 0 5px 5px;
-                }}
-                .info-table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 15px 0;
-                }}
-                .info-table td {{
-                    padding: 10px;
-                    border-bottom: 1px solid #ddd;
-                }}
-                .info-table td:first-child {{
-                    font-weight: bold;
-                    width: 120px;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    text-align: center;
-                    color: #999;
-                    font-size: 12px;
-                }}
-                .success-box {{
-                    background-color: #d4edda;
-                    border-left: 4px solid #28a745;
-                    padding: 15px;
-                    margin: 15px 0;
-                }}
-                .btn {{
-                    display: inline-block;
-                    padding: 12px 24px;
-                    background-color: #667eea;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    margin: 10px 0;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>🎉 恭喜！账户审批通过</h2>
-                </div>
-                <div class="content">
-                    <p>您好，{user.alias}！</p>
-                    <p>恭喜您的账户已通过管理员审批，现在可以使用所有功能了。</p>
-
-                    <div class="success-box">
-                        <strong>✅ 审批结果：</strong> 已通过
-                        <br>
-                        <strong>审批时间：</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-                    </div>
-
-                    <table class="info-table">
-                        <tr>
-                            <td>用户名</td>
-                            <td>{user.alias}</td>
-                        </tr>
-                        <tr>
-                            <td>账户角色</td>
-                            <td>{user.role}</td>
-                        </tr>
-                        <tr>
-                            <td>注册时间</td>
-                            <td>{created_time}</td>
-                        </tr>
-                    </table>
-
-                    <p><strong>接下来您可以：</strong></p>
-                    <ul>
-                        <li>登录系统创建自动打卡任务</li>
-                        <li>配置打卡时间和内容</li>
-                        <li>查看打卡记录和统计</li>
-                    </ul>
-
-                    <p style="text-align: center;">
-                        <a href="{settings.FRONTEND_URL}/login" class="btn">立即登录</a>
-                    </p>
-
-                    <p style="color: #666; font-size: 14px;">
-                        💡 <strong>温馨提示：</strong>如果您还没有设置密码，建议在个人设置中设置密码，方便后续登录。
-                    </p>
-                </div>
-                <div class="footer">
-                    <p>此邮件由系统自动发送，请勿直接回复。</p>
-                    <p>接龙自动打卡系统 © {datetime.now().year}</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
 
         return EmailService.send_email([str(user_email)], subject, body_html)
 
@@ -337,81 +205,15 @@ class EmailService:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过拒绝通知")
             return False
 
-        # 构建邮件内容
         subject = f"【接龙自动打卡系统】账户审批结果 - {user.alias}"
-
-        reason_html = f"<p><strong>拒绝原因：</strong>{reason}</p>" if reason else ""
-
-        body_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background-color: #dc3545;
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                    border-radius: 5px 5px 0 0;
-                }}
-                .content {{
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    border: 1px solid #ddd;
-                    border-radius: 0 0 5px 5px;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    text-align: center;
-                    color: #999;
-                    font-size: 12px;
-                }}
-                .error-box {{
-                    background-color: #f8d7da;
-                    border-left: 4px solid #dc3545;
-                    padding: 15px;
-                    margin: 15px 0;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>账户审批结果通知</h2>
-                </div>
-                <div class="content">
-                    <p>您好，{user.alias}！</p>
-                    <p>很遗憾，您的账户注册申请未能通过审批。</p>
-
-                    <div class="error-box">
-                        <strong>❌ 审批结果：</strong> 未通过
-                        <br>
-                        <strong>处理时间：</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-                    </div>
-
-                    {reason_html}
-
-                    <p>如有疑问，请联系系统管理员。</p>
-                </div>
-                <div class="footer">
-                    <p>此邮件由系统自动发送，请勿直接回复。</p>
-                    <p>接龙自动打卡系统 © {datetime.now().year}</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body_html = render_email_template(
+            EmailTemplate.USER_REJECTED,
+            {
+                "user_alias": user.alias,
+                "processed_time": _now_text(),
+                "reason_section": _optional_reason_section(reason),
+            },
+        )
 
         return EmailService.send_email([str(user_email)], subject, body_html)
 
@@ -432,104 +234,17 @@ class EmailService:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过 Token 过期通知")
             return False
 
-        # 计算剩余时间
-        from backend.utils.time_helpers import parse_jwt_exp, minutes_until_expiry
-
         exp_timestamp = parse_jwt_exp(jwt_exp)
         minutes_left = minutes_until_expiry(exp_timestamp) if exp_timestamp else 0
 
-        # 构建邮件内容
         subject = f"【接龙自动打卡系统】登录凭证即将过期 - {user.alias}"
-
-        body_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background-color: #ff9800;
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                    border-radius: 5px 5px 0 0;
-                }}
-                .content {{
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    border: 1px solid #ddd;
-                    border-radius: 0 0 5px 5px;
-                }}
-                .warning-box {{
-                    background-color: #fff3cd;
-                    border-left: 4px solid #ff9800;
-                    padding: 15px;
-                    margin: 15px 0;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    text-align: center;
-                    color: #999;
-                    font-size: 12px;
-                }}
-                .btn {{
-                    display: inline-block;
-                    padding: 12px 24px;
-                    background-color: #667eea;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    margin: 10px 0;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>⚠️ 登录凭证即将过期</h2>
-                </div>
-                <div class="content">
-                    <p>您好，{user.alias}！</p>
-                    <p>您的 QQ 登录凭证即将在 <strong>{minutes_left} 分钟</strong>后过期。</p>
-
-                    <div class="warning-box">
-                        <strong>⚠️ 重要提示：</strong>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>登录凭证过期后，系统将无法自动执行您的打卡任务</li>
-                            <li>建议尽快登录系统刷新凭证</li>
-                            <li>如果您已设置密码，可以使用密码登录后扫码刷新凭证</li>
-                        </ul>
-                    </div>
-
-                    <p><strong>如何刷新凭证：</strong></p>
-                    <ol style="margin: 10px 0; padding-left: 20px;">
-                        <li>登录系统（扫码或密码登录）</li>
-                        <li>在个人设置旁的按钮中进行刷新 Token</li>
-                        <li>使用手机 QQ 扫描二维码完成刷新</li>
-                    </ol>
-
-                    <p style="text-align: center;">
-                        <a href="{settings.FRONTEND_URL}/login" class="btn">立即登录刷新</a>
-                    </p>
-                </div>
-                <div class="footer">
-                    <p>此邮件由系统自动发送，请勿直接回复。</p>
-                    <p>接龙自动打卡系统 © {datetime.now().year}</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body_html = render_email_template(
+            EmailTemplate.TOKEN_EXPIRING,
+            {
+                "user_alias": user.alias,
+                "minutes_left": minutes_left,
+            },
+        )
 
         return EmailService.send_email([str(user_email)], subject, body_html)
 
@@ -549,98 +264,14 @@ class EmailService:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过 Token 已过期通知")
             return False
 
-        # 构建邮件内容
         subject = f"【接龙自动打卡系统】登录凭证已过期 - {user.alias}"
-
-        body_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background-color: #dc3545;
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                    border-radius: 5px 5px 0 0;
-                }}
-                .content {{
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    border: 1px solid #ddd;
-                    border-radius: 0 0 5px 5px;
-                }}
-                .error-box {{
-                    background-color: #f8d7da;
-                    border-left: 4px solid #dc3545;
-                    padding: 15px;
-                    margin: 15px 0;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    text-align: center;
-                    color: #999;
-                    font-size: 12px;
-                }}
-                .btn {{
-                    display: inline-block;
-                    padding: 12px 24px;
-                    background-color: #667eea;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    margin: 10px 0;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>❌ 登录凭证已过期</h2>
-                </div>
-                <div class="content">
-                    <p>您好，{user.alias}！</p>
-                    <p>您的 QQ 登录凭证已过期，系统已无法自动执行打卡任务。</p>
-
-                    <div class="error-box">
-                        <strong>⚠️ 重要提示：</strong>
-                        <ul style="margin: 10px 0; padding-left: 20px;">
-                            <li>登录凭证已过期，所有自动打卡任务已暂停</li>
-                            <li>请尽快登录系统刷新凭证以恢复服务</li>
-                            <li>如果您已设置密码，可以使用密码登录后扫码刷新凭证</li>
-                        </ul>
-                    </div>
-
-                    <p><strong>如何刷新 Token：</strong></p>
-                    <ol style="margin: 10px 0; padding-left: 20px;">
-                        <li>登录系统（扫码或密码登录）</li>
-                        <li>在个人设置旁的按钮中进行刷新 Token</li>
-                        <li>使用手机 QQ 扫描二维码完成刷新</li>
-                    </ol>
-
-                    <p style="text-align: center;">
-                        <a href="{settings.FRONTEND_URL}/login" class="btn">立即登录刷新</a>
-                    </p>
-                </div>
-                <div class="footer">
-                    <p>此邮件由系统自动发送，请勿直接回复。</p>
-                    <p>接龙自动打卡系统 © {datetime.now().year}</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        body_html = render_email_template(
+            EmailTemplate.TOKEN_EXPIRED,
+            {
+                "user_alias": user.alias,
+                "login_url": _frontend_path("/login"),
+            },
+        )
 
         return EmailService.send_email([str(user_email)], subject, body_html)
 
@@ -665,145 +296,22 @@ class EmailService:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过打卡通知")
             return False
 
-        # 构建邮件内容
-        status_text = "✅ 成功" if success else "❌ 失败"
-        status_color = "#28a745" if success else "#dc3545"
+        status_text = "成功" if success else "失败"
+        status_color = "#15803d" if success else "#b91c1c"
+        subject = f"【接龙自动打卡】打卡{'✅ 成功' if success else '❌ 失败'} - {user.alias}"
+        token_error = _is_token_error(success, message)
 
-        subject = f"【接龙自动打卡】打卡{status_text} - {user.alias}"
-
-        # 判断是否是 Token 失效导致的失败
-        is_token_error = (
-            not success
-            and message
-            and (
-                "Token" in message
-                or "token" in message
-                or "失效" in message
-                or "授权" in message
-                or "登录" in message
-            )
+        body_html = render_email_template(
+            EmailTemplate.CHECK_IN_RESULT,
+            {
+                "user_alias": user.alias,
+                "executed_time": _now_text(),
+                "thread_id": task_info.get("thread_id", "未知"),
+                "status_text": status_text,
+                "status_color": status_color,
+                "message_row": _message_row(message),
+                "guidance_section": _check_in_guidance_section(success, token_error),
+            },
         )
-
-        # Token 失效时的额外提示内容
-        token_error_section = ""
-        if is_token_error:
-            token_error_section = f"""
-                    <div class="error-box">
-                        <strong>⚠️ 打卡凭证已过期</strong>
-                        <p style="margin: 10px 0;">打卡凭证已过期，无法自动打卡。所有自动打卡任务已暂停，请尽快刷新 Token 以恢复服务。</p>
-                    </div>
-
-                    <p><strong>如何刷新 Token：</strong></p>
-                    <ol style="margin: 10px 0; padding-left: 20px;">
-                        <li>登录系统（扫码或密码登录）</li>
-                        <li>进入"仪表盘"或点击右上角的"刷新 Token"按钮</li>
-                        <li>使用手机 QQ 扫描二维码完成刷新</li>
-                    </ol>
-
-                    <p style="text-align: center; margin-top: 20px;">
-                        <a href="{settings.FRONTEND_URL}/dashboard" class="btn">立即登录刷新</a>
-                    </p>
-            """
-
-        body_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background-color: {status_color};
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                    border-radius: 5px 5px 0 0;
-                }}
-                .content {{
-                    background-color: #f9f9f9;
-                    padding: 20px;
-                    border: 1px solid #ddd;
-                    border-radius: 0 0 5px 5px;
-                }}
-                .info-table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 15px 0;
-                }}
-                .info-table td {{
-                    padding: 10px;
-                    border-bottom: 1px solid #ddd;
-                }}
-                .info-table td:first-child {{
-                    font-weight: bold;
-                    width: 120px;
-                }}
-                .footer {{
-                    margin-top: 20px;
-                    text-align: center;
-                    color: #999;
-                    font-size: 12px;
-                }}
-                .error-box {{
-                    background-color: #f8d7da;
-                    border-left: 4px solid #dc3545;
-                    padding: 15px;
-                    margin: 15px 0;
-                }}
-                .btn {{
-                    display: inline-block;
-                    padding: 12px 24px;
-                    background-color: #667eea;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    margin: 10px 0;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>打卡通知 {status_text}</h2>
-                </div>
-                <div class="content">
-                    <p>您好，{user.alias}！</p>
-                    <p>您的接龙自动打卡任务已执行。</p>
-
-                    <table class="info-table">
-                        <tr>
-                            <td>执行时间</td>
-                            <td>{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</td>
-                        </tr>
-                        <tr>
-                            <td>任务 ID</td>
-                            <td>{task_info.get("thread_id", "未知")}</td>
-                        </tr>
-                        <tr>
-                            <td>打卡状态</td>
-                            <td><strong style="color: {status_color};">{status_text}</strong></td>
-                        </tr>
-                        {f"<tr><td>失败原因</td><td>{message}</td></tr>" if message else ""}
-                    </table>
-
-                    {token_error_section if is_token_error else "<p>如有问题，请及时检查您的打卡配置。</p>"}
-                </div>
-                <div class="footer">
-                    <p>此邮件由系统自动发送，请勿直接回复。</p>
-                    <p>接龙自动打卡系统 © {datetime.now().year}</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
 
         return EmailService.send_email([str(user_email)], subject, body_html)

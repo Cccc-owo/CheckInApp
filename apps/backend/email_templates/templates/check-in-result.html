@@ -1,0 +1,20 @@
+<p>您好，${user_alias}！</p>
+<p>您的接龙自动打卡任务已执行。</p>
+
+<table class="info-table">
+    <tr>
+        <td class="info-label">执行时间</td>
+        <td>${executed_time}</td>
+    </tr>
+    <tr>
+        <td class="info-label">任务 ID</td>
+        <td>${thread_id}</td>
+    </tr>
+    <tr>
+        <td class="info-label">打卡状态</td>
+        <td><strong style="color: ${status_color};">${status_text}</strong></td>
+    </tr>
+    ${message_row}
+</table>
+
+${guidance_section}
