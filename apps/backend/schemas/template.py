@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Union
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import json
 
 
@@ -43,10 +43,7 @@ class FieldConfigItem(BaseModel):
 class FieldConfigValues(BaseModel):
     """Values 字段的嵌套配置（如 location, temperature 等）"""
 
-    pass
-
-    class Config:
-        extra = "allow"  # 允许任意字段
+    model_config = ConfigDict(extra="allow")
 
 
 class FieldConfig(BaseModel):
@@ -128,6 +125,8 @@ class TemplateUpdate(BaseModel):
 class TemplateResponse(BaseModel):
     """模板响应 Schema"""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     description: Optional[str]
@@ -136,9 +135,6 @@ class TemplateResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime]
-
-    class Config:
-        from_attributes = True
 
 
 class TaskFromTemplateRequest(BaseModel):

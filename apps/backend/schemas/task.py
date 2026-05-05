@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class TaskBase(BaseModel):
@@ -132,6 +132,8 @@ class TaskUpdate(BaseModel):
 class TaskResponse(TaskBase):
     """打卡任务响应 Schema"""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     created_at: datetime
@@ -145,6 +147,3 @@ class TaskResponse(TaskBase):
     last_check_in_time: Optional[datetime] = Field(None, description="最后一次打卡时间")
     last_check_in_status: Optional[str] = Field(None, description="最后一次打卡状态")
     thread_id: Optional[str] = Field(None, description="接龙 ID（从 payload_config 中提取）")
-
-    class Config:
-        from_attributes = True

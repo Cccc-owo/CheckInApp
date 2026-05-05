@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserBase(BaseModel):
@@ -45,6 +45,8 @@ class UserUpdateProfile(BaseModel):
 class UserResponse(BaseModel):
     """用户响应 Schema"""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     alias: str
     role: str
@@ -54,9 +56,6 @@ class UserResponse(BaseModel):
     has_password: bool = False  # 是否已设置密码
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class UserWithToken(UserResponse):

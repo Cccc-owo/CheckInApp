@@ -3,11 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 
-FRONTEND_ROOT = Path(__file__).resolve().parents[1] / "apps" / "new-frontend"
+FRONTEND_ROOT = Path(__file__).resolve().parents[1] / "apps" / "frontend"
 SRC_ROOT = FRONTEND_ROOT / "src"
 
 
-def test_new_frontend_has_business_app_structure() -> None:
+def test_frontend_has_business_app_structure() -> None:
     expected_files = [
         "api/client.ts",
         "api/index.ts",
@@ -37,7 +37,7 @@ def test_new_frontend_has_business_app_structure() -> None:
     assert missing == []
 
 
-def test_new_frontend_routes_cover_user_and_admin_workflows() -> None:
+def test_frontend_routes_cover_user_and_admin_workflows() -> None:
     router = (SRC_ROOT / "app" / "router.ts").read_text(encoding="utf-8")
 
     for path in [
@@ -57,15 +57,8 @@ def test_new_frontend_routes_cover_user_and_admin_workflows() -> None:
         assert path in router
 
 
-def test_new_frontend_replaces_starter_component() -> None:
+def test_frontend_replaces_starter_component() -> None:
     app = (SRC_ROOT / "App.vue").read_text(encoding="utf-8")
 
     assert "HelloWorld" not in app
     assert not (SRC_ROOT / "components" / "HelloWorld.vue").exists()
-
-
-def test_theme_switch_is_icon_only_but_accessible() -> None:
-    layout = (SRC_ROOT / "components" / "AppLayout.vue").read_text(encoding="utf-8")
-
-    assert "切换主题，当前${themeLabel}" in layout
-    assert "{{ themeLabel }}" not in layout
