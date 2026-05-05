@@ -9,6 +9,7 @@ services:
       - path: .env
         required: false
     environment:
+      TZ: ${TZ:-Asia/Shanghai}
       DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/checkin.db}
       LOG_FILE: ${LOG_FILE:-/app/logs/backend.log}
       SESSION_DIR: ${SESSION_DIR:-/app/sessions}
@@ -40,6 +41,8 @@ services:
         condition: service_healthy
     ports:
       - "${CHECKIN_WEB_PORT:-3090}:80"
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health >/dev/null"]
