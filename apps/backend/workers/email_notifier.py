@@ -14,7 +14,7 @@ from email.mime.multipart import MIMEMultipart
 import logging
 from typing import List, Optional
 
-from backend.config import settings
+from backend.services.email_settings_service import EmailSettingsService
 
 logger = logging.getLogger(__name__)
 
@@ -25,30 +25,19 @@ class EmailNotifier:
     @staticmethod
     def get_email_config() -> Optional[dict]:
         """
-        从环境变量读取邮件配置
+        读取有效邮件配置
 
         Returns:
             dict: 邮件配置，如果配置不完整则返回 None
         """
-        # 检查必要的邮件配置是否存在
-        if not settings.SMTP_SERVER or not settings.SMTP_SENDER_EMAIL:
+        email_config = EmailSettingsService.get_smtp_config()
+        if not email_config:
             logger.debug(
                 "邮件配置未完成（SMTP_SERVER 或 SMTP_SENDER_EMAIL 为空），邮件发送功能已禁用"
             )
             return None
 
-        if not settings.SMTP_PORT:
-            logger.debug("邮件配置未完成（SMTP_PORT 为空），邮件发送功能已禁用")
-            return None
-
-        # 返回配置字典
-        return {
-            "smtp_server": settings.SMTP_SERVER,
-            "smtp_port": settings.SMTP_PORT,
-            "sender_email": settings.SMTP_SENDER_EMAIL,
-            "sender_password": settings.SMTP_SENDER_PASSWORD,
-            "use_ssl": settings.SMTP_USE_SSL,
-        }
+        return email_config
 
     @staticmethod
     def send_email(

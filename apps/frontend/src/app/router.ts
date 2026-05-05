@@ -14,6 +14,7 @@ export type RouteKey =
   | 'admin-records'
   | 'admin-logs'
   | 'admin-stats'
+  | 'admin-email-settings'
   | 'not-found'
 
 export interface AppRoute {
@@ -64,6 +65,13 @@ export const routes: AppRoute[] = [
     key: 'admin-stats',
     path: '/admin/stats',
     title: '统计信息',
+    requiresAuth: true,
+    requiresAdmin: true,
+  },
+  {
+    key: 'admin-email-settings',
+    path: '/admin/email-settings',
+    title: '邮件设置',
     requiresAuth: true,
     requiresAdmin: true,
   },

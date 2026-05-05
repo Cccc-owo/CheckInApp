@@ -202,6 +202,30 @@ export interface LogsResponse {
   logs: string
 }
 
+export interface EmailNotificationSettings {
+  id: number
+  smtp_server: string
+  smtp_port: number
+  smtp_sender_email: string
+  smtp_use_ssl: boolean
+  notify_token_expiring: boolean
+  notify_check_in_success: boolean
+  has_smtp_sender_password: boolean
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export interface EmailNotificationSettingsUpdate {
+  smtp_server: string
+  smtp_port: number
+  smtp_sender_email: string
+  smtp_use_ssl: boolean
+  notify_token_expiring: boolean
+  notify_check_in_success: boolean
+  smtp_sender_password?: string
+  clear_smtp_sender_password?: boolean
+}
+
 export interface CronValidation {
   valid: boolean
   message: string

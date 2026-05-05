@@ -6,9 +6,14 @@ from pydantic import BaseModel
 
 from backend.models import get_db, User, CheckInTask
 from backend.schemas.check_in import BatchCheckInRequest
+from backend.schemas.email_settings import (
+    EmailNotificationSettingsResponse,
+    EmailNotificationSettingsUpdate,
+)
 from backend.schemas.user import UserResponse
 from backend.services.check_in_service import CheckInService
 from backend.services.admin_service import AdminService
+from backend.services.email_settings_service import EmailSettingsService
 from backend.dependencies import get_current_admin_user
 from backend.config import settings
 from backend.exceptions import BaseAPIException
@@ -23,6 +28,49 @@ class BatchToggleTasksRequest(BaseModel):
 
     task_ids: List[int]
     is_active: bool
+
+
+@router.get(
+    "/email_settings",
+    response_model=EmailNotificationSettingsResponse,
+    summary="获取邮件与通知设置",
+)
+async def get_email_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """获取管理员可配置的 SMTP 与通知策略设置。"""
+    try:
+        return EmailSettingsService.get_response(db)
+    except EXPECTED_API_EXCEPTIONS:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取邮件设置失败: {str(e)}",
+        )
+
+
+@router.put(
+    "/email_settings",
+    response_model=EmailNotificationSettingsResponse,
+    summary="更新邮件与通知设置",
+)
+async def update_email_settings(
+    request: EmailNotificationSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """更新管理员可配置的 SMTP 与通知策略设置。"""
+    try:
+        return EmailSettingsService.update_response(db, request)
+    except EXPECTED_API_EXCEPTIONS:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"更新邮件设置失败: {str(e)}",
+        )
 
 
 @router.post("/batch_toggle_tasks", summary="批量启用/禁用任务")

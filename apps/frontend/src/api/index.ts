@@ -6,6 +6,8 @@ import type {
   CheckInStartResponse,
   CreateTaskFromTemplatePayload,
   CronValidation,
+  EmailNotificationSettings,
+  EmailNotificationSettingsUpdate,
   LoginResponse,
   LogsResponse,
   PaginatedResponse,
@@ -118,6 +120,9 @@ export const adminApi = {
     ),
   batchCheckIn: (task_ids: number[]) =>
     apiClient.post<unknown>('/api/admin/batch_check_in', { task_ids }),
+  emailSettings: () => apiClient.get<EmailNotificationSettings>('/api/admin/email_settings'),
+  updateEmailSettings: (payload: EmailNotificationSettingsUpdate) =>
+    apiClient.put<EmailNotificationSettings>('/api/admin/email_settings', payload),
 }
 
 export type * from './types'

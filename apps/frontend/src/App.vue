@@ -16,6 +16,7 @@ import AdminTemplatesView from '@/views/admin/AdminTemplatesView.vue'
 import AdminRecordsView from '@/views/admin/AdminRecordsView.vue'
 import AdminLogsView from '@/views/admin/AdminLogsView.vue'
 import AdminStatsView from '@/views/admin/AdminStatsView.vue'
+import AdminEmailSettingsView from '@/views/admin/AdminEmailSettingsView.vue'
 
 const router = useRouter()
 const auth = useAuth()
@@ -46,6 +47,8 @@ const view = computed(() => {
       return AdminLogsView
     case 'admin-stats':
       return AdminStatsView
+    case 'admin-email-settings':
+      return AdminEmailSettingsView
     default:
       return NotFoundView
   }

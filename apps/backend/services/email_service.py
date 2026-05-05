@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from backend.config import settings
 from backend.models import User
+from backend.services.email_settings_service import EmailSettingsService
 from backend.services.email_templates import EmailTemplate, SafeHtml, render_email_template
 from backend.utils.time_helpers import minutes_until_expiry, parse_jwt_exp
 from backend.workers.email_notifier import EmailNotifier
@@ -229,6 +230,10 @@ class EmailService:
         Returns:
             是否发送成功
         """
+        if not EmailSettingsService.is_token_expiring_notification_enabled():
+            logger.info("Token 即将过期通知已关闭，跳过发送")
+            return False
+
         user_email = user.email
         if user_email is None:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过 Token 过期通知")
@@ -291,6 +296,10 @@ class EmailService:
         Returns:
             是否发送成功
         """
+        if success and not EmailSettingsService.is_check_in_success_notification_enabled():
+            logger.info("打卡成功通知已关闭，跳过发送")
+            return False
+
         user_email = user.email
         if user_email is None:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过打卡通知")

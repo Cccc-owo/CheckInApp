@@ -29,6 +29,7 @@ def test_frontend_has_business_app_structure() -> None:
         "views/admin/AdminRecordsView.vue",
         "views/admin/AdminLogsView.vue",
         "views/admin/AdminStatsView.vue",
+        "views/admin/AdminEmailSettingsView.vue",
         "utils/format.ts",
     ]
 
@@ -53,8 +54,15 @@ def test_frontend_routes_cover_user_and_admin_workflows() -> None:
         "/admin/records",
         "/admin/logs",
         "/admin/stats",
+        "/admin/email-settings",
     ]:
         assert path in router
+
+
+def test_frontend_admin_api_covers_email_settings() -> None:
+    api = (SRC_ROOT / "api" / "index.ts").read_text(encoding="utf-8")
+
+    assert "/api/admin/email_settings" in api
 
 
 def test_frontend_replaces_starter_component() -> None:

@@ -9,6 +9,9 @@ from sqlalchemy import Engine, text
 from sqlalchemy.engine import Connection
 
 from backend.migration_steps.account_lockout import apply as apply_account_lockout
+from backend.migration_steps.email_notification_settings import (
+    apply as apply_email_notification_settings,
+)
 from backend.migration_steps.task_thread_id import apply as apply_task_thread_id
 from backend.models.database import engine as default_engine
 
@@ -85,6 +88,11 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="2026050402_add_task_thread_id",
         description="Add and backfill check-in task thread identity.",
         apply=apply_task_thread_id,
+    ),
+    Migration(
+        id="2026050501_add_email_notification_settings",
+        description="Add admin-managed email notification settings.",
+        apply=apply_email_notification_settings,
     ),
 )
 

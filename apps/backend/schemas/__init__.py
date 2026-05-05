@@ -37,6 +37,10 @@ from backend.schemas.template import (
     TaskFromTemplateRequest,
     TemplatePreviewResponse,
 )
+from backend.schemas.email_settings import (
+    EmailNotificationSettingsResponse,
+    EmailNotificationSettingsUpdate,
+)
 
 __all__ = [
     "UserBase",
@@ -68,4 +72,6 @@ __all__ = [
     "TemplateResponse",
     "TaskFromTemplateRequest",
     "TemplatePreviewResponse",
+    "EmailNotificationSettingsResponse",
+    "EmailNotificationSettingsUpdate",
 ]

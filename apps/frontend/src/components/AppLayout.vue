@@ -7,6 +7,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   Monitor,
   MoonStar,
@@ -43,6 +44,7 @@ const adminLinks = [
   { path: '/admin/records', label: '全量记录', icon: ScrollText },
   { path: '/admin/logs', label: '日志', icon: Shield },
   { path: '/admin/stats', label: '统计', icon: BarChart3 },
+  { path: '/admin/email-settings', label: '邮件', icon: Mail },
 ]
 
 const title = computed(() => router.current.value.title)

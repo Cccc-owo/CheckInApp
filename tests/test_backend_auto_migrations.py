@@ -13,6 +13,9 @@ from backend.migrations import (
     run_pending_migrations,
 )
 from backend.migration_steps.account_lockout import apply as apply_account_lockout
+from backend.migration_steps.email_notification_settings import (
+    apply as apply_email_notification_settings,
+)
 from backend.migration_steps.task_thread_id import apply as apply_task_thread_id
 
 
@@ -75,11 +78,34 @@ def test_existing_migrations_are_registered_in_order() -> None:
     assert [migration.id for migration in MIGRATIONS] == [
         "2026050401_add_account_lockout",
         "2026050402_add_task_thread_id",
+        "2026050501_add_email_notification_settings",
     ]
     assert [migration.apply.__module__ for migration in MIGRATIONS] == [
         "backend.migration_steps.account_lockout",
         "backend.migration_steps.task_thread_id",
+        "backend.migration_steps.email_notification_settings",
     ]
+
+
+def test_email_notification_settings_migration_creates_settings_table() -> None:
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+
+    with engine.connect() as conn:
+        apply_email_notification_settings(conn)
+
+        columns = {
+            row[1] for row in conn.execute(text("PRAGMA table_info(email_notification_settings)"))
+        }
+
+    assert {
+        "smtp_server",
+        "smtp_port",
+        "smtp_sender_email",
+        "smtp_sender_password",
+        "smtp_use_ssl",
+        "notify_token_expiring",
+        "notify_check_in_success",
+    } <= columns
 
 
 def test_account_lockout_migration_adds_missing_user_fields() -> None:
