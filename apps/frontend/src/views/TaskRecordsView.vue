@@ -56,6 +56,7 @@ onMounted(load)
         <option value="">全部状态</option>
         <option value="success">成功</option>
         <option value="failure">失败</option>
+        <option value="token_expired">凭证过期</option>
       </select>
       <select v-model="filters.trigger_type" :class="inputClass">
         <option value="">全部触发</option>

@@ -35,6 +35,7 @@ export function statusLabel(status?: string | null) {
     running: '进行中',
     already_submitted: '已提交',
     out_of_time: '超出时间',
+    token_expired: '凭证过期',
     unknown: '未知',
     manual: '手动',
     scheduler: '定时',
@@ -47,7 +48,14 @@ export function statusLabel(status?: string | null) {
 export function statusTone(status?: string | null) {
   if (status === 'success' || status === 'already_submitted') return 'success'
   if (status === 'pending' || status === 'running') return 'warning'
-  if (status === 'failure' || status === 'failed' || status === 'out_of_time') return 'danger'
+  if (
+    status === 'failure' ||
+    status === 'failed' ||
+    status === 'out_of_time' ||
+    status === 'token_expired'
+  ) {
+    return 'danger'
+  }
   return 'neutral'
 }
 

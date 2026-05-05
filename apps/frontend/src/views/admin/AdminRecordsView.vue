@@ -44,6 +44,7 @@ onMounted(load)
         <option value="success">成功</option>
         <option value="failure">失败</option>
         <option value="out_of_time">超出时间</option>
+        <option value="token_expired">凭证过期</option>
       </select>
       <input v-model.number="filters.limit" :class="inputClass" type="number" min="1" max="200" />
       <Button variant="outline" type="button" @click="load">
