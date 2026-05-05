@@ -28,7 +28,7 @@
 
 - Python 3.12+
 - uv
-- Node.js 20+
+- Node.js 24+
 - pnpm
 - Chrome 浏览器
 

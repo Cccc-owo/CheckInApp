@@ -170,7 +170,7 @@ docker compose restart backend
 - Ubuntu 20.04+ / CentOS 7+ / Windows Server
 - Python 3.12+
 - uv
-- Node.js 20+
+- Node.js 24+
 - pnpm
 - Chrome / Chromium
 - 2GB+ RAM
