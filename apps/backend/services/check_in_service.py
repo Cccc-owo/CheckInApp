@@ -471,6 +471,7 @@ class CheckInService:
         limit: int = 100,
         task_id: Optional[int] = None,
         status: Optional[str] = None,
+        trigger_type: Optional[str] = None,
     ) -> tuple[List[CheckInRecord], int]:
         """
         获取所有打卡记录（管理员）- 使用联表查询优化性能
@@ -481,6 +482,7 @@ class CheckInService:
             limit: 限制记录数
             task_id: 过滤任务 ID
             status: 过滤状态
+            trigger_type: 过滤触发类型
 
         Returns:
             (打卡记录列表, 总记录数)
@@ -497,6 +499,9 @@ class CheckInService:
 
         if status:
             query = query.filter(CheckInRecord.status == status)
+
+        if trigger_type:
+            query = query.filter(CheckInRecord.trigger_type == trigger_type)
 
         # 获取总数
         total = query.count()
@@ -557,6 +562,7 @@ class CheckInService:
             "trigger_type": record.trigger_type,
             "check_in_time": record.check_in_time,
             "user_id": user.id if user else None,
+            "user_alias": user.alias if user else None,
             "user_email": user.email if user else None,
             "task_name": task_name,
             "thread_id": thread_id,

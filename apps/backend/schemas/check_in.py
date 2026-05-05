@@ -33,6 +33,7 @@ class CheckInRecordResponse(BaseModel):
 
     # 新增字段：用户和任务信息（用于管理员查看）
     user_id: Optional[int] = Field(None, description="用户 ID")
+    user_alias: Optional[str] = Field(None, description="用户别名")
     user_email: Optional[str] = Field(None, description="用户邮箱")
     task_name: Optional[str] = Field(None, description="任务名称")
     thread_id: Optional[str] = Field(None, description="接龙 ID")

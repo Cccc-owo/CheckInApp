@@ -171,6 +171,7 @@ async def get_all_check_in_records(
     status_filter: Optional[str] = Query(
         None, alias="status", description="过滤状态 (success/failure)"
     ),
+    trigger_type: Optional[str] = Query(None, description="过滤触发类型 (scheduled/manual/admin)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user),
 ):
@@ -181,9 +182,12 @@ async def get_all_check_in_records(
     - **limit**: 限制记录数
     - **task_id**: 过滤指定任务的记录
     - **status**: 过滤指定状态的记录
+    - **trigger_type**: 过滤触发类型 (scheduled/manual/admin)
     """
     try:
-        records, total = CheckInService.get_all_records(db, skip, limit, task_id, status_filter)
+        records, total = CheckInService.get_all_records(
+            db, skip, limit, task_id, status_filter, trigger_type
+        )
         # 为每条记录添加用户和任务信息
         enriched_records = [
             CheckInService.enrich_record_with_user_task_info(record, db) for record in records
