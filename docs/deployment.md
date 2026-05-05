@@ -26,7 +26,7 @@ cp deploy/compose.env.example .env
 - `SECRET_KEY`: 改成足够长的随机字符串。
 - `CORS_ORIGINS`: 改成浏览器实际访问的站点，例如 `https://checkin.example.com`。
 - `FRONTEND_URL`: 改成同一个公开站点，用于邮件里的链接。
-- `CHECKIN_WEB_PORT`: 默认 `8080`，按服务器端口规划调整。
+- `CHECKIN_WEB_PORT`: 默认 `3090`，按服务器端口规划调整。
 - SMTP 配置：需要邮件通知时填写真实 SMTP 参数。
 
 启动：
@@ -37,9 +37,9 @@ docker compose up -d --build
 
 默认访问：
 
-- Web UI: `http://localhost:8080`
-- API 健康检查: `http://localhost:8080/health`
-- API 文档: `http://localhost:8080/docs`
+- Web UI: `http://localhost:3090`
+- API 健康检查: `http://localhost:3090/health`
+- API 文档: `http://localhost:3090/docs`
 
 ### 运行结构
 
@@ -131,7 +131,7 @@ docker compose up -d --build
 端口占用：
 
 ```bash
-sudo lsof -i :8080
+sudo lsof -i :3090
 ```
 
 修改 `.env` 中的 `CHECKIN_WEB_PORT` 后重新启动：

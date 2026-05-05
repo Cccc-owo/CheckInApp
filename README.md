@@ -62,7 +62,7 @@ cp deploy/compose.env.example .env
 docker compose up -d --build
 ```
 
-默认访问地址：<http://localhost:8080>
+默认访问地址：<http://localhost:3090>
 
 ### 访问地址
 
