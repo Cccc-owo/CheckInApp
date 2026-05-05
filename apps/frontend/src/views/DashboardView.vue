@@ -24,6 +24,7 @@ import { useRouter } from '@/app/router'
 import StateBlock from '@/components/StateBlock.vue'
 import { alertClass, cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   cronLabel,
   extractErrorMessage,
@@ -31,6 +32,11 @@ import {
   statusLabel,
   statusTone,
 } from '@/utils/format'
+import {
+  canRefreshAuthorization,
+  formatAuthorizationExpiryTooltip,
+  formatRemainingDays,
+} from './dashboard-license'
 
 const router = useRouter()
 const auth = useAuth()
@@ -71,6 +77,9 @@ const tokenDetail = computed(() => {
   if (tokenStatus.value.expiring_soon) return 'Token 即将过期，建议准备刷新授权。'
   return `业务 Token 正常，${tokenStatus.value.days_until_expiry ?? '未知'} 天后过期。`
 })
+const remainingDaysLabel = computed(() => formatRemainingDays(tokenStatus.value?.days_until_expiry))
+const expiryTooltip = computed(() => formatAuthorizationExpiryTooltip(tokenStatus.value))
+const canRefreshToken = computed(() => canRefreshAuthorization(tokenStatus.value))
 const needsEmail = computed(() => !auth.state.user?.email)
 const needsPassword = computed(() => auth.state.user?.has_password === false)
 
@@ -295,12 +304,23 @@ onMounted(load)
         <div class="grid gap-3 p-4 text-sm">
           <div class="flex items-center justify-between">
             <span class="text-muted-foreground">剩余</span>
-            <span class="font-medium">
-              {{
-                tokenStatus?.days_until_expiry == null
-                  ? '未知'
-                  : `${tokenStatus.days_until_expiry} 天`
-              }}
+            <TooltipProvider v-if="expiryTooltip">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span
+                    class="cursor-help font-medium underline decoration-muted-foreground/40 underline-offset-4"
+                    :title="expiryTooltip"
+                  >
+                    {{ remainingDaysLabel }}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {{ expiryTooltip }}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span v-else class="font-medium">
+              {{ remainingDaysLabel }}
             </span>
           </div>
           <div class="flex items-center justify-between">
@@ -309,7 +329,8 @@ onMounted(load)
           </div>
           <div class="text-sm text-muted-foreground">{{ tokenDetail }}</div>
           <Button
-            :variant="tokenStatus?.is_valid ? 'outline' : 'default'"
+            :variant="canRefreshToken ? 'default' : 'outline'"
+            :disabled="!canRefreshToken"
             type="button"
             @click="router.navigate('/login')"
           >
