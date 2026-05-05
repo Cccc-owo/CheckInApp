@@ -70,3 +70,12 @@ def test_frontend_replaces_starter_component() -> None:
 
     assert "HelloWorld" not in app
     assert not (SRC_ROOT / "components" / "HelloWorld.vue").exists()
+
+
+def test_dashboard_refresh_uses_qr_api_instead_of_login_redirect() -> None:
+    dashboard = (SRC_ROOT / "views" / "DashboardView.vue").read_text(encoding="utf-8")
+
+    assert "authApi.requestQRCode" in dashboard
+    assert "authApi.getQRCodeStatus" in dashboard
+    assert "authApi.cancelQRCodeSession" in dashboard
+    assert "router.navigate('/login')" not in dashboard

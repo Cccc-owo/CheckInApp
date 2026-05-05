@@ -7,10 +7,13 @@ import {
   Clock,
   KeyRound,
   QrCode,
+  RotateCw,
   UserRound,
+  X,
 } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
+  authApi,
   checkInApi,
   taskApi,
   userApi,
@@ -49,7 +52,20 @@ const tokenStatus = ref<TokenStatus | null>(null)
 const selectedTaskId = ref<number | null>(null)
 const checkInLoading = ref(false)
 const latestStatus = ref<CheckInRecordStatus | null>(null)
+const qrRefreshLoading = ref(false)
+const qrRefreshInfo = ref('')
+const qrRefreshError = ref('')
+const qrRefreshImage = ref('')
+const qrRefreshSessionId = ref('')
+const qrRefreshSucceeded = ref(false)
 let pollTimer: number | undefined
+let qrRefreshPollTimer: number | undefined
+
+interface QrImagePayload {
+  qrcode_image?: string
+  qrcode_base64?: string
+  qr_code?: string
+}
 
 const activeTasks = computed(() => tasks.value.filter((task) => task.is_active).length)
 const inactiveTasks = computed(() => Math.max(0, tasks.value.length - activeTasks.value))
@@ -82,6 +98,15 @@ const expiryTooltip = computed(() => formatAuthorizationExpiryTooltip(tokenStatu
 const canRefreshToken = computed(() => canRefreshAuthorization(tokenStatus.value))
 const needsEmail = computed(() => !auth.state.user?.email)
 const needsPassword = computed(() => auth.state.user?.has_password === false)
+const qrRefreshImageSrc = computed(() =>
+  qrRefreshImage.value.startsWith('data:')
+    ? qrRefreshImage.value
+    : `data:image/png;base64,${qrRefreshImage.value}`,
+)
+
+function extractQrImage(payload: QrImagePayload) {
+  return payload.qrcode_image ?? payload.qrcode_base64 ?? payload.qr_code ?? ''
+}
 
 async function load() {
   loading.value = true
@@ -139,7 +164,93 @@ function startRecordPolling(recordId: number) {
   }, 1800)
 }
 
+async function cancelQrRefresh(clearFeedback = true) {
+  window.clearInterval(qrRefreshPollTimer)
+  qrRefreshPollTimer = undefined
+  const sessionId = qrRefreshSessionId.value
+  qrRefreshSessionId.value = ''
+  qrRefreshImage.value = ''
+  qrRefreshLoading.value = false
+  if (clearFeedback) {
+    qrRefreshInfo.value = ''
+    qrRefreshError.value = ''
+    qrRefreshSucceeded.value = false
+  }
+  if (sessionId) await authApi.cancelQRCodeSession(sessionId).catch(() => undefined)
+}
+
+async function requestQrRefresh() {
+  if (!canRefreshToken.value || qrRefreshLoading.value) return
+
+  const alias = auth.state.user?.alias?.trim()
+  if (!alias) {
+    qrRefreshError.value = '当前用户缺少用户名，无法创建扫码刷新会话。'
+    return
+  }
+
+  await cancelQrRefresh(false)
+  qrRefreshLoading.value = true
+  qrRefreshInfo.value = '正在创建扫码刷新会话'
+  qrRefreshError.value = ''
+  qrRefreshSucceeded.value = false
+
+  try {
+    const result = await authApi.requestQRCode(alias)
+    if (result.status === 'error') throw new Error(result.message || '创建扫码会话失败')
+
+    qrRefreshSessionId.value = result.session_id
+    qrRefreshImage.value = extractQrImage(result)
+    qrRefreshInfo.value = '请使用手机 QQ 扫描二维码刷新授权'
+    startQrRefreshPolling()
+  } catch (err) {
+    qrRefreshError.value = extractErrorMessage(err)
+    qrRefreshInfo.value = ''
+  } finally {
+    qrRefreshLoading.value = false
+  }
+}
+
+function startQrRefreshPolling() {
+  window.clearInterval(qrRefreshPollTimer)
+  qrRefreshPollTimer = window.setInterval(async () => {
+    if (!qrRefreshSessionId.value) return
+    try {
+      const status = await authApi.getQRCodeStatus(qrRefreshSessionId.value)
+      qrRefreshImage.value = extractQrImage(status) || qrRefreshImage.value
+
+      if (status.status === 'success') {
+        window.clearInterval(qrRefreshPollTimer)
+        qrRefreshPollTimer = undefined
+        qrRefreshSucceeded.value = true
+        qrRefreshInfo.value = status.message || '授权已刷新，正在同步仪表盘'
+        qrRefreshError.value = ''
+        qrRefreshSessionId.value = ''
+        auth.applyLogin(status)
+        await auth.refreshCurrentUser()
+        await load()
+      } else if (status.status === 'error') {
+        window.clearInterval(qrRefreshPollTimer)
+        qrRefreshPollTimer = undefined
+        qrRefreshError.value = status.message || '扫码刷新失败'
+        qrRefreshInfo.value = ''
+      } else {
+        qrRefreshInfo.value = status.message || '等待扫码确认'
+      }
+    } catch (err) {
+      window.clearInterval(qrRefreshPollTimer)
+      qrRefreshPollTimer = undefined
+      qrRefreshError.value = extractErrorMessage(err)
+      qrRefreshInfo.value = ''
+    }
+  }, 2200)
+}
+
 onMounted(load)
+
+onBeforeUnmount(() => {
+  window.clearInterval(pollTimer)
+  void cancelQrRefresh()
+})
 </script>
 
 <template>
@@ -195,12 +306,7 @@ onMounted(load)
           <AlertTriangle class="size-4 shrink-0" />
           打卡凭证已过期
         </span>
-        <Button
-          variant="ghost"
-          class="font-semibold"
-          type="button"
-          @click="router.navigate('/login')"
-        >
+        <Button variant="ghost" class="font-semibold" type="button" @click="requestQrRefresh">
           刷新
         </Button>
       </div>
@@ -330,13 +436,66 @@ onMounted(load)
           <div class="text-sm text-muted-foreground">{{ tokenDetail }}</div>
           <Button
             :variant="canRefreshToken ? 'default' : 'outline'"
-            :disabled="!canRefreshToken"
+            :disabled="!canRefreshToken || qrRefreshLoading"
             type="button"
-            @click="router.navigate('/login')"
+            @click="requestQrRefresh"
           >
             <QrCode class="size-4" />
-            扫码刷新
+            {{ qrRefreshLoading ? '创建中' : '扫码刷新' }}
           </Button>
+          <div
+            v-if="qrRefreshImage || qrRefreshInfo || qrRefreshError"
+            class="grid gap-3 rounded-lg border border-border bg-muted p-3"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="font-medium text-foreground">扫码刷新授权</div>
+                <div v-if="qrRefreshInfo" class="mt-1 text-muted-foreground">
+                  {{ qrRefreshInfo }}
+                </div>
+              </div>
+              <Button
+                v-if="qrRefreshSessionId || qrRefreshImage"
+                variant="ghost"
+                size="icon"
+                type="button"
+                aria-label="关闭扫码刷新"
+                @click="cancelQrRefresh"
+              >
+                <X class="size-4" />
+              </Button>
+            </div>
+            <div v-if="qrRefreshError" :class="alertClass.danger">
+              {{ qrRefreshError }}
+            </div>
+            <div v-if="qrRefreshSucceeded" :class="alertClass.success">授权刷新成功</div>
+            <div v-if="qrRefreshImage" class="rounded-lg border border-border bg-background p-3">
+              <img
+                :src="qrRefreshImageSrc"
+                alt="QQ 授权刷新二维码"
+                class="mx-auto size-44 rounded-md bg-background object-contain"
+              />
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                type="button"
+                :disabled="qrRefreshLoading || !canRefreshToken"
+                @click="requestQrRefresh"
+              >
+                <RotateCw class="size-4" />
+                重新获取
+              </Button>
+              <Button
+                v-if="qrRefreshSessionId || qrRefreshImage"
+                variant="ghost"
+                type="button"
+                @click="cancelQrRefresh"
+              >
+                取消
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
