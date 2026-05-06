@@ -1,4 +1,12 @@
 import type { TokenStatus } from '@/api'
+import type { Tone } from '@/components/ui'
+
+const SECONDS_PER_DAY = 24 * 60 * 60
+
+export interface UserAuthorizationSummary {
+  label: string
+  tone: Tone
+}
 
 export function formatRemainingDays(days?: number | null) {
   return days == null ? '未知' : `${days} 天`
@@ -35,4 +43,24 @@ export function formatAuthorizationExpiryTooltip(
     }, {})
 
   return `过期时间：${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`
+}
+
+export function formatUserAuthorizationSummary(
+  jwtExp?: string | null,
+  nowSeconds = Math.floor(Date.now() / 1000),
+): UserAuthorizationSummary {
+  const expiresAt = Number(jwtExp)
+  if (!jwtExp || jwtExp === '0' || !Number.isFinite(expiresAt) || expiresAt <= 0) {
+    return { label: '未绑定凭证', tone: 'neutral' }
+  }
+
+  if (expiresAt <= nowSeconds) {
+    return { label: '凭证过期', tone: 'danger' }
+  }
+
+  const remainingDays = Math.ceil((expiresAt - nowSeconds) / SECONDS_PER_DAY)
+  return {
+    label: `${remainingDays} 天后过期`,
+    tone: remainingDays <= 7 ? 'warning' : 'success',
+  }
 }

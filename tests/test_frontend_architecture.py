@@ -90,6 +90,13 @@ def test_frontend_admin_approval_policy_warnings_are_visible() -> None:
     assert "未验证邮箱审批警告" not in email_settings
 
 
+def test_frontend_admin_users_show_authorization_summary() -> None:
+    admin_users = (SRC_ROOT / "views" / "admin" / "AdminUsersView.vue").read_text(encoding="utf-8")
+
+    assert "formatUserAuthorizationSummary" in admin_users
+    assert "jwt_exp" in admin_users
+
+
 def test_frontend_replaces_starter_component() -> None:
     app = (SRC_ROOT / "App.vue").read_text(encoding="utf-8")
 

@@ -4,6 +4,7 @@ import type { TokenStatus } from '@/api'
 import {
   canRefreshAuthorization,
   formatAuthorizationExpiryTooltip,
+  formatUserAuthorizationSummary,
   formatRemainingDays,
 } from './dashboard-license.ts'
 
@@ -64,4 +65,23 @@ test('formats remaining days label consistently', () => {
   assert.equal(formatRemainingDays(null), '未知')
   assert.equal(formatRemainingDays(0), '0 天')
   assert.equal(formatRemainingDays(12), '12 天')
+})
+
+test('formats user authorization summary from jwt expiration', () => {
+  assert.deepEqual(formatUserAuthorizationSummary('0'), {
+    label: '未绑定凭证',
+    tone: 'neutral',
+  })
+  assert.deepEqual(formatUserAuthorizationSummary('1000', 2000), {
+    label: '凭证过期',
+    tone: 'danger',
+  })
+  assert.deepEqual(formatUserAuthorizationSummary(String(2000 + 2 * 24 * 60 * 60), 2000), {
+    label: '2 天后过期',
+    tone: 'warning',
+  })
+  assert.deepEqual(formatUserAuthorizationSummary(String(2000 + 9 * 24 * 60 * 60), 2000), {
+    label: '9 天后过期',
+    tone: 'success',
+  })
 })

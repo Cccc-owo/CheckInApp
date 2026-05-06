@@ -13,6 +13,7 @@ import {
 } from '@/components/ui'
 import { Button } from '@/components/ui/button'
 import { extractErrorMessage, formatDateTime } from '@/utils/format'
+import { formatUserAuthorizationSummary } from '../dashboard-license'
 
 const loading = ref(true)
 const error = ref('')
@@ -31,6 +32,10 @@ function requiresUnverifiedEmailOverride(
   result: User | AdminApprovalResponse,
 ): result is AdminApprovalResponse {
   return 'requires_override' in result && result.warning_code === 'UNVERIFIED_EMAIL'
+}
+
+function userAuthorizationSummary(user: User) {
+  return formatUserAuthorizationSummary(user.jwt_exp)
 }
 
 async function load() {
@@ -162,6 +167,9 @@ onMounted(load)
             <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span>{{ user.email || '未设置邮箱' }}</span>
               <span>{{ user.email_verified ? '邮箱已验证' : '邮箱未验证' }}</span>
+              <span :class="toneClass(userAuthorizationSummary(user).tone)">{{
+                userAuthorizationSummary(user).label
+              }}</span>
               <span>{{ formatDateTime(user.created_at) }}</span>
             </div>
           </div>
