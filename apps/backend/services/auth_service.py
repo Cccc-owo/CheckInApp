@@ -226,13 +226,16 @@ class AuthService:
                     return {"status": "error", "message": "注册失败：用户名已被占用，请更换用户名"}
 
                 # 创建新用户（待审批状态）
+                from backend.services.email_settings_service import EmailSettingsService
+
+                requires_approval = EmailSettingsService.is_registration_approval_required()
                 new_user = User(
                     jwt_sub=jwt_sub,
                     alias=alias,
                     authorization=pure_token,  # 存储清理后的 token
                     jwt_exp=jwt_exp,
                     role="user",
-                    is_approved=False,  # 待审批
+                    is_approved=not requires_approval,
                 )
 
                 db.add(new_user)

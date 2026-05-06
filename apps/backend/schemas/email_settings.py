@@ -13,6 +13,12 @@ class EmailNotificationSettingsBase(BaseModel):
     smtp_use_ssl: bool = Field(True, description="是否使用 SMTP SSL")
     notify_token_expiring: bool = Field(True, description="是否通知 Token 即将过期")
     notify_check_in_success: bool = Field(True, description="是否通知打卡成功")
+    require_admin_approval_for_registration: bool = Field(
+        True, description="新注册是否需要管理员审批"
+    )
+    warn_unverified_email_before_approval: bool = Field(
+        True, description="审批未验证邮箱用户时是否警告"
+    )
 
     @field_validator("smtp_server", "smtp_sender_email", mode="before")
     @classmethod

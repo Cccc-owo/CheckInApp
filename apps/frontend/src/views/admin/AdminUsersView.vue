@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check, Save, Search, Trash2, UserPlus } from 'lucide-vue-next'
 import { onMounted, reactive, ref } from 'vue'
-import { adminApi, userApi, type User } from '@/api'
+import { adminApi, userApi, type AdminApprovalResponse, type User } from '@/api'
 import StateBlock from '@/components/StateBlock.vue'
 import {
   alertClass,
@@ -27,6 +27,12 @@ const form = reactive({
   is_approved: true,
 })
 
+function requiresUnverifiedEmailOverride(
+  result: User | AdminApprovalResponse,
+): result is AdminApprovalResponse {
+  return 'requires_override' in result && result.warning_code === 'UNVERIFIED_EMAIL'
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -40,7 +46,12 @@ async function load() {
 }
 
 async function approve(userId: number) {
-  await adminApi.approveUser(userId)
+  const result = await adminApi.approveUser(userId)
+  if (requiresUnverifiedEmailOverride(result)) {
+    const ok = window.confirm('邮箱未验证，审批后不会发送审批通知。确认无视邮箱条件继续审批？')
+    if (!ok) return
+    await adminApi.approveUser(userId, { allow_unverified_email: true })
+  }
   await load()
 }
 
@@ -81,7 +92,12 @@ async function save() {
     if (editingId.value === 'new') {
       await userApi.create(payload)
     } else if (typeof editingId.value === 'number') {
-      await userApi.update(editingId.value, payload)
+      const result = await userApi.update(editingId.value, payload)
+      if (requiresUnverifiedEmailOverride(result)) {
+        const ok = window.confirm('邮箱未验证，审批后不会发送审批通知。确认无视邮箱条件继续审批？')
+        if (!ok) return
+        await userApi.update(editingId.value, { ...payload, allow_unverified_email: true })
+      }
     }
     editingId.value = null
     await load()
@@ -145,6 +161,7 @@ onMounted(load)
             </div>
             <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span>{{ user.email || '未设置邮箱' }}</span>
+              <span>{{ user.email_verified ? '邮箱已验证' : '邮箱未验证' }}</span>
               <span>{{ formatDateTime(user.created_at) }}</span>
             </div>
           </div>

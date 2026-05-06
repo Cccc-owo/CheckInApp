@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -213,9 +213,9 @@ def test_user_approval_notification_uses_template_login_link(monkeypatch) -> Non
 
     monkeypatch.setattr(EmailService, "send_email", fake_send)
 
-    assert (
-        EmailService.notify_user_approved(User(alias="Alice", email="alice@example.test")) is True
-    )
+    user = User(alias="Alice", email="alice@example.test")
+    user.email_verified_at = datetime.now(timezone.utc)
+    assert EmailService.notify_user_approved(user) is True
 
     assert sent["to_emails"] == ["alice@example.test"]
     assert "账户审批通过" in str(sent["subject"])

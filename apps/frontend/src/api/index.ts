@@ -1,5 +1,6 @@
 import { apiClient } from './client'
 import type {
+  AdminApprovalResponse,
   AdminStats,
   CheckInRecord,
   CheckInRecordStatus,
@@ -45,6 +46,8 @@ export const userApi = {
   me: () => apiClient.get<User>('/api/users/me'),
   status: () => apiClient.get<UserStatus>('/api/users/me/status'),
   tokenStatus: () => apiClient.get<TokenStatus>('/api/users/me/token_status'),
+  setEmail: (email: string) => apiClient.put<User>('/api/users/me/email', { email }),
+  verifyEmail: (code: string) => apiClient.post<User>('/api/users/me/email/verify', { code }),
   updateProfile: (payload: {
     alias?: string
     email?: string
@@ -56,8 +59,12 @@ export const userApi = {
     apiClient.post<User>('/api/users', payload),
   update: (
     userId: number,
-    payload: Partial<User> & { password?: string; reset_password?: boolean },
-  ) => apiClient.put<User>(`/api/users/${userId}`, payload),
+    payload: Partial<User> & {
+      password?: string
+      reset_password?: boolean
+      allow_unverified_email?: boolean
+    },
+  ) => apiClient.put<User | AdminApprovalResponse>(`/api/users/${userId}`, payload),
   delete: (userId: number) => apiClient.delete<void>(`/api/users/${userId}`),
 }
 
@@ -104,8 +111,8 @@ export const templateApi = {
 
 export const adminApi = {
   pendingUsers: () => apiClient.get<User[]>('/api/admin/users/pending'),
-  approveUser: (userId: number) =>
-    apiClient.post<{ success: boolean; message: string }>(`/api/admin/users/${userId}/approve`),
+  approveUser: (userId: number, payload: { allow_unverified_email?: boolean } = {}) =>
+    apiClient.post<AdminApprovalResponse>(`/api/admin/users/${userId}/approve`, payload),
   rejectUser: (userId: number) =>
     apiClient.delete<{ success: boolean; message: string }>(`/api/admin/users/${userId}/reject`),
   stats: () => apiClient.get<AdminStats>('/api/admin/stats'),

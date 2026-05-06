@@ -28,6 +28,8 @@ const form = reactive({
   smtp_use_ssl: true,
   notify_token_expiring: true,
   notify_check_in_success: true,
+  require_admin_approval_for_registration: true,
+  warn_unverified_email_before_approval: true,
 })
 
 const passwordState = computed(() => {
@@ -47,6 +49,8 @@ function hydrate(next: EmailNotificationSettings) {
   form.smtp_use_ssl = next.smtp_use_ssl
   form.notify_token_expiring = next.notify_token_expiring
   form.notify_check_in_success = next.notify_check_in_success
+  form.require_admin_approval_for_registration = next.require_admin_approval_for_registration
+  form.warn_unverified_email_before_approval = next.warn_unverified_email_before_approval
 }
 
 async function load() {
@@ -63,6 +67,12 @@ async function load() {
 }
 
 async function save() {
+  if (!form.require_admin_approval_for_registration) {
+    const ok = window.confirm(
+      '关闭管理员审批后，新注册用户可能绕过人工审核直接进入系统。确认关闭管理员审批？',
+    )
+    if (!ok) return
+  }
   saving.value = true
   error.value = ''
   savedMessage.value = ''
@@ -74,6 +84,8 @@ async function save() {
       smtp_use_ssl: form.smtp_use_ssl,
       notify_token_expiring: form.notify_token_expiring,
       notify_check_in_success: form.notify_check_in_success,
+      require_admin_approval_for_registration: form.require_admin_approval_for_registration,
+      warn_unverified_email_before_approval: form.warn_unverified_email_before_approval,
       smtp_sender_password: form.smtp_sender_password || undefined,
       clear_smtp_sender_password: form.clear_smtp_sender_password,
     })
@@ -203,6 +215,34 @@ onMounted(load)
             />
           </span>
           <span class="text-sm text-muted-foreground">只影响过期前提醒，不影响已过期通知。</span>
+        </label>
+
+        <label class="grid gap-2 rounded-lg border border-border bg-background p-3">
+          <span class="flex items-center justify-between gap-3 text-sm font-medium">
+            管理员审批
+            <input
+              v-model="form.require_admin_approval_for_registration"
+              type="checkbox"
+              class="size-4 accent-primary"
+            />
+          </span>
+          <span class="text-sm text-muted-foreground"
+            >默认开启。关闭管理员审批会让新注册用户绕过人工审核。</span
+          >
+        </label>
+
+        <label class="grid gap-2 rounded-lg border border-border bg-background p-3">
+          <span class="flex items-center justify-between gap-3 text-sm font-medium">
+            未验证邮箱审批警告
+            <input
+              v-model="form.warn_unverified_email_before_approval"
+              type="checkbox"
+              class="size-4 accent-primary"
+            />
+          </span>
+          <span class="text-sm text-muted-foreground"
+            >开启后，管理员审批邮箱未验证用户时需要确认覆盖。</span
+          >
         </label>
 
         <label class="grid gap-2 rounded-lg border border-border bg-background p-3">

@@ -30,6 +30,15 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(
         String(100), nullable=True, comment="用户邮箱（用于接收通知）"
     )
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="邮箱验证时间"
+    )
+    email_verification_code_hash: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="邮箱验证码哈希"
+    )
+    email_verification_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="邮箱验证码过期时间"
+    )
     password_hash: Mapped[str | None] = mapped_column(
         String(200), nullable=True, comment="密码哈希（bcrypt加密）"
     )
@@ -91,3 +100,8 @@ class User(Base):
     def is_admin(self) -> bool:
         """判断是否为管理员"""
         return self.role == "admin"
+
+    @property
+    def email_verified(self) -> bool:
+        """判断当前邮箱是否已验证"""
+        return bool(self.email and self.email_verified_at)

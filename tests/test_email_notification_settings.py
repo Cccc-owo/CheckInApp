@@ -74,6 +74,8 @@ def test_email_settings_update_preserves_and_clears_password(monkeypatch) -> Non
     assert updated.smtp_sender_password == "new-secret"
     assert updated.notify_token_expiring is False
     assert updated.notify_check_in_success is False
+    assert updated.require_admin_approval_for_registration is True
+    assert updated.warn_unverified_email_before_approval is True
 
     EmailSettingsService.update_settings(
         session,
@@ -84,6 +86,8 @@ def test_email_settings_update_preserves_and_clears_password(monkeypatch) -> Non
             smtp_use_ssl=True,
             notify_token_expiring=False,
             notify_check_in_success=False,
+            require_admin_approval_for_registration=False,
+            warn_unverified_email_before_approval=False,
             clear_smtp_sender_password=True,
         ),
     )
@@ -91,6 +95,8 @@ def test_email_settings_update_preserves_and_clears_password(monkeypatch) -> Non
     cleared = EmailSettingsService.get_snapshot(session)
     assert cleared.smtp_sender_password in ("", None)
     assert cleared.has_smtp_sender_password is False
+    assert cleared.require_admin_approval_for_registration is False
+    assert cleared.warn_unverified_email_before_approval is False
     session.close()
     engine.dispose()
 
@@ -195,3 +201,14 @@ def test_email_settings_update_validates_sender_email() -> None:
             notify_token_expiring=True,
             notify_check_in_success=True,
         )
+
+
+def test_registration_approval_policy_defaults_enabled() -> None:
+    engine, _, session = make_session()
+
+    snapshot = EmailSettingsService.get_snapshot(session)
+
+    assert snapshot.require_admin_approval_for_registration is True
+    assert snapshot.warn_unverified_email_before_approval is True
+    session.close()
+    engine.dispose()

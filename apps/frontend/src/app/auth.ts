@@ -33,6 +33,8 @@ function userFromLogin(payload: LoginResponse): User | null {
       is_approved: raw?.is_approved ?? payload.is_approved ?? false,
       jwt_exp: raw?.jwt_exp ?? '',
       email: raw?.email ?? null,
+      email_verified: raw?.email_verified ?? false,
+      email_verified_at: raw?.email_verified_at ?? null,
       has_password: raw?.has_password,
       created_at: raw?.created_at ?? new Date().toISOString(),
       updated_at: raw?.updated_at ?? null,

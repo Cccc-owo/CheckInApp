@@ -17,6 +17,8 @@ def apply(conn: Connection) -> None:
                 smtp_use_ssl BOOLEAN NOT NULL DEFAULT 1,
                 notify_token_expiring BOOLEAN NOT NULL DEFAULT 1,
                 notify_check_in_success BOOLEAN NOT NULL DEFAULT 1,
+                require_admin_approval_for_registration BOOLEAN NOT NULL DEFAULT 1,
+                warn_unverified_email_before_approval BOOLEAN NOT NULL DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME
             )

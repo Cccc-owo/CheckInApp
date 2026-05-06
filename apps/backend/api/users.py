@@ -4,15 +4,19 @@ from sqlalchemy.orm import Session
 
 from backend.models import get_db, User
 from backend.schemas.user import (
+    AdminApprovalResponse,
     UserCreate,
     UserUpdate,
     UserResponse,
     TokenStatus,
     UserUpdateProfile,
+    UserEmailUpdate,
+    UserEmailVerify,
 )
 from backend.schemas.task import TaskResponse
 from backend.services.user_service import UserService
 from backend.services.task_service import TaskService
+from backend.services.admin_service import AdminService
 from backend.dependencies import get_current_user, get_current_admin_user
 from backend.exceptions import (
     AuthorizationError,
@@ -69,6 +73,8 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "is_approved": current_user.is_approved,
         "jwt_exp": current_user.jwt_exp,
         "email": current_user.email,
+        "email_verified": current_user.email_verified,
+        "email_verified_at": current_user.email_verified_at,
         "has_password": bool(current_user.password_hash),
         "created_at": current_user.created_at,
         "updated_at": current_user.updated_at,
@@ -85,8 +91,55 @@ async def get_user_status(current_user: User = Depends(get_current_user)):
         "user_id": current_user.id,
         "alias": current_user.alias,
         "is_approved": current_user.is_approved,
+        "email": current_user.email,
+        "email_verified": current_user.email_verified,
+        "email_verified_at": current_user.email_verified_at.isoformat()
+        if current_user.email_verified_at
+        else None,
         "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
     }
+
+
+@router.put("/me/email", response_model=UserResponse, summary="设置邮箱并发送验证码")
+async def set_current_user_email(
+    email_data: UserEmailUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    设置当前用户邮箱并发送验证码（不要求账户已审批）。
+    """
+    try:
+        return UserService.set_email_for_verification(current_user.id, str(email_data.email), db)
+    except ValueError as e:
+        raise ValidationError(str(e))
+    except EXPECTED_API_EXCEPTIONS:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"设置邮箱失败: {str(e)}"
+        )
+
+
+@router.post("/me/email/verify", response_model=UserResponse, summary="验证当前用户邮箱")
+async def verify_current_user_email(
+    verify_data: UserEmailVerify,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    校验当前用户邮箱验证码（不要求账户已审批）。
+    """
+    try:
+        return UserService.verify_email_code(current_user.id, verify_data.code, db)
+    except ValueError as e:
+        raise ValidationError(str(e))
+    except EXPECTED_API_EXCEPTIONS:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"验证邮箱失败: {str(e)}"
+        )
 
 
 @router.put("/me/profile", response_model=UserResponse, summary="更新个人信息")
@@ -211,7 +264,11 @@ async def get_user(
     return user
 
 
-@router.put("/{user_id}", response_model=UserResponse, summary="更新用户信息")
+@router.put(
+    "/{user_id}",
+    response_model=UserResponse | AdminApprovalResponse,
+    summary="更新用户信息",
+)
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
@@ -241,6 +298,19 @@ async def update_user(
         # 保存更新前的审批状态 (先读取后转换为 Python bool)
         old_approved_value = old_user.is_approved
         was_approved_before = True if old_approved_value else False
+        is_admin = current_user.role == "admin"
+        update_data = user_data.model_dump(exclude_unset=True)
+        will_approve = (
+            is_admin and (not was_approved_before) and update_data.get("is_approved") is True
+        )
+        if will_approve:
+            approval_warning = AdminService.approval_warning_for_user(
+                old_user,
+                allow_unverified_email=user_data.allow_unverified_email,
+                next_email=str(update_data["email"]) if "email" in update_data else None,
+            )
+            if approval_warning and approval_warning.get("requires_override"):
+                return approval_warning
 
         # 更新用户信息
         user = UserService.update_user(user_id, user_data, db)
@@ -249,7 +319,6 @@ async def update_user(
         new_approved_value = user.is_approved
         is_approved_now = True if new_approved_value else False
 
-        is_admin = current_user.role == "admin"
         needs_notification = is_admin and (not was_approved_before) and is_approved_now
 
         if needs_notification:

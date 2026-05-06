@@ -1,6 +1,6 @@
 from typing import List
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -10,7 +10,7 @@ from backend.schemas.email_settings import (
     EmailNotificationSettingsResponse,
     EmailNotificationSettingsUpdate,
 )
-from backend.schemas.user import UserResponse
+from backend.schemas.user import AdminApprovalResponse, UserResponse
 from backend.services.check_in_service import CheckInService
 from backend.services.admin_service import AdminService
 from backend.services.email_settings_service import EmailSettingsService
@@ -322,9 +322,14 @@ async def get_pending_users(
         )
 
 
-@router.post("/users/{user_id}/approve", response_model=dict, summary="审批通过用户")
+@router.post(
+    "/users/{user_id}/approve",
+    response_model=AdminApprovalResponse,
+    summary="审批通过用户",
+)
 async def approve_user(
     user_id: int,
+    payload: dict = Body(default_factory=dict),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user),
 ):
@@ -332,9 +337,15 @@ async def approve_user(
     审批通过指定用户（需要管理员权限）
     """
     try:
-        result = AdminService.approve_user(user_id, db)
+        result = AdminService.approve_user(
+            user_id,
+            db,
+            allow_unverified_email=bool(payload.get("allow_unverified_email", False)),
+        )
 
         if not result["success"]:
+            if result.get("requires_override"):
+                return result
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"])
 
         return result

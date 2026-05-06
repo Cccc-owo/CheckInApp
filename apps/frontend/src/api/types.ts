@@ -7,6 +7,8 @@ export interface User {
   is_approved: boolean
   jwt_exp: string
   email?: string | null
+  email_verified?: boolean
+  email_verified_at?: string | null
   has_password?: boolean
   created_at: string
   updated_at?: string | null
@@ -35,6 +37,8 @@ export interface AuthUserPayload {
   is_approved?: boolean
   jwt_exp?: string
   email?: string | null
+  email_verified?: boolean
+  email_verified_at?: string | null
   has_password?: boolean
   created_at?: string
   updated_at?: string | null
@@ -210,6 +214,8 @@ export interface EmailNotificationSettings {
   smtp_use_ssl: boolean
   notify_token_expiring: boolean
   notify_check_in_success: boolean
+  require_admin_approval_for_registration: boolean
+  warn_unverified_email_before_approval: boolean
   has_smtp_sender_password: boolean
   created_at?: string | null
   updated_at?: string | null
@@ -222,8 +228,18 @@ export interface EmailNotificationSettingsUpdate {
   smtp_use_ssl: boolean
   notify_token_expiring: boolean
   notify_check_in_success: boolean
+  require_admin_approval_for_registration: boolean
+  warn_unverified_email_before_approval: boolean
   smtp_sender_password?: string
   clear_smtp_sender_password?: boolean
+}
+
+export interface AdminApprovalResponse {
+  success: boolean
+  message: string
+  user_id?: number
+  requires_override?: boolean
+  warning_code?: string
 }
 
 export interface CronValidation {

@@ -1,8 +1,12 @@
 import logging
+import secrets
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
-from datetime import datetime
-from sqlalchemy.orm import Session
+
+import bcrypt
+from email_validator import validate_email, EmailNotValidError
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 from backend.models import User
 from backend.schemas.user import UserCreate, UserUpdate, UserUpdateProfile
@@ -27,6 +31,19 @@ class UserService:
     """用户服务"""
 
     @staticmethod
+    def _clear_email_verification(user: User) -> None:
+        user.email_verified_at = None
+        user.email_verification_code_hash = None
+        user.email_verification_expires_at = None
+
+    @staticmethod
+    def _normalize_email(email: str) -> str:
+        try:
+            return str(validate_email(email.strip(), check_deliverability=False).normalized)
+        except EmailNotValidError as exc:
+            raise ValueError("邮箱格式无效") from exc
+
+    @staticmethod
     def create_user(user_data: UserCreate, db: Session) -> User:
         """
         创建用户（管理员手动创建）
@@ -47,7 +64,7 @@ class UserService:
         user = User(
             jwt_sub=None,  # NULL 表示未绑定 QQ
             alias=user_data.alias,
-            email=user_data.email,
+            email=str(user_data.email) if user_data.email is not None else None,
             role=user_data.role or "user",
             is_approved=user_data.is_approved
             if user_data.is_approved is not None
@@ -192,7 +209,14 @@ class UserService:
             logger.info(f"管理员修改用户 {user.alias} (ID: {user_id}) 的密码")
 
         # 更新其他字段（排除密码相关字段）
-        excluded_fields = {"password", "reset_password"}
+        excluded_fields = {"password", "reset_password", "allow_unverified_email"}
+        if "email" in update_data:
+            next_email = update_data["email"]
+            next_email = str(next_email) if next_email is not None else None
+            if next_email != user.email:
+                UserService._clear_email_verification(user)
+            update_data["email"] = next_email
+
         for key, value in update_data.items():
             if key not in excluded_fields:
                 setattr(user, key, value)
@@ -235,7 +259,10 @@ class UserService:
 
         # 更新邮箱
         if "email" in update_data:
-            user.email = update_data["email"]
+            next_email = str(update_data["email"]) if update_data["email"] is not None else None
+            if next_email != user.email:
+                UserService._clear_email_verification(user)
+            user.email = next_email
             logger.info(f"用户 ID {user_id} 邮箱更新: {user.email}")
 
         # 更新密码
@@ -260,6 +287,62 @@ class UserService:
         db.refresh(user)
 
         logger.info(f"✅ 更新用户个人信息成功: {user.alias} (ID: {user.id})")
+        return user
+
+    @staticmethod
+    def set_email_for_verification(user_id: int, email: str, db: Session) -> User:
+        from backend.services.email_service import EmailService
+
+        user = UserService.get_user_by_id(user_id, db)
+        if not user:
+            raise ValueError(f"用户 ID {user_id} 不存在")
+
+        normalized_email = UserService._normalize_email(email)
+        if normalized_email != user.email:
+            user.email = normalized_email
+            UserService._clear_email_verification(user)
+
+        code = f"{secrets.randbelow(1_000_000):06d}"
+        code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        user.email_verification_code_hash = code_hash
+        user.email_verification_expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+        user.updated_at = datetime.now(timezone.utc)
+
+        sent = EmailService.send_email_verification_code(normalized_email, user.alias, code)
+        if not sent:
+            db.rollback()
+            raise ValueError("验证码邮件发送失败，请检查邮件配置后重试")
+
+        db.commit()
+        db.refresh(user)
+        logger.info("用户 ID %s 已请求邮箱验证码: %s", user_id, normalized_email)
+        return user
+
+    @staticmethod
+    def verify_email_code(user_id: int, code: str, db: Session) -> User:
+        user = UserService.get_user_by_id(user_id, db)
+        if not user:
+            raise ValueError(f"用户 ID {user_id} 不存在")
+
+        code_hash = user.email_verification_code_hash
+        expires_at = user.email_verification_expires_at
+        now = datetime.now(timezone.utc)
+        if expires_at and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if not code_hash or not expires_at or expires_at <= now:
+            raise ValueError("验证码无效或已过期")
+
+        if not bcrypt.checkpw(code.encode("utf-8"), code_hash.encode("utf-8")):
+            raise ValueError("验证码无效或已过期")
+
+        user.email_verified_at = now
+        user.email_verification_code_hash = None
+        user.email_verification_expires_at = None
+        user.updated_at = now
+        db.commit()
+        db.refresh(user)
+        logger.info("用户 ID %s 邮箱验证成功: %s", user_id, user.email)
         return user
 
     @staticmethod

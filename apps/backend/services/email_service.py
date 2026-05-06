@@ -160,6 +160,16 @@ class EmailService:
         return EmailService.send_email(admin_emails, subject, body_html)
 
     @staticmethod
+    def send_email_verification_code(to_email: str, alias: str, code: str) -> bool:
+        subject = f"【接龙自动打卡系统】邮箱验证码 - {alias}"
+        body_html = (
+            "<p>您正在验证接龙自动打卡系统账号邮箱。</p>"
+            f"<p>验证码：<strong>{_email_text(code)}</strong></p>"
+            "<p>验证码 10 分钟内有效。如非本人操作，请忽略本邮件。</p>"
+        )
+        return EmailService.send_email([to_email], subject, body_html)
+
+    @staticmethod
     def notify_user_approved(user: User) -> bool:
         """
         通知用户审批已通过
@@ -173,6 +183,9 @@ class EmailService:
         user_email = user.email
         if user_email is None:
             logger.info(f"用户 {user.alias} 未设置邮箱，跳过审批通知")
+            return False
+        if not user.email_verified_at:
+            logger.info(f"用户 {user.alias} 邮箱未验证，跳过审批通知")
             return False
 
         subject = f"【接龙自动打卡系统】账户审批通过 - {user.alias}"

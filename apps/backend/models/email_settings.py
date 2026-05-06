@@ -22,6 +22,12 @@ class EmailNotificationSettings(Base):
     smtp_use_ssl: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notify_token_expiring: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notify_check_in_success: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    require_admin_approval_for_registration: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    warn_unverified_email_before_approval: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), comment="创建时间"
     )

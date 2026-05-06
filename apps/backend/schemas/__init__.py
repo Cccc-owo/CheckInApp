@@ -5,6 +5,9 @@ from backend.schemas.user import (
     UserResponse,
     UserWithToken,
     TokenStatus,
+    UserEmailUpdate,
+    UserEmailVerify,
+    AdminApprovalResponse,
 )
 from backend.schemas.auth import (
     QRCodeRequest,
@@ -49,6 +52,9 @@ __all__ = [
     "UserResponse",
     "UserWithToken",
     "TokenStatus",
+    "UserEmailUpdate",
+    "UserEmailVerify",
+    "AdminApprovalResponse",
     "QRCodeRequest",
     "QRCodeResponse",
     "QRCodeStatusResponse",

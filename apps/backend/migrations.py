@@ -13,6 +13,9 @@ from backend.migration_steps.email_notification_settings import (
     apply as apply_email_notification_settings,
 )
 from backend.migration_steps.task_thread_id import apply as apply_task_thread_id
+from backend.migration_steps.user_email_verification import (
+    apply as apply_user_email_verification,
+)
 from backend.models.database import engine as default_engine
 
 logger = logging.getLogger(__name__)
@@ -93,6 +96,11 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="2026050501_add_email_notification_settings",
         description="Add admin-managed email notification settings.",
         apply=apply_email_notification_settings,
+    ),
+    Migration(
+        id="2026050601_add_user_email_verification",
+        description="Add user email verification fields and registration approval policy flags.",
+        apply=apply_user_email_verification,
     ),
 )
 

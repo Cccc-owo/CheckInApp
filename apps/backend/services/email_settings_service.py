@@ -27,6 +27,8 @@ class EmailSettingsSnapshot:
     smtp_use_ssl: bool
     notify_token_expiring: bool
     notify_check_in_success: bool
+    require_admin_approval_for_registration: bool
+    warn_unverified_email_before_approval: bool
     has_smtp_sender_password: bool
     created_at: datetime | None = None
     updated_at: datetime | None = None
@@ -46,6 +48,8 @@ class EmailSettingsService:
             smtp_use_ssl=settings.SMTP_USE_SSL,
             notify_token_expiring=True,
             notify_check_in_success=True,
+            require_admin_approval_for_registration=True,
+            warn_unverified_email_before_approval=True,
         )
 
     @staticmethod
@@ -60,6 +64,8 @@ class EmailSettingsService:
             smtp_use_ssl=settings.SMTP_USE_SSL,
             notify_token_expiring=True,
             notify_check_in_success=True,
+            require_admin_approval_for_registration=True,
+            warn_unverified_email_before_approval=True,
             has_smtp_sender_password=bool(password),
             created_at=None,
             updated_at=None,
@@ -93,6 +99,10 @@ class EmailSettingsService:
             smtp_use_ssl=bool(row.smtp_use_ssl),
             notify_token_expiring=bool(row.notify_token_expiring),
             notify_check_in_success=bool(row.notify_check_in_success),
+            require_admin_approval_for_registration=bool(
+                row.require_admin_approval_for_registration
+            ),
+            warn_unverified_email_before_approval=bool(row.warn_unverified_email_before_approval),
             has_smtp_sender_password=bool(password),
             created_at=row.created_at,
             updated_at=row.updated_at,
@@ -108,6 +118,8 @@ class EmailSettingsService:
             smtp_use_ssl=snapshot.smtp_use_ssl,
             notify_token_expiring=snapshot.notify_token_expiring,
             notify_check_in_success=snapshot.notify_check_in_success,
+            require_admin_approval_for_registration=snapshot.require_admin_approval_for_registration,
+            warn_unverified_email_before_approval=snapshot.warn_unverified_email_before_approval,
             has_smtp_sender_password=snapshot.has_smtp_sender_password,
             created_at=snapshot.created_at,
             updated_at=snapshot.updated_at,
@@ -132,6 +144,10 @@ class EmailSettingsService:
         row.smtp_use_ssl = payload.smtp_use_ssl
         row.notify_token_expiring = payload.notify_token_expiring
         row.notify_check_in_success = payload.notify_check_in_success
+        row.require_admin_approval_for_registration = (
+            payload.require_admin_approval_for_registration
+        )
+        row.warn_unverified_email_before_approval = payload.warn_unverified_email_before_approval
 
         if payload.clear_smtp_sender_password:
             row.smtp_sender_password = ""
@@ -190,5 +206,31 @@ class EmailSettingsService:
                 return EmailSettingsService.get_snapshot(db).notify_check_in_success
             except SQLAlchemyError:
                 return EmailSettingsService._default_snapshot().notify_check_in_success
+        finally:
+            db.close()
+
+    @staticmethod
+    def is_registration_approval_required() -> bool:
+        db = SessionLocal()
+        try:
+            try:
+                return EmailSettingsService.get_snapshot(db).require_admin_approval_for_registration
+            except SQLAlchemyError:
+                return (
+                    EmailSettingsService._default_snapshot().require_admin_approval_for_registration
+                )
+        finally:
+            db.close()
+
+    @staticmethod
+    def should_warn_unverified_email_before_approval() -> bool:
+        db = SessionLocal()
+        try:
+            try:
+                return EmailSettingsService.get_snapshot(db).warn_unverified_email_before_approval
+            except SQLAlchemyError:
+                return (
+                    EmailSettingsService._default_snapshot().warn_unverified_email_before_approval
+                )
         finally:
             db.close()

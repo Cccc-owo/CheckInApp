@@ -29,6 +29,7 @@ class UserUpdate(BaseModel):
         None, min_length=6, description="新密码（可选，留空表示不修改）"
     )
     reset_password: Optional[bool] = Field(False, description="是否清空密码")
+    allow_unverified_email: bool = Field(False, description="是否允许审批未验证邮箱用户")
 
 
 class UserUpdateProfile(BaseModel):
@@ -42,6 +43,28 @@ class UserUpdateProfile(BaseModel):
     new_password: Optional[str] = Field(None, min_length=6, description="新密码")
 
 
+class UserEmailUpdate(BaseModel):
+    """用户设置邮箱并请求验证码 Schema"""
+
+    email: EmailStr = Field(..., description="邮箱地址")
+
+
+class UserEmailVerify(BaseModel):
+    """用户邮箱验证码校验 Schema"""
+
+    code: str = Field(..., min_length=4, max_length=12, description="邮箱验证码")
+
+
+class AdminApprovalResponse(BaseModel):
+    """管理员审批响应 Schema"""
+
+    success: bool
+    message: str
+    user_id: Optional[int] = None
+    requires_override: bool = False
+    warning_code: Optional[str] = None
+
+
 class UserResponse(BaseModel):
     """用户响应 Schema"""
 
@@ -53,6 +76,8 @@ class UserResponse(BaseModel):
     is_approved: bool
     jwt_exp: str
     email: Optional[EmailStr] = None
+    email_verified: bool = False
+    email_verified_at: Optional[datetime] = None
     has_password: bool = False  # 是否已设置密码
     created_at: datetime
     updated_at: Optional[datetime] = None

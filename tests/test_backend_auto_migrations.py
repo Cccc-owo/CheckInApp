@@ -17,6 +17,9 @@ from backend.migration_steps.email_notification_settings import (
     apply as apply_email_notification_settings,
 )
 from backend.migration_steps.task_thread_id import apply as apply_task_thread_id
+from backend.migration_steps.user_email_verification import (
+    apply as apply_user_email_verification,
+)
 
 
 def test_pending_migration_is_recorded_and_skipped_on_next_run() -> None:
@@ -79,11 +82,13 @@ def test_existing_migrations_are_registered_in_order() -> None:
         "2026050401_add_account_lockout",
         "2026050402_add_task_thread_id",
         "2026050501_add_email_notification_settings",
+        "2026050601_add_user_email_verification",
     ]
     assert [migration.apply.__module__ for migration in MIGRATIONS] == [
         "backend.migration_steps.account_lockout",
         "backend.migration_steps.task_thread_id",
         "backend.migration_steps.email_notification_settings",
+        "backend.migration_steps.user_email_verification",
     ]
 
 
@@ -105,7 +110,43 @@ def test_email_notification_settings_migration_creates_settings_table() -> None:
         "smtp_use_ssl",
         "notify_token_expiring",
         "notify_check_in_success",
+        "require_admin_approval_for_registration",
+        "warn_unverified_email_before_approval",
     } <= columns
+
+
+def test_user_email_verification_migration_adds_user_fields_and_policy_flags() -> None:
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+
+    with engine.connect() as conn:
+        conn.execute(text("CREATE TABLE users (id INTEGER PRIMARY KEY, alias VARCHAR(50))"))
+        conn.execute(
+            text(
+                "CREATE TABLE email_notification_settings ("
+                "id INTEGER PRIMARY KEY, "
+                "notify_token_expiring BOOLEAN NOT NULL DEFAULT 1, "
+                "notify_check_in_success BOOLEAN NOT NULL DEFAULT 1"
+                ")"
+            )
+        )
+        conn.commit()
+
+        apply_user_email_verification(conn)
+
+        user_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(users)"))}
+        settings_columns = {
+            row[1] for row in conn.execute(text("PRAGMA table_info(email_notification_settings)"))
+        }
+
+    assert {
+        "email_verified_at",
+        "email_verification_code_hash",
+        "email_verification_expires_at",
+    } <= user_columns
+    assert {
+        "require_admin_approval_for_registration",
+        "warn_unverified_email_before_approval",
+    } <= settings_columns
 
 
 def test_account_lockout_migration_adds_missing_user_fields() -> None:

@@ -65,6 +65,28 @@ def test_frontend_admin_api_covers_email_settings() -> None:
     assert "/api/admin/email_settings" in api
 
 
+def test_frontend_covers_pending_email_verification_flow() -> None:
+    api = (SRC_ROOT / "api" / "index.ts").read_text(encoding="utf-8")
+    pending = (SRC_ROOT / "views" / "PendingApprovalView.vue").read_text(encoding="utf-8")
+
+    assert "/api/users/me/email" in api
+    assert "/api/users/me/email/verify" in api
+    assert "自动吊销" in pending
+    assert "验证码" in pending
+
+
+def test_frontend_admin_approval_policy_warnings_are_visible() -> None:
+    admin_users = (SRC_ROOT / "views" / "admin" / "AdminUsersView.vue").read_text(encoding="utf-8")
+    email_settings = (SRC_ROOT / "views" / "admin" / "AdminEmailSettingsView.vue").read_text(
+        encoding="utf-8"
+    )
+
+    assert "allow_unverified_email" in admin_users
+    assert "邮箱未验证" in admin_users
+    assert "require_admin_approval_for_registration" in email_settings
+    assert "关闭管理员审批" in email_settings
+
+
 def test_frontend_replaces_starter_component() -> None:
     app = (SRC_ROOT / "App.vue").read_text(encoding="utf-8")
 
