@@ -19,6 +19,16 @@ def _add_column_if_missing(
     return columns
 
 
+def _drop_column_if_present(
+    conn: Connection, table_name: str, columns: set[str], column_name: str
+) -> set[str]:
+    if column_name in columns:
+        conn.execute(text(f"ALTER TABLE {table_name} DROP COLUMN {column_name}"))
+        conn.commit()
+        return _table_columns(conn, table_name)
+    return columns
+
+
 def apply(conn: Connection) -> None:
     user_columns = _table_columns(conn, "users")
     user_columns = _add_column_if_missing(
@@ -51,10 +61,16 @@ def apply(conn: Connection) -> None:
         "require_admin_approval_for_registration",
         "require_admin_approval_for_registration BOOLEAN NOT NULL DEFAULT 1",
     )
-    _add_column_if_missing(
+    settings_columns = _add_column_if_missing(
+        conn,
+        "email_notification_settings",
+        settings_columns,
+        "require_verified_email_for_approval",
+        "require_verified_email_for_approval BOOLEAN NOT NULL DEFAULT 1",
+    )
+    _drop_column_if_present(
         conn,
         "email_notification_settings",
         settings_columns,
         "warn_unverified_email_before_approval",
-        "warn_unverified_email_before_approval BOOLEAN NOT NULL DEFAULT 1",
     )

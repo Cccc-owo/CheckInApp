@@ -16,8 +16,8 @@ class EmailNotificationSettingsBase(BaseModel):
     require_admin_approval_for_registration: bool = Field(
         True, description="新注册是否需要管理员审批"
     )
-    warn_unverified_email_before_approval: bool = Field(
-        True, description="审批未验证邮箱用户时是否警告"
+    require_verified_email_for_approval: bool = Field(
+        True, description="审批前是否要求用户完成邮箱验证"
     )
 
     @field_validator("smtp_server", "smtp_sender_email", mode="before")

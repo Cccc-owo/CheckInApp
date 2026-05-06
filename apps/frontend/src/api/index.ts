@@ -48,12 +48,8 @@ export const userApi = {
   tokenStatus: () => apiClient.get<TokenStatus>('/api/users/me/token_status'),
   setEmail: (email: string) => apiClient.put<User>('/api/users/me/email', { email }),
   verifyEmail: (code: string) => apiClient.post<User>('/api/users/me/email/verify', { code }),
-  updateProfile: (payload: {
-    alias?: string
-    email?: string
-    current_password?: string
-    new_password?: string
-  }) => apiClient.put<User>('/api/users/me/profile', payload),
+  updateProfile: (payload: { alias?: string; current_password?: string; new_password?: string }) =>
+    apiClient.put<User>('/api/users/me/profile', payload),
   list: (params: Record<string, unknown> = {}) => apiClient.get<User[]>('/api/users', params),
   create: (payload: Partial<User> & { password?: string }) =>
     apiClient.post<User>('/api/users', payload),

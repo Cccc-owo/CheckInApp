@@ -20,7 +20,7 @@ class AdminService:
         email_changed = next_email is not None and next_email != user.email
         has_verified_email = bool(user.email and user.email_verified_at and not email_changed)
         should_warn = (
-            EmailSettingsService.should_warn_unverified_email_before_approval()
+            EmailSettingsService.is_verified_email_required_for_approval()
             and not has_verified_email
         )
         if should_warn and not allow_unverified_email:

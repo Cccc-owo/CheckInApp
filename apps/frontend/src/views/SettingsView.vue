@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Save } from 'lucide-vue-next'
-import { onMounted, reactive, ref } from 'vue'
+import { MailCheck, Save, Send } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { userApi, type TokenStatus } from '@/api'
 import { useAuth } from '@/app/auth'
 import StateBlock from '@/components/StateBlock.vue'
@@ -18,15 +18,22 @@ import { extractErrorMessage } from '@/utils/format'
 const auth = useAuth()
 const loading = ref(true)
 const saving = ref(false)
+const sendingCode = ref(false)
+const verifyingEmail = ref(false)
 const error = ref('')
 const message = ref('')
+const emailMessage = ref('')
 const token = ref<TokenStatus | null>(null)
 const form = reactive({
   alias: '',
-  email: '',
   current_password: '',
   new_password: '',
 })
+const emailForm = reactive({
+  email: '',
+  code: '',
+})
+const emailVerified = computed(() => Boolean(auth.state.user?.email_verified))
 
 async function load() {
   loading.value = true
@@ -39,7 +46,7 @@ async function load() {
     auth.state.user = user
     token.value = tokenStatus
     form.alias = user.alias
-    form.email = user.email ?? ''
+    emailForm.email = user.email ?? ''
   } catch (err) {
     error.value = extractErrorMessage(err)
   } finally {
@@ -54,7 +61,6 @@ async function save() {
   try {
     const user = await userApi.updateProfile({
       alias: form.alias,
-      email: form.email || undefined,
       current_password: form.current_password || undefined,
       new_password: form.new_password || undefined,
     })
@@ -66,6 +72,40 @@ async function save() {
     error.value = extractErrorMessage(err)
   } finally {
     saving.value = false
+  }
+}
+
+async function requestEmailCode() {
+  sendingCode.value = true
+  error.value = ''
+  emailMessage.value = ''
+  try {
+    const user = await userApi.setEmail(emailForm.email)
+    auth.state.user = user
+    emailForm.email = user.email ?? emailForm.email
+    emailForm.code = ''
+    emailMessage.value = '验证码已发送，请检查邮箱'
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    sendingCode.value = false
+  }
+}
+
+async function verifyEmail() {
+  verifyingEmail.value = true
+  error.value = ''
+  emailMessage.value = ''
+  try {
+    const user = await userApi.verifyEmail(emailForm.code)
+    auth.state.user = user
+    emailForm.email = user.email ?? emailForm.email
+    emailForm.code = ''
+    emailMessage.value = '邮箱已验证'
+  } catch (err) {
+    error.value = extractErrorMessage(err)
+  } finally {
+    verifyingEmail.value = false
   }
 }
 
@@ -91,10 +131,6 @@ onMounted(load)
         <label class="grid gap-2">
           <span :class="labelClass">别名</span>
           <input v-model="form.alias" :class="inputClass" required />
-        </label>
-        <label class="grid gap-2">
-          <span :class="labelClass">邮箱</span>
-          <input v-model="form.email" :class="inputClass" type="email" placeholder="用于打卡通知" />
         </label>
         <div class="grid gap-4 md:grid-cols-2">
           <label class="grid gap-2">
@@ -128,6 +164,61 @@ onMounted(load)
         </Button>
       </div>
     </form>
+
+    <section :class="[cardClass, 'overflow-hidden lg:col-span-2']">
+      <div :class="sectionHeaderClass">
+        <div class="flex items-center gap-2">
+          <h2 class="font-semibold">邮箱验证</h2>
+          <span :class="toneClass(emailVerified ? 'success' : 'warning')">
+            {{ emailVerified ? '已验证' : '待验证' }}
+          </span>
+        </div>
+      </div>
+      <div class="grid gap-4 p-4">
+        <label class="grid gap-2">
+          <span :class="labelClass">邮箱</span>
+          <input
+            v-model.trim="emailForm.email"
+            :class="inputClass"
+            type="email"
+            placeholder="用于审批与打卡通知"
+          />
+        </label>
+        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+          <label class="grid gap-2">
+            <span :class="labelClass">验证码</span>
+            <input
+              v-model.trim="emailForm.code"
+              :class="inputClass"
+              inputmode="numeric"
+              placeholder="请输入邮箱验证码"
+            />
+          </label>
+          <div class="flex items-end gap-2">
+            <Button
+              variant="outline"
+              type="button"
+              :disabled="sendingCode || !emailForm.email"
+              @click="requestEmailCode"
+            >
+              <Send class="size-4" :class="{ 'animate-spin': sendingCode }" />
+              发送验证码
+            </Button>
+            <Button
+              type="button"
+              :disabled="verifyingEmail || !emailForm.code"
+              @click="verifyEmail"
+            >
+              <MailCheck class="size-4" :class="{ 'animate-spin': verifyingEmail }" />
+              验证
+            </Button>
+          </div>
+        </div>
+        <div v-if="emailMessage" :class="alertClass.success">
+          {{ emailMessage }}
+        </div>
+      </div>
+    </section>
 
     <aside :class="[cardClass, 'h-fit overflow-hidden']">
       <div

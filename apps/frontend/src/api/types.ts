@@ -215,7 +215,7 @@ export interface EmailNotificationSettings {
   notify_token_expiring: boolean
   notify_check_in_success: boolean
   require_admin_approval_for_registration: boolean
-  warn_unverified_email_before_approval: boolean
+  require_verified_email_for_approval: boolean
   has_smtp_sender_password: boolean
   created_at?: string | null
   updated_at?: string | null
@@ -229,7 +229,7 @@ export interface EmailNotificationSettingsUpdate {
   notify_token_expiring: boolean
   notify_check_in_success: boolean
   require_admin_approval_for_registration: boolean
-  warn_unverified_email_before_approval: boolean
+  require_verified_email_for_approval: boolean
   smtp_sender_password?: string
   clear_smtp_sender_password?: boolean
 }

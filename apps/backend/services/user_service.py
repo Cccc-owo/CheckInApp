@@ -257,13 +257,11 @@ class UserService:
             user.alias = update_data["alias"]
             logger.info(f"用户 ID {user_id} 别名更新: {user.alias}")
 
-        # 更新邮箱
+        # 邮箱必须走 /users/me/email 的验证码流程，不能从普通资料保存绕过。
         if "email" in update_data:
             next_email = str(update_data["email"]) if update_data["email"] is not None else None
             if next_email != user.email:
-                UserService._clear_email_verification(user)
-            user.email = next_email
-            logger.info(f"用户 ID {user_id} 邮箱更新: {user.email}")
+                raise ValueError("邮箱修改需要先完成验证码验证")
 
         # 更新密码
         if "new_password" in update_data and update_data["new_password"]:

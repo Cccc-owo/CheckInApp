@@ -29,7 +29,7 @@ const form = reactive({
   notify_token_expiring: true,
   notify_check_in_success: true,
   require_admin_approval_for_registration: true,
-  warn_unverified_email_before_approval: true,
+  require_verified_email_for_approval: true,
 })
 
 const passwordState = computed(() => {
@@ -50,7 +50,7 @@ function hydrate(next: EmailNotificationSettings) {
   form.notify_token_expiring = next.notify_token_expiring
   form.notify_check_in_success = next.notify_check_in_success
   form.require_admin_approval_for_registration = next.require_admin_approval_for_registration
-  form.warn_unverified_email_before_approval = next.warn_unverified_email_before_approval
+  form.require_verified_email_for_approval = next.require_verified_email_for_approval
 }
 
 async function load() {
@@ -85,7 +85,7 @@ async function save() {
       notify_token_expiring: form.notify_token_expiring,
       notify_check_in_success: form.notify_check_in_success,
       require_admin_approval_for_registration: form.require_admin_approval_for_registration,
-      warn_unverified_email_before_approval: form.warn_unverified_email_before_approval,
+      require_verified_email_for_approval: form.require_verified_email_for_approval,
       smtp_sender_password: form.smtp_sender_password || undefined,
       clear_smtp_sender_password: form.clear_smtp_sender_password,
     })
@@ -233,15 +233,15 @@ onMounted(load)
 
         <label class="grid gap-2 rounded-lg border border-border bg-background p-3">
           <span class="flex items-center justify-between gap-3 text-sm font-medium">
-            未验证邮箱审批警告
+            审批前要求验证邮箱
             <input
-              v-model="form.warn_unverified_email_before_approval"
+              v-model="form.require_verified_email_for_approval"
               type="checkbox"
               class="size-4 accent-primary"
             />
           </span>
           <span class="text-sm text-muted-foreground"
-            >开启后，管理员审批邮箱未验证用户时需要确认覆盖。</span
+            >开启后，管理员审批未验证邮箱用户时每次都需要确认覆盖。</span
           >
         </label>
 

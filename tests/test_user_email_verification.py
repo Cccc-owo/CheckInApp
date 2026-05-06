@@ -12,7 +12,7 @@ from backend.api import users as users_api
 from backend.dependencies import get_current_user, get_db
 from backend.models import Base, User
 from backend.schemas.email_settings import EmailNotificationSettingsUpdate
-from backend.schemas.user import UserUpdate
+from backend.schemas.user import UserUpdate, UserUpdateProfile
 from backend.services import email_settings_service
 from backend.services.admin_service import AdminService
 from backend.services.email_service import EmailService
@@ -116,6 +116,24 @@ def test_changing_email_clears_verification_state(monkeypatch) -> None:
     engine.dispose()
 
 
+def test_profile_update_rejects_email_changes() -> None:
+    engine, _, session = make_session()
+    user = add_user(session, email="old@example.com")
+
+    with pytest.raises(ValueError, match="邮箱"):
+        UserService.update_user_profile(
+            user.id,
+            UserUpdateProfile(email="new@example.com"),
+            session,
+        )
+
+    refreshed = session.get(User, user.id)
+    assert refreshed is not None
+    assert refreshed.email == "old@example.com"
+    session.close()
+    engine.dispose()
+
+
 def test_approval_requires_warning_then_allows_override(monkeypatch) -> None:
     engine, session_factory, session = make_session()
     monkeypatch.setattr(email_settings_service, "SessionLocal", session_factory)
@@ -134,7 +152,7 @@ def test_approval_requires_warning_then_allows_override(monkeypatch) -> None:
     engine.dispose()
 
 
-def test_approval_warning_can_be_disabled(monkeypatch) -> None:
+def test_verified_email_requirement_can_be_disabled(monkeypatch) -> None:
     engine, session_factory, session = make_session()
     monkeypatch.setattr(email_settings_service, "SessionLocal", session_factory)
     EmailSettingsService.update_settings(
@@ -147,7 +165,7 @@ def test_approval_warning_can_be_disabled(monkeypatch) -> None:
             notify_token_expiring=True,
             notify_check_in_success=True,
             require_admin_approval_for_registration=True,
-            warn_unverified_email_before_approval=False,
+            require_verified_email_for_approval=False,
         ),
     )
     user = add_user(session)
@@ -192,7 +210,6 @@ def test_registration_approval_policy_controls_new_user_approval(monkeypatch) ->
             notify_token_expiring=True,
             notify_check_in_success=True,
             require_admin_approval_for_registration=False,
-            warn_unverified_email_before_approval=True,
         ),
     )
 

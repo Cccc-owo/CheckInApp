@@ -25,7 +25,7 @@ class EmailNotificationSettings(Base):
     require_admin_approval_for_registration: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False
     )
-    warn_unverified_email_before_approval: Mapped[bool] = mapped_column(
+    require_verified_email_for_approval: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(

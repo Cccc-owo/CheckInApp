@@ -12,6 +12,12 @@ from backend.migration_steps.account_lockout import apply as apply_account_locko
 from backend.migration_steps.email_notification_settings import (
     apply as apply_email_notification_settings,
 )
+from backend.migration_steps.email_approval_policy import (
+    apply as apply_email_approval_policy,
+)
+from backend.migration_steps.legacy_user_email_verification import (
+    apply as apply_legacy_user_email_verification,
+)
 from backend.migration_steps.task_thread_id import apply as apply_task_thread_id
 from backend.migration_steps.user_email_verification import (
     apply as apply_user_email_verification,
@@ -101,6 +107,16 @@ MIGRATIONS: tuple[Migration, ...] = (
         id="2026050601_add_user_email_verification",
         description="Add user email verification fields and registration approval policy flags.",
         apply=apply_user_email_verification,
+    ),
+    Migration(
+        id="2026050602_backfill_legacy_verified_emails",
+        description="Trust existing approved user email addresses after verification rollout.",
+        apply=apply_legacy_user_email_verification,
+    ),
+    Migration(
+        id="2026050603_remove_legacy_email_approval_warning",
+        description="Replace legacy unverified-email warning setting with approval email policy.",
+        apply=apply_email_approval_policy,
     ),
 )
 

@@ -84,7 +84,10 @@ def test_frontend_admin_approval_policy_warnings_are_visible() -> None:
     assert "allow_unverified_email" in admin_users
     assert "邮箱未验证" in admin_users
     assert "require_admin_approval_for_registration" in email_settings
+    assert "require_verified_email_for_approval" in email_settings
+    assert "审批前要求验证邮箱" in email_settings
     assert "关闭管理员审批" in email_settings
+    assert "未验证邮箱审批警告" not in email_settings
 
 
 def test_frontend_replaces_starter_component() -> None:
@@ -110,3 +113,13 @@ def test_dashboard_qr_refresh_uses_dialog() -> None:
     assert "qrRefreshDialogOpen" in dashboard
     assert "<Dialog" in dashboard
     assert "<DialogContent" in dashboard
+
+
+def test_settings_email_changes_use_verification_flow() -> None:
+    settings = (SRC_ROOT / "views" / "SettingsView.vue").read_text(encoding="utf-8")
+    api = (SRC_ROOT / "api" / "index.ts").read_text(encoding="utf-8")
+
+    assert "userApi.setEmail" in settings
+    assert "userApi.verifyEmail" in settings
+    assert "验证码" in settings
+    assert "email?: string" not in api

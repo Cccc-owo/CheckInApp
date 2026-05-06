@@ -16,9 +16,13 @@ from backend.migration_steps.account_lockout import apply as apply_account_locko
 from backend.migration_steps.email_notification_settings import (
     apply as apply_email_notification_settings,
 )
+from backend.migration_steps.email_approval_policy import apply as apply_email_approval_policy
 from backend.migration_steps.task_thread_id import apply as apply_task_thread_id
 from backend.migration_steps.user_email_verification import (
     apply as apply_user_email_verification,
+)
+from backend.migration_steps.legacy_user_email_verification import (
+    apply as apply_legacy_user_email_verification,
 )
 
 
@@ -83,12 +87,16 @@ def test_existing_migrations_are_registered_in_order() -> None:
         "2026050402_add_task_thread_id",
         "2026050501_add_email_notification_settings",
         "2026050601_add_user_email_verification",
+        "2026050602_backfill_legacy_verified_emails",
+        "2026050603_remove_legacy_email_approval_warning",
     ]
     assert [migration.apply.__module__ for migration in MIGRATIONS] == [
         "backend.migration_steps.account_lockout",
         "backend.migration_steps.task_thread_id",
         "backend.migration_steps.email_notification_settings",
         "backend.migration_steps.user_email_verification",
+        "backend.migration_steps.legacy_user_email_verification",
+        "backend.migration_steps.email_approval_policy",
     ]
 
 
@@ -111,8 +119,9 @@ def test_email_notification_settings_migration_creates_settings_table() -> None:
         "notify_token_expiring",
         "notify_check_in_success",
         "require_admin_approval_for_registration",
-        "warn_unverified_email_before_approval",
+        "require_verified_email_for_approval",
     } <= columns
+    assert "warn_unverified_email_before_approval" not in columns
 
 
 def test_user_email_verification_migration_adds_user_fields_and_policy_flags() -> None:
@@ -145,8 +154,72 @@ def test_user_email_verification_migration_adds_user_fields_and_policy_flags() -
     } <= user_columns
     assert {
         "require_admin_approval_for_registration",
-        "warn_unverified_email_before_approval",
+        "require_verified_email_for_approval",
     } <= settings_columns
+
+
+def test_email_notification_settings_migration_removes_legacy_warning_column() -> None:
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+
+    with engine.connect() as conn:
+        conn.execute(
+            text(
+                "CREATE TABLE email_notification_settings ("
+                "id INTEGER PRIMARY KEY, "
+                "warn_unverified_email_before_approval BOOLEAN NOT NULL DEFAULT 1"
+                ")"
+            )
+        )
+        conn.commit()
+
+        apply_email_approval_policy(conn)
+
+        columns = {
+            row[1] for row in conn.execute(text("PRAGMA table_info(email_notification_settings)"))
+        }
+
+    assert "warn_unverified_email_before_approval" not in columns
+    assert "require_verified_email_for_approval" in columns
+
+
+def test_legacy_email_verification_migration_trusts_approved_existing_emails() -> None:
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+
+    with engine.connect() as conn:
+        conn.execute(
+            text(
+                "CREATE TABLE users ("
+                "id INTEGER PRIMARY KEY, "
+                "email VARCHAR(100), "
+                "is_approved BOOLEAN NOT NULL DEFAULT 0, "
+                "email_verified_at DATETIME"
+                ")"
+            )
+        )
+        conn.execute(
+            text(
+                "INSERT INTO users (id, email, is_approved, email_verified_at) VALUES "
+                "(1, 'old@example.com', 1, NULL), "
+                "(2, 'pending@example.com', 0, NULL), "
+                "(3, '', 1, NULL), "
+                "(4, 'verified@example.com', 1, '2026-01-01T00:00:00+00:00')"
+            )
+        )
+        conn.commit()
+
+        apply_legacy_user_email_verification(conn)
+
+        rows = {
+            row.id: row.email_verified_at
+            for row in conn.execute(
+                text("SELECT id, email_verified_at FROM users ORDER BY id")
+            ).fetchall()
+        }
+
+    assert rows[1] is not None
+    assert rows[2] is None
+    assert rows[3] is None
+    assert rows[4] == "2026-01-01T00:00:00+00:00"
 
 
 def test_account_lockout_migration_adds_missing_user_fields() -> None:
