@@ -27,6 +27,7 @@ import { useRouter } from '@/app/router'
 import StateBlock from '@/components/StateBlock.vue'
 import { alertClass, cardClass, inputClass, sectionHeaderClass, toneClass } from '@/components/ui'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   cronLabel,
@@ -58,6 +59,7 @@ const qrRefreshError = ref('')
 const qrRefreshImage = ref('')
 const qrRefreshSessionId = ref('')
 const qrRefreshSucceeded = ref(false)
+const qrRefreshDialogOpen = ref(false)
 let pollTimer: number | undefined
 let qrRefreshPollTimer: number | undefined
 
@@ -179,9 +181,24 @@ async function cancelQrRefresh(clearFeedback = true) {
   if (sessionId) await authApi.cancelQRCodeSession(sessionId).catch(() => undefined)
 }
 
+async function closeQrRefreshDialog() {
+  qrRefreshDialogOpen.value = false
+  await cancelQrRefresh()
+}
+
+async function handleQrRefreshDialogOpenChange(open: boolean) {
+  if (open) {
+    qrRefreshDialogOpen.value = true
+    return
+  }
+
+  await closeQrRefreshDialog()
+}
+
 async function requestQrRefresh() {
   if (!canRefreshToken.value || qrRefreshLoading.value) return
 
+  qrRefreshDialogOpen.value = true
   const alias = auth.state.user?.alias?.trim()
   if (!alias) {
     qrRefreshError.value = '当前用户缺少用户名，无法创建扫码刷新会话。'
@@ -443,62 +460,52 @@ onBeforeUnmount(() => {
             <QrCode class="size-4" />
             {{ qrRefreshLoading ? '创建中' : '扫码刷新' }}
           </Button>
-          <div
-            v-if="qrRefreshImage || qrRefreshInfo || qrRefreshError"
-            class="grid gap-3 rounded-lg border border-border bg-muted p-3"
-          >
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <div class="font-medium text-foreground">扫码刷新授权</div>
-                <div v-if="qrRefreshInfo" class="mt-1 text-muted-foreground">
-                  {{ qrRefreshInfo }}
-                </div>
-              </div>
-              <Button
-                v-if="qrRefreshSessionId || qrRefreshImage"
-                variant="ghost"
-                size="icon"
-                type="button"
-                aria-label="关闭扫码刷新"
-                @click="cancelQrRefresh"
-              >
-                <X class="size-4" />
-              </Button>
-            </div>
-            <div v-if="qrRefreshError" :class="alertClass.danger">
-              {{ qrRefreshError }}
-            </div>
-            <div v-if="qrRefreshSucceeded" :class="alertClass.success">授权刷新成功</div>
-            <div v-if="qrRefreshImage" class="rounded-lg border border-border bg-background p-3">
-              <img
-                :src="qrRefreshImageSrc"
-                alt="QQ 授权刷新二维码"
-                class="mx-auto size-44 rounded-md bg-background object-contain"
-              />
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                type="button"
-                :disabled="qrRefreshLoading || !canRefreshToken"
-                @click="requestQrRefresh"
-              >
-                <RotateCw class="size-4" />
-                重新获取
-              </Button>
-              <Button
-                v-if="qrRefreshSessionId || qrRefreshImage"
-                variant="ghost"
-                type="button"
-                @click="cancelQrRefresh"
-              >
-                取消
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
+
+    <Dialog :open="qrRefreshDialogOpen" @update:open="handleQrRefreshDialogOpenChange">
+      <DialogContent class="gap-0 overflow-hidden p-0 sm:max-w-[420px]">
+        <DialogHeader class="border-b border-border bg-muted/55 px-5 py-4">
+          <DialogTitle class="flex items-center gap-2">
+            <QrCode class="size-5" />
+            扫码刷新授权
+          </DialogTitle>
+        </DialogHeader>
+        <div class="grid gap-4 p-5 text-sm">
+          <div v-if="qrRefreshInfo" class="text-muted-foreground">
+            {{ qrRefreshInfo }}
+          </div>
+          <div v-if="qrRefreshError" :class="alertClass.danger">
+            {{ qrRefreshError }}
+          </div>
+          <div v-if="qrRefreshSucceeded" :class="alertClass.success">授权刷新成功</div>
+          <div v-if="qrRefreshImage" class="rounded-lg border border-border bg-background p-4">
+            <img
+              :src="qrRefreshImageSrc"
+              alt="QQ 授权刷新二维码"
+              class="mx-auto size-56 max-w-full rounded-md bg-background object-contain"
+            />
+          </div>
+          <StateBlock v-else-if="qrRefreshLoading" title="正在创建二维码" type="loading" />
+          <div class="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="outline"
+              type="button"
+              :disabled="qrRefreshLoading || !canRefreshToken"
+              @click="requestQrRefresh"
+            >
+              <RotateCw class="size-4" />
+              重新获取
+            </Button>
+            <Button variant="ghost" type="button" @click="closeQrRefreshDialog">
+              <X class="size-4" />
+              取消
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
 
     <section :class="[cardClass, 'overflow-hidden']">
       <div :class="sectionHeaderClass">

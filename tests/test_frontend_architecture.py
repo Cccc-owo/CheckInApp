@@ -101,3 +101,12 @@ def test_dashboard_refresh_uses_qr_api_instead_of_login_redirect() -> None:
     assert "authApi.getQRCodeStatus" in dashboard
     assert "authApi.cancelQRCodeSession" in dashboard
     assert "router.navigate('/login')" not in dashboard
+
+
+def test_dashboard_qr_refresh_uses_dialog() -> None:
+    dashboard = (SRC_ROOT / "views" / "DashboardView.vue").read_text(encoding="utf-8")
+
+    assert "@/components/ui/dialog" in dashboard
+    assert "qrRefreshDialogOpen" in dashboard
+    assert "<Dialog" in dashboard
+    assert "<DialogContent" in dashboard
